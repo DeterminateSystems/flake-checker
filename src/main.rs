@@ -85,7 +85,8 @@ fn write_to_summary(msg: &str) {
     let filepath = std::env::var("GITHUB_STEP_SUMMARY").unwrap();
     println!("Filepath: {filepath}");
     let mut file = OpenOptions::new()
-        .write(true)
+        .append(true)
+        .create(true)
         .open(&filepath)
         .unwrap();
     file.write_all(msg.as_bytes()).unwrap();
