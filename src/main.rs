@@ -18,10 +18,13 @@ const ALLOWED_REFS: &[&str; 6] = &[
     "nixpkgs-unstable",
 ];
 
+/// A flake.lock checker for Nix projects.
 #[derive(Parser)]
+#[command(author, version, about, long_about = None)]
 struct Cli {
-    #[arg(short, long, default_value = "flake.lock")]
-    path: PathBuf,
+    /// The path to the flake.lock file to check.
+    #[clap(default_value = "flake.lock")]
+    flake_lock_path: PathBuf,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -119,8 +122,8 @@ fn nixpkgs_deps(nodes: &HashMap<String, Node>) -> HashMap<String, Node> {
 }
 
 fn main() -> Result<(), Error> {
-    let Cli { path } = Cli::parse();
-    let file = read_to_string(path)?;
+    let Cli { flake_lock_path } = Cli::parse();
+    let file = read_to_string(flake_lock_path)?;
     let flake_lock: FlakeLock = serde_json::from_str(&file)?;
     check_flake_lock(&flake_lock);
 
