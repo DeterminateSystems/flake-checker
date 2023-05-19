@@ -31,19 +31,21 @@
       });
 
       packages = forAllSystems ({ pkgs }: {
-        default = let
-          meta = (builtins.fromTOML (builtins.readFile ./Cargo.toml)).package;
+        default =
+          let
+            meta = (builtins.fromTOML (builtins.readFile ./Cargo.toml)).package;
 
-          rust = pkgs.makeRustPlatform {
-            cargo = pkgs.rustToolchain;
-            rustc = pkgs.rustToolchain;
+            rust = pkgs.makeRustPlatform {
+              cargo = pkgs.rustToolchain;
+              rustc = pkgs.rustToolchain;
+            };
+          in
+          rust.buildRustPackage {
+            pname = meta.name;
+            version = meta.version;
+            src = ./.;
+            cargoHash = "sha256-8UWTu62VjoOJJ9UExSXnqodYYZbpPmvYLI/bvUsCZp0=";
           };
-        in rust.buildRustPackage {
-          pname = meta.name;
-          version = meta.version;
-          src = ./.;
-          cargoHash = "sha256-8UWTu62VjoOJJ9UExSXnqodYYZbpPmvYLI/bvUsCZp0=";
-        };
       });
     };
 }
