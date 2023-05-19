@@ -20,7 +20,7 @@ const ALLOWED_REFS: &[&str; 6] = &[
 
 #[derive(Parser)]
 struct Cli {
-    #[arg(short, long)]
+    #[arg(short, long, default_value = "flake.lock")]
     path: PathBuf,
 }
 
