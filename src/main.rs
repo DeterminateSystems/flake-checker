@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 use std::collections::HashMap;
-use std::fs::{read_to_string, File, OpenOptions};
+use std::fs::{read_to_string, OpenOptions};
 use std::io::Write;
 use std::path::PathBuf;
 
@@ -86,7 +86,7 @@ fn write_to_summary(msg: &str) {
     println!("Filepath: {filepath}");
     let mut file = OpenOptions::new()
         .write(true)
-        .create(true)
+        .create(true) // Create the file if it doesn't exist
         .open(&filepath)
         .unwrap();
     file.write_all(msg.as_bytes()).unwrap();
@@ -104,13 +104,16 @@ fn check_for_outdated_nixpkgs(
 
             if num_days_old > config.max_days {
                 #[cfg(feature = "gha")]
-                write_to_summary("## Error: dependency is too old");
+                write_to_summary(&format!(
+                    "* error: dependency `{name}` is {num_days_old} days old, which is over the max of {}",
+                    config.max_days
+                ));
 
                 warn(
                     flake_lock_path,
                     &format!(
-                        "dependency {} is {} days old, which is over the max of {}",
-                        name, num_days_old, config.max_days
+                        "dependency {name} is {num_days_old} days old, which is over the max of {}",
+                        config.max_days
                     ),
                 );
             }
@@ -129,7 +132,7 @@ fn check_for_non_allowed_refs(
             if let Some(ref git_ref) = original.r#ref {
                 if !config.allowed_refs.contains(git_ref) {
                     #[cfg(feature = "gha")]
-                    write_to_summary("## Error: dependency isn't explicitly allowed");
+                    write_to_summary(&format!("* error: dependency `{name}` has a git ref `{git_ref}` that isn't explicitly allowed"));
 
                     warn(flake_lock_path, &format!("dependency {name} has a Git ref of {git_ref} which is not explicitly allowed"));
                 }
