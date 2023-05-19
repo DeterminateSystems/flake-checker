@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 use std::collections::HashMap;
-use std::fs::{File, read_to_string};
+use std::fs::{read_to_string, File, OpenOptions};
 use std::io::Write;
 use std::path::PathBuf;
 
@@ -82,9 +82,14 @@ fn nixpkgs_num_days_old(timestamp: i64) -> i64 {
 }
 
 fn write_to_summary(msg: &str) {
-    let file = std::env::var("GITHUB_STEP_SUMMARY").unwrap();
-    let mut handle = File::open(file).unwrap();
-    handle.write_all(msg.as_bytes()).unwrap();
+    let filepath = std::env::var("GITHUB_STEP_SUMMARY").unwrap();
+    println!("Filepath: {filepath}");
+    let mut file = OpenOptions::new()
+        .write(true)
+        .create(true)
+        .open(&filepath)
+        .unwrap();
+    file.write_all(msg.as_bytes()).unwrap();
 }
 
 fn check_for_outdated_nixpkgs(
