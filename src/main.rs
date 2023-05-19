@@ -123,7 +123,8 @@ fn main() -> Result<(), Error> {
     let flake_lock: FlakeLock = serde_json::from_str(&flake_lock_file)?;
 
     let config_file = include_str!("policy.json");
-    let config: Config = serde_json::from_str(&config_file)?;
+    let config: Config =
+        serde_json::from_str(&config_file).expect("inline policy.json file is malformed");
 
     check_flake_lock(&flake_lock, &config);
 
