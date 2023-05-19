@@ -28,8 +28,8 @@ enum Error {
 
 #[derive(Clone, Deserialize)]
 struct Original {
-    owner: String,
-    repo: String,
+    owner: Option<String>,
+    repo: Option<String>,
     r#type: String,
     r#ref: Option<String>,
 }
@@ -40,15 +40,23 @@ struct Locked {
     last_modified: i64,
     #[serde(alias = "narHash")]
     nar_hash: String,
-    owner: String,
-    repo: String,
-    rev: String,
+    owner: Option<String>,
+    repo: Option<String>,
+    rev: Option<String>,
     r#type: String,
 }
 
 #[derive(Clone, Deserialize)]
+#[serde(untagged)]
+enum Input {
+    String(String),
+    List(Vec<String>),
+}
+
+// TODO: make this an enum rather than a struct
+#[derive(Clone, Deserialize)]
 struct Node {
-    inputs: Option<HashMap<String, String>>,
+    inputs: Option<HashMap<String, Input>>,
     locked: Option<Locked>,
     original: Option<Original>,
 }

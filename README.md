@@ -1,7 +1,12 @@
 # flake-checker
 
 ```shell
-nix run . -- --path ./flake.lock
+nix build
+
+./result/bin/flake-checker
+
+# Or point to an explicit path
+./result/bin/flake-checker /path/to/flake.lock
 ```
 
 Currently performs two checks:
