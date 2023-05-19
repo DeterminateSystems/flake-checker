@@ -101,7 +101,7 @@ fn check_for_non_allowed_refs(nodes: &HashMap<String, Node>, config: &Config) {
     for (name, dep) in nixpkgs_deps {
         if let Some(original) = &dep.original {
             if let Some(ref git_ref) = original.r#ref {
-                if !config.allowed_refs.contains(&git_ref) {
+                if !config.allowed_refs.contains(git_ref) {
                     println!(
                         "dependency {} has a Git ref of {} which is not explicitly allowed",
                         name, git_ref
@@ -132,7 +132,7 @@ fn main() -> Result<(), Error> {
 
     let config_file = include_str!("policy.json");
     let config: Config =
-        serde_json::from_str(&config_file).expect("inline policy.json file is malformed");
+        serde_json::from_str(config_file).expect("inline policy.json file is malformed");
 
     check_flake_lock(&flake_lock, &config);
 
