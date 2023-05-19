@@ -4,11 +4,19 @@ use std::collections::HashMap;
 use std::fs::read_to_string;
 use std::path::PathBuf;
 
-use chrono::{DateTime, Duration, NaiveDateTime, Utc};
+use chrono::{Duration, Utc};
 use clap::Parser;
 use serde::Deserialize;
 
-const MAX_DAYS: usize = 30;
+const MAX_DAYS: i64 = 30;
+const ALLOWED_REFS: &[&str; 6] = &[
+    "nixos-22.11",
+    "nixos-22.11-small",
+    "nixos-unstable",
+    "nixos-unstable-small",
+    "nixpkgs-22.11-darwin",
+    "nixpkgs-unstable",
+];
 
 #[derive(Parser)]
 struct Cli {
@@ -59,30 +67,47 @@ struct FlakeLock {
     version: usize,
 }
 
-fn nixpkgs_too_old(timestamp: i64) -> bool {
-    let date_from_timestamp = DateTime::<Utc>::from_utc(
-        NaiveDateTime::from_timestamp(timestamp, 0),
-        Utc,
-    );
-
-    let thirty_days_ago = Utc::now() - Duration::days(30);
-
-    date_from_timestamp < thirty_days_ago
+fn nixpkgs_num_days_old(timestamp: i64) -> i64 {
+    let now_timestamp = Utc::now().timestamp();
+    let diff = now_timestamp - timestamp;
+    Duration::seconds(diff).num_days()
 }
 
 fn check_for_outdated_nixpkgs(nodes: &HashMap<String, Node>) {
     let nixpkgs_deps = nixpkgs_deps(nodes);
-    for dep in nixpkgs_deps.values() {
-       if let Some(locked) = &dep.locked {
-            if nixpkgs_too_old(locked.last_modified) {
-                println!("TOO OLD");
+    for (name, dep) in nixpkgs_deps {
+        if let Some(locked) = &dep.locked {
+            let num_days_old = nixpkgs_num_days_old(locked.last_modified);
+
+            if num_days_old > MAX_DAYS {
+                println!(
+                    "dependency {} is {} days old, which is over the max of {}",
+                    name, num_days_old, MAX_DAYS
+                );
             }
-       }
+        }
+    }
+}
+
+fn check_for_non_allowed_refs(nodes: &HashMap<String, Node>) {
+    let nixpkgs_deps = nixpkgs_deps(nodes);
+    for (name, dep) in nixpkgs_deps {
+        if let Some(original) = &dep.original {
+            if let Some(ref git_ref) = original.r#ref {
+                if !ALLOWED_REFS.contains(&git_ref.as_str()) {
+                    println!(
+                        "dependency {} has a Git ref of {} which is not explicitly allowed",
+                        name, git_ref
+                    );
+                }
+            }
+        }
     }
 }
 
 fn check_flake_lock(flake_lock: &FlakeLock) {
     check_for_outdated_nixpkgs(&flake_lock.nodes);
+    check_for_non_allowed_refs(&flake_lock.nodes);
 }
 
 fn nixpkgs_deps(nodes: &HashMap<String, Node>) -> HashMap<String, Node> {
