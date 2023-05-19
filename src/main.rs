@@ -105,7 +105,7 @@ fn check_for_outdated_nixpkgs(
             if num_days_old > config.max_days {
                 #[cfg(feature = "gha")]
                 write_to_summary(&format!(
-                    "* error: dependency `{name}` is {num_days_old} days old, which is over the max of {}",
+                    "* error: dependency `{name}` is {num_days_old} days old, which is over the max of {}\n",
                     config.max_days
                 ));
 
@@ -132,7 +132,7 @@ fn check_for_non_allowed_refs(
             if let Some(ref git_ref) = original.r#ref {
                 if !config.allowed_refs.contains(git_ref) {
                     #[cfg(feature = "gha")]
-                    write_to_summary(&format!("* error: dependency `{name}` has a git ref `{git_ref}` that isn't explicitly allowed"));
+                    write_to_summary(&format!("* error: dependency `{name}` has a git ref `{git_ref}` that isn't explicitly allowed\n"));
 
                     warn(flake_lock_path, &format!("dependency {name} has a Git ref of {git_ref} which is not explicitly allowed"));
                 }
@@ -159,6 +159,9 @@ fn warn(path: &str, message: &str) {
 }
 
 fn main() -> Result<(), Error> {
+    #[cfg(feature = "gha")]
+    write_to_summary("This Markdown document provides a neat and tidy summary of this Determinate Nix Installer run.\n\n");
+
     let Cli { flake_lock_path } = Cli::parse();
     let flake_lock_path = flake_lock_path.as_path().to_str().unwrap(); // TODO: handle this better
     let flake_lock_file = read_to_string(flake_lock_path)?;
