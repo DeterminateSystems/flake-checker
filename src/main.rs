@@ -1,7 +1,8 @@
 #![allow(dead_code)]
 
 use std::collections::HashMap;
-use std::fs::read_to_string;
+use std::fs::{File, read_to_string};
+use std::io::Write;
 use std::path::PathBuf;
 
 use chrono::{Duration, Utc};
@@ -80,6 +81,12 @@ fn nixpkgs_num_days_old(timestamp: i64) -> i64 {
     Duration::seconds(diff).num_days()
 }
 
+fn write_to_summary(msg: &str) {
+    let file = std::env::var("GITHUB_STEP_SUMMARY").unwrap();
+    let mut handle = File::open(file).unwrap();
+    handle.write_all(msg.as_bytes()).unwrap();
+}
+
 fn check_for_outdated_nixpkgs(
     flake_lock_path: &str,
     nodes: &HashMap<String, Node>,
@@ -91,6 +98,9 @@ fn check_for_outdated_nixpkgs(
             let num_days_old = nixpkgs_num_days_old(locked.last_modified);
 
             if num_days_old > config.max_days {
+                #[cfg(feature = "gha")]
+                write_to_summary("## Error: dependency is too old");
+
                 warn(
                     flake_lock_path,
                     &format!(
@@ -113,6 +123,9 @@ fn check_for_non_allowed_refs(
         if let Some(original) = &dep.original {
             if let Some(ref git_ref) = original.r#ref {
                 if !config.allowed_refs.contains(git_ref) {
+                    #[cfg(feature = "gha")]
+                    write_to_summary("## Error: dependency isn't explicitly allowed");
+
                     warn(flake_lock_path, &format!("dependency {name} has a Git ref of {git_ref} which is not explicitly allowed"));
                 }
             }
@@ -138,6 +151,9 @@ fn warn(path: &str, message: &str) {
 }
 
 fn main() -> Result<(), Error> {
+    #[cfg(feature = "gha")]
+    write_to_summary("# Nix Installer Report");
+
     let Cli { flake_lock_path } = Cli::parse();
     let flake_lock_path = flake_lock_path.as_path().to_str().unwrap(); // TODO: handle this better
     let flake_lock_file = read_to_string(flake_lock_path)?;

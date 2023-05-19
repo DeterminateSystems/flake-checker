@@ -30,22 +30,30 @@
         };
       });
 
-      packages = forAllSystems ({ pkgs }: {
-        default =
-          let
-            meta = (builtins.fromTOML (builtins.readFile ./Cargo.toml)).package;
-
-            rust = pkgs.makeRustPlatform {
-              cargo = pkgs.rustToolchain;
-              rustc = pkgs.rustToolchain;
+      packages = forAllSystems ({ pkgs }:
+        let
+          meta = (builtins.fromTOML (builtins.readFile ./Cargo.toml)).package;
+          rust = pkgs.makeRustPlatform {
+            cargo = pkgs.rustToolchain;
+            rustc = pkgs.rustToolchain;
+          };
+        in
+        {
+          default =
+            rust.buildRustPackage {
+              pname = meta.name;
+              version = meta.version;
+              src = ./.;
+              cargoHash = "sha256-8UWTu62VjoOJJ9UExSXnqodYYZbpPmvYLI/bvUsCZp0=";
             };
-          in
-          rust.buildRustPackage {
+
+          gha = rust.buildRustPackage {
             pname = meta.name;
             version = meta.version;
             src = ./.;
             cargoHash = "sha256-8UWTu62VjoOJJ9UExSXnqodYYZbpPmvYLI/bvUsCZp0=";
+            buildFeatures = ["gha"];
           };
-      });
+        });
     };
 }
