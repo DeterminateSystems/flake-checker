@@ -86,7 +86,6 @@ fn write_to_summary(msg: &str) {
     println!("Filepath: {filepath}");
     let mut file = OpenOptions::new()
         .write(true)
-        .create(true) // Create the file if it doesn't exist
         .open(&filepath)
         .unwrap();
     file.write_all(msg.as_bytes()).unwrap();
@@ -159,9 +158,6 @@ fn warn(path: &str, message: &str) {
 }
 
 fn main() -> Result<(), Error> {
-    #[cfg(feature = "gha")]
-    write_to_summary("# Nix Installer Report");
-
     let Cli { flake_lock_path } = Cli::parse();
     let flake_lock_path = flake_lock_path.as_path().to_str().unwrap(); // TODO: handle this better
     let flake_lock_file = read_to_string(flake_lock_path)?;
