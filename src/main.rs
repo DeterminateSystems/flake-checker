@@ -80,41 +80,49 @@ fn nixpkgs_num_days_old(timestamp: i64) -> i64 {
     Duration::seconds(diff).num_days()
 }
 
-fn check_for_outdated_nixpkgs(nodes: &HashMap<String, Node>, config: &Config) {
+fn check_for_outdated_nixpkgs(
+    flake_lock_path: &str,
+    nodes: &HashMap<String, Node>,
+    config: &Config,
+) {
     let nixpkgs_deps = nixpkgs_deps(nodes);
     for (name, dep) in nixpkgs_deps {
         if let Some(locked) = &dep.locked {
             let num_days_old = nixpkgs_num_days_old(locked.last_modified);
 
             if num_days_old > config.max_days {
-                println!(
-                    "dependency {} is {} days old, which is over the max of {}",
-                    name, num_days_old, config.max_days
+                warn(
+                    flake_lock_path,
+                    &format!(
+                        "dependency {} is {} days old, which is over the max of {}",
+                        name, num_days_old, config.max_days
+                    ),
                 );
             }
         }
     }
 }
 
-fn check_for_non_allowed_refs(nodes: &HashMap<String, Node>, config: &Config) {
+fn check_for_non_allowed_refs(
+    flake_lock_path: &str,
+    nodes: &HashMap<String, Node>,
+    config: &Config,
+) {
     let nixpkgs_deps = nixpkgs_deps(nodes);
     for (name, dep) in nixpkgs_deps {
         if let Some(original) = &dep.original {
             if let Some(ref git_ref) = original.r#ref {
                 if !config.allowed_refs.contains(git_ref) {
-                    println!(
-                        "dependency {} has a Git ref of {} which is not explicitly allowed",
-                        name, git_ref
-                    );
+                    warn(flake_lock_path, &format!("dependency {name} has a Git ref of {git_ref} which is not explicitly allowed"));
                 }
             }
         }
     }
 }
 
-fn check_flake_lock(flake_lock: &FlakeLock, config: &Config) {
-    check_for_outdated_nixpkgs(&flake_lock.nodes, config);
-    check_for_non_allowed_refs(&flake_lock.nodes, config);
+fn check_flake_lock(flake_lock_path: &str, flake_lock: &FlakeLock, config: &Config) {
+    check_for_outdated_nixpkgs(flake_lock_path, &flake_lock.nodes, config);
+    check_for_non_allowed_refs(flake_lock_path, &flake_lock.nodes, config);
 }
 
 fn nixpkgs_deps(nodes: &HashMap<String, Node>) -> HashMap<String, Node> {
@@ -125,8 +133,13 @@ fn nixpkgs_deps(nodes: &HashMap<String, Node>) -> HashMap<String, Node> {
         .collect()
 }
 
+fn warn(path: &str, message: &str) {
+    println!("::warning file={path}::{message}");
+}
+
 fn main() -> Result<(), Error> {
     let Cli { flake_lock_path } = Cli::parse();
+    let flake_lock_path = flake_lock_path.as_path().to_str().unwrap(); // TODO: handle this better
     let flake_lock_file = read_to_string(flake_lock_path)?;
     let flake_lock: FlakeLock = serde_json::from_str(&flake_lock_file)?;
 
@@ -134,7 +147,7 @@ fn main() -> Result<(), Error> {
     let config: Config =
         serde_json::from_str(config_file).expect("inline policy.json file is malformed");
 
-    check_flake_lock(&flake_lock, &config);
+    check_flake_lock(flake_lock_path, &flake_lock, &config);
 
     Ok(())
 }
