@@ -8,16 +8,6 @@ use chrono::{Duration, Utc};
 use clap::Parser;
 use serde::Deserialize;
 
-const MAX_DAYS: i64 = 30;
-const ALLOWED_REFS: &[&str; 6] = &[
-    "nixos-22.11",
-    "nixos-22.11-small",
-    "nixos-unstable",
-    "nixos-unstable-small",
-    "nixpkgs-22.11-darwin",
-    "nixpkgs-unstable",
-];
-
 /// A flake.lock checker for Nix projects.
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -70,34 +60,40 @@ struct FlakeLock {
     version: usize,
 }
 
+#[derive(Deserialize)]
+struct Config {
+    allowed_refs: Vec<String>,
+    max_days: i64,
+}
+
 fn nixpkgs_num_days_old(timestamp: i64) -> i64 {
     let now_timestamp = Utc::now().timestamp();
     let diff = now_timestamp - timestamp;
     Duration::seconds(diff).num_days()
 }
 
-fn check_for_outdated_nixpkgs(nodes: &HashMap<String, Node>) {
+fn check_for_outdated_nixpkgs(nodes: &HashMap<String, Node>, config: &Config) {
     let nixpkgs_deps = nixpkgs_deps(nodes);
     for (name, dep) in nixpkgs_deps {
         if let Some(locked) = &dep.locked {
             let num_days_old = nixpkgs_num_days_old(locked.last_modified);
 
-            if num_days_old > MAX_DAYS {
+            if num_days_old > config.max_days {
                 println!(
                     "dependency {} is {} days old, which is over the max of {}",
-                    name, num_days_old, MAX_DAYS
+                    name, num_days_old, config.max_days
                 );
             }
         }
     }
 }
 
-fn check_for_non_allowed_refs(nodes: &HashMap<String, Node>) {
+fn check_for_non_allowed_refs(nodes: &HashMap<String, Node>, config: &Config) {
     let nixpkgs_deps = nixpkgs_deps(nodes);
     for (name, dep) in nixpkgs_deps {
         if let Some(original) = &dep.original {
             if let Some(ref git_ref) = original.r#ref {
-                if !ALLOWED_REFS.contains(&git_ref.as_str()) {
+                if !config.allowed_refs.contains(&git_ref) {
                     println!(
                         "dependency {} has a Git ref of {} which is not explicitly allowed",
                         name, git_ref
@@ -108,9 +104,9 @@ fn check_for_non_allowed_refs(nodes: &HashMap<String, Node>) {
     }
 }
 
-fn check_flake_lock(flake_lock: &FlakeLock) {
-    check_for_outdated_nixpkgs(&flake_lock.nodes);
-    check_for_non_allowed_refs(&flake_lock.nodes);
+fn check_flake_lock(flake_lock: &FlakeLock, config: &Config) {
+    check_for_outdated_nixpkgs(&flake_lock.nodes, config);
+    check_for_non_allowed_refs(&flake_lock.nodes, config);
 }
 
 fn nixpkgs_deps(nodes: &HashMap<String, Node>) -> HashMap<String, Node> {
@@ -123,9 +119,13 @@ fn nixpkgs_deps(nodes: &HashMap<String, Node>) -> HashMap<String, Node> {
 
 fn main() -> Result<(), Error> {
     let Cli { flake_lock_path } = Cli::parse();
-    let file = read_to_string(flake_lock_path)?;
-    let flake_lock: FlakeLock = serde_json::from_str(&file)?;
-    check_flake_lock(&flake_lock);
+    let flake_lock_file = read_to_string(flake_lock_path)?;
+    let flake_lock: FlakeLock = serde_json::from_str(&flake_lock_file)?;
+
+    let config_file = include_str!("policy.json");
+    let config: Config = serde_json::from_str(&config_file)?;
+
+    check_flake_lock(&flake_lock, &config);
 
     Ok(())
 }
