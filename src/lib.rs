@@ -17,6 +17,6 @@ pub struct Data {
 }
 
 #[derive(Deserialize)]
-pub struct TopLevel {
+pub struct NixOsRefsQuery {
     pub data: Data,
 }

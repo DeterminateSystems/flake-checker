@@ -11,14 +11,14 @@ use clap::Parser;
 use handlebars::Handlebars;
 use serde::{Deserialize, Serialize};
 
-use flake_checker::TopLevel;
+use flake_checker::NixOsRefsQuery;
 
 const ALLOWED_REFS_ENDPOINT: &str = "https://monitoring.nixos.org/prometheus/api/v1/query?query=channel_revision";
 const MAX_DAYS: i64 = 30;
 
 fn get_allowed_refs() -> Result<Vec<String>, FlakeCheckerError> {
-    let resp: TopLevel = reqwest::blocking::get(ALLOWED_REFS_ENDPOINT)?
-        .json::<TopLevel>()?;
+    let resp = reqwest::blocking::get(ALLOWED_REFS_ENDPOINT)?
+        .json::<NixOsRefsQuery>()?;
 
     let mut branches = vec![];
     for result in resp.data.result {
@@ -81,7 +81,7 @@ enum Input {
 #[derive(Clone, Deserialize)]
 #[serde(untagged)]
 enum Node {
-    Dependency(DependencyNode),
+    Dependency(Box<DependencyNode>),
     Root(RootNode),
 }
 
