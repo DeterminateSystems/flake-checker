@@ -37,6 +37,8 @@ enum IssueKind {
     Disallowed,
     #[serde(rename = "outdated")]
     Outdated,
+    #[serde(rename = "non-upstream")]
+    NonUpstream,
 }
 
 pub struct Summary {
@@ -45,7 +47,7 @@ pub struct Summary {
 
 impl Summary {
     pub fn generate_markdown(&self) {
-        let summary_md = if self.issues.is_empty() {
+        let summary_md = if !self.issues.is_empty() {
             let mut data = BTreeMap::new();
             data.insert("issues", &self.issues);
             let mut handlebars = Handlebars::new();
@@ -98,6 +100,18 @@ impl FlakeLock {
                         message: format!(
                             "The flake input named `{name}` hasn't been updated in **{num_days_old}** days, which is over the allowed {MAX_DAYS}. Consider automating `flake.lock` updates with the [`update-flake-lock` Action](https://github.com/DeterminateSystems/update-flake-lock).",
                         ),
+                    });
+                }
+
+                // Check that the GitHub owner is NixOS
+                let owner = dep.original.owner;
+                if owner.to_lowercase() != "nixos" {
+                    issues.push(Issue {
+                        dependency: name.clone(),
+                        kind: IssueKind::NonUpstream,
+                        message: format!("
+                            The flake input named `{name}` uses a version of Nixpkgs that comes from the `{owner}` organization instead of upstream. Consider switching to the upstream `NixOS` organization.
+                        "),
                     });
                 }
 
