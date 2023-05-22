@@ -1,7 +1,7 @@
-This Markdown document provides a neat and tidy summary of this Determinate Nix Installer run.
+Scanning your `flake.lock` has turned up a few issues we recommend looking into:
 
 Type | Description
 :----|:-----------
 {{#each issues}}
-`{{ this.kind }}` | {{{ this.message }}}
+`{{ this.kind }}` {{#if (eq this.kind "outdated")}}:clock:{{/if}}{{#if (eq this.kind "disallowed")}}:x:{{/if}} | {{{ this.message }}}
 {{/each}}

@@ -107,10 +107,10 @@ struct FlakeLock {
 impl FlakeLock {
     fn nixpkgs_deps(&self) -> HashMap<String, Node> {
         self.nodes
-        .iter()
-        .filter(|(_, v)| v.is_nixpkgs())
-        .map(|(k, v)| (k.clone(), v.clone()))
-        .collect()
+            .iter()
+            .filter(|(_, v)| v.is_nixpkgs())
+            .map(|(k, v)| (k.clone(), v.clone()))
+            .collect()
     }
 
     fn check(&self) -> Vec<Issue> {
@@ -176,15 +176,20 @@ struct Summary {
 
 impl Summary {
     fn generate_markdown(&self) {
-        let mut data = BTreeMap::new();
-        data.insert("issues", &self.issues);
-        let mut handlebars = Handlebars::new();
-        handlebars
-            .register_template_string("summary.md", include_str!("./templates/summary.md"))
-            .expect("summary template not found");
-        let summary_md = handlebars
-            .render("summary.md", &data)
-            .expect("markdown render error");
+        let summary_md = if self.issues.len() > 0 {
+            let mut data = BTreeMap::new();
+            data.insert("issues", &self.issues);
+            let mut handlebars = Handlebars::new();
+            handlebars
+                .register_template_string("summary.md", include_str!("./templates/summary.md"))
+                .expect("summary template not found");
+            handlebars
+                .render("summary.md", &data)
+                .expect("markdown render error")
+        } else {
+            String::from("Your `flake.lock` has a clean bill of health :healthy:")
+        };
+
         let summary_md_filepath =
             std::env::var("GITHUB_STEP_SUMMARY").expect("summary markdown file not found");
         let mut summary_md_file = OpenOptions::new()
