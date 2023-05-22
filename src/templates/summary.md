@@ -1,17 +1,15 @@
 # Nix flake dependency check
 
-:warning: Scanning your `flake.lock` has turned up a few issues we recommend looking into:
+:warning: Scanning your `flake.lock` has turned up a few issues we recommend looking into.
 
 {{#if has_disallowed}}
----
-
 ## Non-supported branches
 
 {{#each disallowed}}
 * `{{this.details.input}}` uses ref `{{this.details.ref}}`
 {{/each}}
 
-### :toolbox: What to do
+### What to do :hammer:
 
 Use one of these branches instead:
 
@@ -20,7 +18,9 @@ Use one of these branches instead:
 Here's an example:
 
 ```nix
-inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+{
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+}
 ```
 
 <details>
@@ -30,17 +30,15 @@ inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 {{/if}}
 
 {{#if has_outdated}}
----
-
 ## Outdated Nixpkgs dependencies
 
 {{#each outdated}}
 * `{{this.details.input}}` is **{{this.details.num_days_old}}** days old
 {{/each}}
 
-> The maximum age is **{{max_days}}** days.
+The maximum recommended age is **{{max_days}}** days.
 
-### :toolbox: What to do
+### What to do :hammer:
 
 Use the [`update-flake-lock`][flake-lock-action] GitHub Action to automate updates.
 
@@ -51,21 +49,21 @@ Use the [`update-flake-lock`][flake-lock-action] GitHub Action to automate updat
 {{/if}}
 
 {{#if has_non_upstream}}
----
-
 ## Non-upstream Nixpkgs dependencies
 
 {{#each non_upstream}}
 * `{{this.details.input}}` has `{{this.details.owner}}` as an owner rather than `NixOS`
 {{/each}}
 
-### :toolbox: What to do
+### What to do :hammer:
 
 Use a Nixpkgs dependency from the [`NixOS`][nixoks] org.
 Here's an example:
 
 ```nix
-inputs.nixpkgs.url = "github:NixOS/nixpkgs";
+{
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs";
+}
 ```
 
 <details>
@@ -74,5 +72,5 @@ inputs.nixpkgs.url = "github:NixOS/nixpkgs";
 </details>
 {{/if}}
 
-[flake-lock-action]: TODO
+[flake-lock-action]: https://github.com/determinateSystems/update-flake-lock
 [nixos]: https://github.com/nixos
