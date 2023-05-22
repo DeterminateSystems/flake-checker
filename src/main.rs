@@ -104,18 +104,36 @@ struct FlakeLock {
     version: usize,
 }
 
-trait Check {
-    fn run(&self, flake_lock: &FlakeLock) -> Vec<Issue>;
-}
+impl FlakeLock {
+    fn nixpkgs_deps(&self) -> HashMap<String, Node> {
+        self.nodes
+        .iter()
+        .filter(|(_, v)| v.is_nixpkgs())
+        .map(|(k, v)| (k.clone(), v.clone()))
+        .collect()
+    }
 
-struct AllowedRefs;
-
-impl Check for AllowedRefs {
-    fn run(&self, flake_lock: &FlakeLock) -> Vec<Issue> {
+    fn check(&self) -> Vec<Issue> {
         let mut issues = vec![];
-        let nixpkgs_deps = nixpkgs_deps(&flake_lock.nodes);
-        for (name, dep) in nixpkgs_deps {
+
+        for (name, dep) in self.nixpkgs_deps() {
             if let Node::Dependency(dep) = dep {
+                // Check if outdated
+                let now_timestamp = Utc::now().timestamp();
+                let diff = now_timestamp - dep.locked.last_modified;
+                let num_days_old = Duration::seconds(diff).num_days();
+
+                if num_days_old > MAX_DAYS {
+                    issues.push(Issue {
+                        dependency: name.clone(),
+                        kind: IssueKind::Outdated,
+                        message: format!(
+                            "The flake input named `{name}` hasn't been updated in **{num_days_old}** days, which is over the allowed {MAX_DAYS}. Consider automating `flake.lock` updates with the [`update-flake-lock` Action](https://github.com/DeterminateSystems/update-flake-lock).",
+                        ),
+                    });
+                }
+
+                // Check if not explicitly supported
                 if let Some(ref git_ref) = dep.original.git_ref {
                     if !ALLOWED_REFS.contains(&git_ref.as_str()) {
                         let supported_ref_names = ALLOWED_REFS.map(|r| format!("`{r}`")).join(", ");
@@ -130,58 +148,6 @@ impl Check for AllowedRefs {
         }
         issues
     }
-}
-
-struct MaxAge;
-
-impl Check for MaxAge {
-    fn run(&self, flake_lock: &FlakeLock) -> Vec<Issue> {
-        let mut issues = vec![];
-        let nixpkgs_deps = nixpkgs_deps(&flake_lock.nodes);
-        for (name, dep) in nixpkgs_deps {
-            if let Node::Dependency(dep) = dep {
-                let now_timestamp = Utc::now().timestamp();
-                let diff = now_timestamp - dep.locked.last_modified;
-                let num_days_old = Duration::seconds(diff).num_days();
-
-                if num_days_old > MAX_DAYS {
-                    issues.push(Issue {
-                        dependency: name.clone(),
-                        kind: IssueKind::Outdated,
-                        message: format!(
-                            "The flake input named `{name}` hasn't been updated in **{num_days_old}** days, which is over the allowed {MAX_DAYS}. Consider automating `flake.lock` updates with the [`update-flake-lock` Action](https://github.com/DeterminateSystems/update-flake-lock).",
-
-                        ),
-                    });
-                }
-            }
-        }
-        issues
-    }
-}
-
-#[derive(Deserialize)]
-struct Config {
-    allowed_refs: Vec<String>,
-    max_days: i64,
-}
-
-fn check_flake_lock(flake_lock: &FlakeLock) -> Vec<Issue> {
-    let mut is1 = MaxAge.run(flake_lock);
-    let mut is2 = AllowedRefs.run(flake_lock);
-
-    // TODO: find a more elegant way to concat results
-    is1.append(&mut is2);
-    is1
-}
-
-fn nixpkgs_deps(nodes: &HashMap<String, Node>) -> HashMap<String, Node> {
-    // TODO: select based on locked.type="github" and original.repo="nixpkgs"
-    nodes
-        .iter()
-        .filter(|(_, v)| v.is_nixpkgs())
-        .map(|(k, v)| (k.clone(), v.clone()))
-        .collect()
 }
 
 // TODO: re-introduce logging
@@ -240,8 +206,7 @@ fn main() -> Result<(), FlakeCheckerError> {
         .expect("flake.lock file not found based on supplied path"); // TODO: handle this better
     let flake_lock_file = read_to_string(flake_lock_path)?;
     let flake_lock: FlakeLock = serde_json::from_str(&flake_lock_file)?;
-
-    let issues = check_flake_lock(&flake_lock);
+    let issues = flake_lock.check();
     let summary = Summary { issues };
     summary.generate_markdown();
 
