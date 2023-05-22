@@ -19,7 +19,6 @@ const ALLOWED_REFS: &[&str; 6] = &[
 ];
 const MAX_DAYS: i64 = 30;
 
-
 /// A flake.lock checker for Nix projects.
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -109,9 +108,9 @@ trait Check {
     fn run(&self, flake_lock: &FlakeLock) -> Vec<Issue>;
 }
 
-struct Refs;
+struct AllowedRefs;
 
-impl Check for Refs {
+impl Check for AllowedRefs {
     fn run(&self, flake_lock: &FlakeLock) -> Vec<Issue> {
         let mut issues = vec![];
         let nixpkgs_deps = nixpkgs_deps(&flake_lock.nodes);
@@ -119,10 +118,12 @@ impl Check for Refs {
             if let Node::Dependency(dep) = dep {
                 if let Some(ref git_ref) = dep.original.git_ref {
                     if !ALLOWED_REFS.contains(&git_ref.as_str()) {
+                        let supported_ref_names = ALLOWED_REFS.map(|r| format!("`{r}`")).join(", ");
                         issues.push(Issue {
-                        kind: IssueKind::Disallowed,
-                        message: format!("dependency `{name}` has a Git ref of `{git_ref}` which is not explicitly allowed"),
-                    });
+                            dependency: name.clone(),
+                            kind: IssueKind::Disallowed,
+                            message: format!("The flake input named `{name}` has a Git ref of `{git_ref}` which is not a supported branch. Consider updating to one of these: {supported_ref_names}."),
+                        });
                     }
                 }
             }
@@ -145,10 +146,11 @@ impl Check for MaxAge {
 
                 if num_days_old > MAX_DAYS {
                     issues.push(Issue {
+                        dependency: name.clone(),
                         kind: IssueKind::Outdated,
                         message: format!(
-                            "dependency `{name}` is **{num_days_old}** days old, which is over the max of **{}**",
-                            MAX_DAYS
+                            "The flake input named `{name}` hasn't been updated in **{num_days_old}** days, which is over the allowed {MAX_DAYS}. Consider automating `flake.lock` updates with the [`update-flake-lock` Action](https://github.com/DeterminateSystems/update-flake-lock).",
+
                         ),
                     });
                 }
@@ -165,9 +167,8 @@ struct Config {
 }
 
 fn check_flake_lock(flake_lock: &FlakeLock) -> Vec<Issue> {
-    let mut is1 = (MaxAge).run(flake_lock);
-
-    let mut is2 = (Refs).run(flake_lock);
+    let mut is1 = MaxAge.run(flake_lock);
+    let mut is2 = AllowedRefs.run(flake_lock);
 
     // TODO: find a more elegant way to concat results
     is1.append(&mut is2);
@@ -198,6 +199,7 @@ enum IssueKind {
 
 #[derive(Serialize)]
 struct Issue {
+    dependency: String,
     kind: IssueKind,
     message: String,
 }

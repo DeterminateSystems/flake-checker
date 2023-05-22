@@ -3,5 +3,5 @@ This Markdown document provides a neat and tidy summary of this Determinate Nix 
 Type | Description
 :----|:-----------
 {{#each issues}}
-`{{ this.kind }}` | {{ this.message }}
+`{{ this.kind }}` | {{{ this.message }}}
 {{/each}}
