@@ -1,13 +1,14 @@
 #![allow(dead_code)]
 
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::fs::{read_to_string, OpenOptions};
 use std::io::Write;
 use std::path::PathBuf;
 
 use chrono::{Duration, Utc};
 use clap::Parser;
-use serde::Deserialize;
+use handlebars::Handlebars;
+use serde::{Deserialize, Serialize};
 
 /// A flake.lock checker for Nix projects.
 #[derive(Parser)]
@@ -93,57 +94,57 @@ fn write_to_summary(msg: &str) {
 }
 
 fn check_for_outdated_nixpkgs(
-    flake_lock_path: &str,
     nodes: &HashMap<String, Node>,
     config: &Config,
-) {
+) -> Vec<Issue> {
+    let mut issues = vec![];
     let nixpkgs_deps = nixpkgs_deps(nodes);
     for (name, dep) in nixpkgs_deps {
         if let Some(locked) = &dep.locked {
             let num_days_old = nixpkgs_num_days_old(locked.last_modified);
 
             if num_days_old > config.max_days {
-                #[cfg(feature = "gha")]
-                write_to_summary(&format!(
-                    "* error: dependency `{name}` is {num_days_old} days old, which is over the max of {}\n",
-                    config.max_days
-                ));
-
-                warn(
-                    flake_lock_path,
-                    &format!(
+                issues.push(Issue {
+                    kind: IssueKind::Outdated,
+                    message: format!(
                         "dependency {name} is {num_days_old} days old, which is over the max of {}",
                         config.max_days
-                    ),
-                );
+                    )
+                });
             }
         }
     }
+    issues
 }
 
 fn check_for_non_allowed_refs(
-    flake_lock_path: &str,
     nodes: &HashMap<String, Node>,
     config: &Config,
-) {
+) -> Vec<Issue> {
+    let mut issues = vec![];
     let nixpkgs_deps = nixpkgs_deps(nodes);
     for (name, dep) in nixpkgs_deps {
         if let Some(original) = &dep.original {
             if let Some(ref git_ref) = original.r#ref {
                 if !config.allowed_refs.contains(git_ref) {
-                    #[cfg(feature = "gha")]
-                    write_to_summary(&format!("* error: dependency `{name}` has a git ref `{git_ref}` that isn't explicitly allowed\n"));
+                    issues.push(Issue {
+                        kind: IssueKind::Disallowed,
+                        message: format!("dependency {name} has a Git ref of {git_ref} which is not explicitly allowed"),
+                    });
 
-                    warn(flake_lock_path, &format!("dependency {name} has a Git ref of {git_ref} which is not explicitly allowed"));
                 }
             }
         }
     }
+    issues
 }
 
-fn check_flake_lock(flake_lock_path: &str, flake_lock: &FlakeLock, config: &Config) {
-    check_for_outdated_nixpkgs(flake_lock_path, &flake_lock.nodes, config);
-    check_for_non_allowed_refs(flake_lock_path, &flake_lock.nodes, config);
+fn check_flake_lock(flake_lock: &FlakeLock, config: &Config) -> Vec<Issue> {
+    let mut is1 = check_for_outdated_nixpkgs(&flake_lock.nodes, config);
+    let mut is2 = check_for_non_allowed_refs(&flake_lock.nodes, config);
+
+    is1.append(&mut is2); // TODO: find a more elegant way to do this
+    is1
 }
 
 fn nixpkgs_deps(nodes: &HashMap<String, Node>) -> HashMap<String, Node> {
@@ -158,9 +159,40 @@ fn warn(path: &str, message: &str) {
     println!("::warning file={path}::{message}");
 }
 
+#[derive(Serialize)]
+enum IssueKind {
+    Disallowed,
+    Outdated,
+}
+
+#[derive(Serialize)]
+struct Issue {
+    kind: IssueKind,
+    message: String,
+}
+
+struct Summary {
+    issues: Vec<Issue>,
+}
+
+impl Summary {
+    fn generate_markdown(&self) -> String {
+        let mut data = BTreeMap::new();
+        data.insert("issues", &self.issues);
+        let mut handlebars = Handlebars::new();
+        handlebars.register_template_string("summary.md", include_str!("./templates/summary.md")).unwrap();
+        handlebars.render("summary.md", &data).unwrap()
+    }
+}
+
 fn main() -> Result<(), Error> {
-    #[cfg(feature = "gha")]
-    write_to_summary("This Markdown document provides a neat and tidy summary of this Determinate Nix Installer run.\n\n");
+    let filepath = std::env::var("GITHUB_STEP_SUMMARY").unwrap();
+    println!("Filepath: {filepath}");
+    let mut summary_md_file = OpenOptions::new()
+        .append(true)
+        .create(true)
+        .open(&filepath)
+        .unwrap();
 
     let Cli { flake_lock_path } = Cli::parse();
     let flake_lock_path = flake_lock_path.as_path().to_str().unwrap(); // TODO: handle this better
@@ -171,7 +203,12 @@ fn main() -> Result<(), Error> {
     let config: Config =
         serde_json::from_str(config_file).expect("inline policy.json file is malformed");
 
-    check_flake_lock(flake_lock_path, &flake_lock, &config);
+    let issues = check_flake_lock(&flake_lock, &config);
+    let summary = Summary { issues };
+    let summary_md = summary.generate_markdown();
+
+    summary_md_file.write_all(summary_md.as_bytes()).unwrap();
+
 
     Ok(())
 }
