@@ -73,66 +73,87 @@ struct FlakeLock {
     version: usize,
 }
 
+trait Check {
+    fn run(&self, flake_lock: &FlakeLock) -> Vec<Issue>;
+}
+
+struct Refs {
+    allowed_refs: Vec<String>,
+}
+
+impl Check for Refs {
+    fn run(&self, flake_lock: &FlakeLock) -> Vec<Issue> {
+        let mut issues = vec![];
+        let nixpkgs_deps = nixpkgs_deps(&flake_lock.nodes);
+        for (name, dep) in nixpkgs_deps {
+            if let Some(original) = &dep.original {
+                if let Some(ref git_ref) = original.git_ref {
+                    if !self.allowed_refs.contains(git_ref) {
+                        issues.push(Issue {
+                        kind: IssueKind::Disallowed,
+                        message: format!("dependency `{name}` has a Git ref of `{git_ref}` which is not explicitly allowed"),
+                    });
+                    }
+                }
+            }
+        }
+        issues
+    }
+}
+
+struct MaxAge {
+    max_days: i64,
+}
+
+impl Check for MaxAge {
+    fn run(&self, flake_lock: &FlakeLock) -> Vec<Issue> {
+        let mut issues = vec![];
+        let nixpkgs_deps = nixpkgs_deps(&flake_lock.nodes);
+        for (name, dep) in nixpkgs_deps {
+            if let Some(locked) = &dep.locked {
+                let now_timestamp = Utc::now().timestamp();
+                let diff = now_timestamp - locked.last_modified;
+                let num_days_old = Duration::seconds(diff).num_days();
+
+                if num_days_old > self.max_days {
+                    issues.push(Issue {
+                        kind: IssueKind::Outdated,
+                        message: format!(
+                            "dependency `{name}` is **{num_days_old}** days old, which is over the max of **{}**",
+                            self.max_days
+                        ),
+                    });
+                }
+            }
+        }
+        issues
+    }
+}
+
 #[derive(Deserialize)]
 struct Config {
     allowed_refs: Vec<String>,
     max_days: i64,
 }
 
-fn nixpkgs_num_days_old(timestamp: i64) -> i64 {
-    let now_timestamp = Utc::now().timestamp();
-    let diff = now_timestamp - timestamp;
-    Duration::seconds(diff).num_days()
-}
-
-fn check_for_outdated_nixpkgs(nodes: &HashMap<String, Node>, config: &Config) -> Vec<Issue> {
-    let mut issues = vec![];
-    let nixpkgs_deps = nixpkgs_deps(nodes);
-    for (name, dep) in nixpkgs_deps {
-        if let Some(locked) = &dep.locked {
-            let num_days_old = nixpkgs_num_days_old(locked.last_modified);
-
-            if num_days_old > config.max_days {
-                issues.push(Issue {
-                    kind: IssueKind::Outdated,
-                    message: format!(
-                        "dependency `{name}` is **{num_days_old}** days old, which is over the max of **{}**",
-                        config.max_days
-                    ),
-                });
-            }
-        }
-    }
-    issues
-}
-
-fn check_for_non_allowed_refs(nodes: &HashMap<String, Node>, config: &Config) -> Vec<Issue> {
-    let mut issues = vec![];
-    let nixpkgs_deps = nixpkgs_deps(nodes);
-    for (name, dep) in nixpkgs_deps {
-        if let Some(original) = &dep.original {
-            if let Some(ref git_ref) = original.git_ref {
-                if !config.allowed_refs.contains(git_ref) {
-                    issues.push(Issue {
-                        kind: IssueKind::Disallowed,
-                        message: format!("dependency `{name}` has a Git ref of `{git_ref}` which is not explicitly allowed"),
-                    });
-                }
-            }
-        }
-    }
-    issues
-}
-
 fn check_flake_lock(flake_lock: &FlakeLock, config: &Config) -> Vec<Issue> {
-    let mut is1 = check_for_outdated_nixpkgs(&flake_lock.nodes, config);
-    let mut is2 = check_for_non_allowed_refs(&flake_lock.nodes, config);
+    let mut is1 = (MaxAge {
+        max_days: config.max_days,
+    })
+    .run(flake_lock);
 
-    is1.append(&mut is2); // TODO: find a more elegant way to do this
+    let mut is2 = (Refs {
+        allowed_refs: config.allowed_refs.to_vec(),
+    })
+    .run(flake_lock);
+
+    // TODO: find a more elegant way to concat results
+    is1.append(&mut is2);
     is1
 }
 
 fn nixpkgs_deps(nodes: &HashMap<String, Node>) -> HashMap<String, Node> {
+    // TODO: select based on locked.type="github" and original.repo="nixpkgs"
     nodes
         .iter()
         .filter(|(k, _)| k.starts_with("nixpkgs"))
@@ -140,6 +161,7 @@ fn nixpkgs_deps(nodes: &HashMap<String, Node>) -> HashMap<String, Node> {
         .collect()
 }
 
+// TODO: re-introduce logging
 fn warn(path: &str, message: &str) {
     println!("::warning file={path}::{message}");
 }
