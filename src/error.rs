@@ -1,4 +1,3 @@
-
 #[derive(Debug, thiserror::Error)]
 pub enum FlakeCheckerError {
     #[error("couldn't access flake.lock: {0}")]

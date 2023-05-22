@@ -93,15 +93,24 @@ impl Summary {
     }
 
     fn disallowed(&self) -> Vec<&Issue> {
-        self.issues.iter().filter(|i| matches!(i.kind, IssueKind::Disallowed)).collect()
+        self.issues
+            .iter()
+            .filter(|i| matches!(i.kind, IssueKind::Disallowed))
+            .collect()
     }
 
     fn outdated(&self) -> Vec<&Issue> {
-        self.issues.iter().filter(|i| matches!(i.kind, IssueKind::Outdated)).collect()
+        self.issues
+            .iter()
+            .filter(|i| matches!(i.kind, IssueKind::Outdated))
+            .collect()
     }
 
     fn non_upstream(&self) -> Vec<&Issue> {
-        self.issues.iter().filter(|i| matches!(i.kind, IssueKind::NonUpstream)).collect()
+        self.issues
+            .iter()
+            .filter(|i| matches!(i.kind, IssueKind::NonUpstream))
+            .collect()
     }
 }
 
@@ -119,8 +128,8 @@ impl FlakeLock {
 
         for (name, dep) in self.nixpkgs_deps() {
             if let Node::Dependency(dep) = dep {
-                 // Check if not explicitly supported
-                 if let Some(ref git_ref) = dep.original.git_ref {
+                // Check if not explicitly supported
+                if let Some(ref git_ref) = dep.original.git_ref {
                     if !ALLOWED_REFS.contains(&git_ref.as_str()) {
                         issues.push(Issue {
                             dependency: name.clone(),
