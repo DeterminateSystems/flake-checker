@@ -82,21 +82,7 @@ fn nixpkgs_num_days_old(timestamp: i64) -> i64 {
     Duration::seconds(diff).num_days()
 }
 
-fn write_to_summary(msg: &str) {
-    let filepath = std::env::var("GITHUB_STEP_SUMMARY").unwrap();
-    println!("Filepath: {filepath}");
-    let mut file = OpenOptions::new()
-        .append(true)
-        .create(true)
-        .open(&filepath)
-        .unwrap();
-    file.write_all(msg.as_bytes()).unwrap();
-}
-
-fn check_for_outdated_nixpkgs(
-    nodes: &HashMap<String, Node>,
-    config: &Config,
-) -> Vec<Issue> {
+fn check_for_outdated_nixpkgs(nodes: &HashMap<String, Node>, config: &Config) -> Vec<Issue> {
     let mut issues = vec![];
     let nixpkgs_deps = nixpkgs_deps(nodes);
     for (name, dep) in nixpkgs_deps {
@@ -109,7 +95,7 @@ fn check_for_outdated_nixpkgs(
                     message: format!(
                         "dependency {name} is {num_days_old} days old, which is over the max of {}",
                         config.max_days
-                    )
+                    ),
                 });
             }
         }
@@ -117,10 +103,7 @@ fn check_for_outdated_nixpkgs(
     issues
 }
 
-fn check_for_non_allowed_refs(
-    nodes: &HashMap<String, Node>,
-    config: &Config,
-) -> Vec<Issue> {
+fn check_for_non_allowed_refs(nodes: &HashMap<String, Node>, config: &Config) -> Vec<Issue> {
     let mut issues = vec![];
     let nixpkgs_deps = nixpkgs_deps(nodes);
     for (name, dep) in nixpkgs_deps {
@@ -131,7 +114,6 @@ fn check_for_non_allowed_refs(
                         kind: IssueKind::Disallowed,
                         message: format!("dependency {name} has a Git ref of {git_ref} which is not explicitly allowed"),
                     });
-
                 }
             }
         }
@@ -180,31 +162,41 @@ impl Summary {
         let mut data = BTreeMap::new();
         data.insert("issues", &self.issues);
         let mut handlebars = Handlebars::new();
-        handlebars.register_template_string("summary.md", include_str!("./templates/summary.md")).unwrap();
-        let summary_md = handlebars.render("summary.md", &data).unwrap();
-        let summary_md_filepath = std::env::var("GITHUB_STEP_SUMMARY").unwrap();
+        handlebars
+            .register_template_string("summary.md", include_str!("./templates/summary.md"))
+            .expect("summary template not found");
+        let summary_md = handlebars
+            .render("summary.md", &data)
+            .expect("markdown render error");
+        let summary_md_filepath =
+            std::env::var("GITHUB_STEP_SUMMARY").expect("summary markdown file not found");
         let mut summary_md_file = OpenOptions::new()
             .append(true)
             .create(true)
-            .open(&summary_md_filepath)
-            .unwrap();
-        summary_md_file.write_all(summary_md.as_bytes()).unwrap();
+            .open(summary_md_filepath)
+            .expect("error creating/reading summary markdown file");
+        summary_md_file
+            .write_all(summary_md.as_bytes())
+            .expect("error writing summary markdown to file");
     }
 }
 
 fn main() -> Result<(), Error> {
     let Cli { flake_lock_path } = Cli::parse();
-    let flake_lock_path = flake_lock_path.as_path().to_str().unwrap(); // TODO: handle this better
+    let flake_lock_path = flake_lock_path
+        .as_path()
+        .to_str()
+        .expect("flake.lock file not found based on supplied path"); // TODO: handle this better
     let flake_lock_file = read_to_string(flake_lock_path)?;
     let flake_lock: FlakeLock = serde_json::from_str(&flake_lock_file)?;
 
-    let config_file = include_str!("policy.json");
+    let config_file = include_str!("./policy.json");
     let config: Config =
         serde_json::from_str(config_file).expect("inline policy.json file is malformed");
 
     let issues = check_flake_lock(&flake_lock, &config);
     let summary = Summary { issues };
-    let _ = summary.generate_markdown();
+    summary.generate_markdown();
 
     Ok(())
 }
