@@ -1,11 +1,12 @@
 #![allow(dead_code)]
-use std::collections::{BTreeMap, HashMap};
+use std::collections::HashMap;
 use std::fs::OpenOptions;
 use std::io::Write;
 
 use chrono::{Duration, Utc};
 use handlebars::Handlebars;
 use serde::{Deserialize, Serialize};
+use serde_json::json;
 
 const ALLOWED_REFS: &[&str; 6] = &[
     "nixos-22.11",
@@ -48,8 +49,18 @@ pub struct Summary {
 impl Summary {
     pub fn generate_markdown(&self) {
         let summary_md = if !self.issues.is_empty() {
-            let mut data = BTreeMap::new();
-            data.insert("issues", &self.issues);
+            // TODO: make this more elegant
+            let has_disallowed = !&self.issues.iter().filter(|i| matches!(i.kind, IssueKind::Disallowed)).collect::<Vec<_>>().is_empty();
+            let has_outdated = !&self.issues.iter().filter(|i| matches!(i.kind, IssueKind::Outdated)).collect::<Vec<_>>().is_empty();
+            let has_non_upstream = !&self.issues.iter().filter(|i| matches!(i.kind, IssueKind::NonUpstream)).collect::<Vec<_>>().is_empty();
+
+            let data = json!({
+                "issues": &self.issues,
+                "has_disallowed": has_disallowed,
+                "has_outdated": has_outdated,
+                "has_non_upstream": has_non_upstream,
+            });
+
             let mut handlebars = Handlebars::new();
             handlebars
                 .register_template_string("summary.md", include_str!("./templates/summary.md"))
