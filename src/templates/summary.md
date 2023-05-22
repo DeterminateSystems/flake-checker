@@ -1,7 +1,9 @@
-Scanning your `flake.lock` has turned up a few issues we recommend looking into:
+:warning: Scanning your `flake.lock` has turned up a few issues we recommend looking into:
 
 {{#if has_disallowed}}
-:warning: **Warning**! We found some non-supported branches:
+---
+
+We found some non-supported branches:
 
 {{#each disallowed}}
 * `{{this.details.input}}` uses ref `{{this.details.ref}}`
@@ -18,7 +20,9 @@ Use one of these instead:
 {{/if}}
 
 {{#if has_outdated}}
-:warning: **Warning**! We found some outdated Nixpkgs dependencies:
+---
+
+We found some outdated Nixpkgs dependencies:
 
 {{#each outdated}}
 * `{{this.details.input}}` is **{{this.details.num_days_old}}** days old
@@ -30,10 +34,14 @@ The maximum age is **{{max_days}}** days.
   <summary>Why keeping Nix dependencies up to date is important</summary>
   Insert info here.
 </details>
+
+{{#if has_non_upstream }}---{{/if}}
 {{/if}}
 
 {{#if has_non_upstream}}
-:warning: **Warning**! We found some non-upstream Nixpkgs dependencies:
+---
+
+We found some non-upstream Nixpkgs dependencies:
 
 {{#each non_upstream}}
 * `{{this.details.input}}` has `{{this.details.owner}}` as an owner rather than `NixOS`
