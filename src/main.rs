@@ -13,7 +13,8 @@ use serde::{Deserialize, Serialize};
 
 use flake_checker::TopLevel;
 
-const ALLOWED_REFS_ENDPOINT: &str = "hhttps://monitoring.nixos.org/prometheus/api/v1/query?query=channel_revision";
+const ALLOWED_REFS_ENDPOINT: &str = "https://monitoring.nixos.org/prometheus/api/v1/query?query=channel_revision";
+const MAX_DAYS: i64 = 30;
 
 fn get_allowed_refs() -> Result<Vec<String>, FlakeCheckerError> {
     let resp: TopLevel = reqwest::blocking::get(ALLOWED_REFS_ENDPOINT)?
@@ -25,7 +26,6 @@ fn get_allowed_refs() -> Result<Vec<String>, FlakeCheckerError> {
             branches.push(result.metric.channel);
         }
     }
-    println!("branches: {:?}", branches);
     Ok(branches)
 }
 
@@ -126,7 +126,6 @@ struct MaxAge;
 
 impl Check for MaxAge {
     fn run(&self, flake_lock: &FlakeLock) -> Vec<Issue> {
-        let max_days = 30;
         let mut issues = vec![];
         let nixpkgs_deps = nixpkgs_deps(&flake_lock.nodes);
         for (name, dep) in nixpkgs_deps {
@@ -135,12 +134,12 @@ impl Check for MaxAge {
                 let diff = now_timestamp - locked.last_modified;
                 let num_days_old = Duration::seconds(diff).num_days();
 
-                if num_days_old > max_days {
+                if num_days_old > MAX_DAYS {
                     issues.push(Issue {
                         kind: IssueKind::Outdated,
                         message: format!(
                             "dependency `{name}` is **{num_days_old}** days old, which is over the max of **{}**",
-                            max_days
+                            MAX_DAYS
                         ),
                     });
                 }

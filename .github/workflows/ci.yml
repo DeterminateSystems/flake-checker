@@ -7,12 +7,12 @@ on:
 
 jobs:
   check-flake:
-    name: Check flake.lock
+    name: Check flake.lock test
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@v2
-      - run: |
-          nix develop -c get-refs
+      - name: Check flake.lock
+        run: |
           nix develop -c cargo run -- ./flake.bad.lock
