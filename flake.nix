@@ -10,6 +10,13 @@
         inputs.rust-overlay.overlays.default
         (final: prev: {
           rustToolchain = prev.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
+
+          get-refs = prev.writeScriptBin "get-refs" ''
+            ${prev.curl}/bin/curl --fail --silent \
+              'https://monitoring.nixos.org/prometheus/api/v1/query?query=channel_revision' \
+              | ${prev.jq}/bin/jq -r '{ "allowed_branches": [(.data.result[] | select(.metric.current == "1") | .metric.channel)] | sort, "max_days": 30 }' \
+              > src/policy.json
+          '';
         })
       ];
       systems = [ "aarch64-linux" "aarch64-darwin" "x86_64-linux" "x86_64-darwin" ];
@@ -26,6 +33,9 @@
             cargo-edit
             cargo-watch
             rust-analyzer
+
+            # Helpers
+            get-refs
           ];
         };
       });
