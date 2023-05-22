@@ -29,7 +29,7 @@ pub struct FlakeLock {
 pub struct Issue {
     dependency: String,
     kind: IssueKind,
-    message: String,
+    details: serde_json::Value,
 }
 
 #[derive(Serialize)]
@@ -50,15 +50,23 @@ impl Summary {
     pub fn generate_markdown(&self) {
         let summary_md = if !self.issues.is_empty() {
             // TODO: make this more elegant
-            let has_disallowed = !&self.issues.iter().filter(|i| matches!(i.kind, IssueKind::Disallowed)).collect::<Vec<_>>().is_empty();
-            let has_outdated = !&self.issues.iter().filter(|i| matches!(i.kind, IssueKind::Outdated)).collect::<Vec<_>>().is_empty();
-            let has_non_upstream = !&self.issues.iter().filter(|i| matches!(i.kind, IssueKind::NonUpstream)).collect::<Vec<_>>().is_empty();
+            let has_disallowed = !&self.disallowed().is_empty();
+            let has_outdated = !&self.outdated().is_empty();
+            let has_non_upstream = !&self.non_upstream().is_empty();
+
+            let supported_ref_names = ALLOWED_REFS.map(|r| format!("* `{r}`")).join("\n");
 
             let data = json!({
                 "issues": &self.issues,
+                "disallowed": &self.disallowed(),
+                "outdated": &self.outdated(),
+                "non_upstream": &self.non_upstream(),
                 "has_disallowed": has_disallowed,
                 "has_outdated": has_outdated,
                 "has_non_upstream": has_non_upstream,
+                // Constants
+                "max_days": MAX_DAYS,
+                "supported_ref_names": supported_ref_names,
             });
 
             let mut handlebars = Handlebars::new();
@@ -83,6 +91,18 @@ impl Summary {
             .write_all(summary_md.as_bytes())
             .expect("error writing summary markdown to file");
     }
+
+    fn disallowed(&self) -> Vec<&Issue> {
+        self.issues.iter().filter(|i| matches!(i.kind, IssueKind::Disallowed)).collect()
+    }
+
+    fn outdated(&self) -> Vec<&Issue> {
+        self.issues.iter().filter(|i| matches!(i.kind, IssueKind::Outdated)).collect()
+    }
+
+    fn non_upstream(&self) -> Vec<&Issue> {
+        self.issues.iter().filter(|i| matches!(i.kind, IssueKind::NonUpstream)).collect()
+    }
 }
 
 impl FlakeLock {
@@ -99,6 +119,20 @@ impl FlakeLock {
 
         for (name, dep) in self.nixpkgs_deps() {
             if let Node::Dependency(dep) = dep {
+                 // Check if not explicitly supported
+                 if let Some(ref git_ref) = dep.original.git_ref {
+                    if !ALLOWED_REFS.contains(&git_ref.as_str()) {
+                        issues.push(Issue {
+                            dependency: name.clone(),
+                            kind: IssueKind::Disallowed,
+                            details: json!({
+                                "input": name,
+                                "ref": git_ref
+                            }),
+                        });
+                    }
+                }
+
                 // Check if outdated
                 let now_timestamp = Utc::now().timestamp();
                 let diff = now_timestamp - dep.locked.last_modified;
@@ -108,9 +142,10 @@ impl FlakeLock {
                     issues.push(Issue {
                         dependency: name.clone(),
                         kind: IssueKind::Outdated,
-                        message: format!(
-                            "The flake input named `{name}` hasn't been updated in **{num_days_old}** days, which is over the allowed {MAX_DAYS}. Consider automating `flake.lock` updates with the [`update-flake-lock` Action](https://github.com/DeterminateSystems/update-flake-lock).",
-                        ),
+                        details: json!({
+                            "input": name,
+                            "num_days_old": num_days_old,
+                        }),
                     });
                 }
 
@@ -120,22 +155,11 @@ impl FlakeLock {
                     issues.push(Issue {
                         dependency: name.clone(),
                         kind: IssueKind::NonUpstream,
-                        message: format!("
-                            The flake input named `{name}` uses a version of Nixpkgs that comes from the `{owner}` organization instead of upstream. Consider switching to the upstream `NixOS` organization.
-                        "),
+                        details: json!({
+                            "input": name,
+                            "owner": owner,
+                        }),
                     });
-                }
-
-                // Check if not explicitly supported
-                if let Some(ref git_ref) = dep.original.git_ref {
-                    if !ALLOWED_REFS.contains(&git_ref.as_str()) {
-                        let supported_ref_names = ALLOWED_REFS.map(|r| format!("`{r}`")).join(", ");
-                        issues.push(Issue {
-                            dependency: name.clone(),
-                            kind: IssueKind::Disallowed,
-                            message: format!("The flake input named `{name}` has a Git ref of `{git_ref}` which is not a supported branch. Consider updating to one of these: {supported_ref_names}."),
-                        });
-                    }
                 }
             }
         }

@@ -1,12 +1,16 @@
 Scanning your `flake.lock` has turned up a few issues we recommend looking into:
 
-Type | Description
-:----|:-----------
-{{#each issues}}
-`{{ this.kind }}` {{#if (eq this.kind "outdated")}}:clock:{{/if}}{{#if (eq this.kind "disallowed")}}:x:{{/if}}{{#if (eq this.kind "disallowed")}}:branch:{{/if}} | {{{ this.message }}}
+{{#if has_disallowed}}
+:warning: **Warning**! We found some non-supported branches:
+
+{{#each disallowed}}
+* `{{this.details.input}}` uses ref `{{this.details.ref}}`
 {{/each}}
 
-{{#if has_disallowed}}
+Use one of these instead:
+
+{{{supported_ref_names}}}
+
 <details>
   <summary>Why using supported branches is important</summary>
   Insert info here.
@@ -14,6 +18,14 @@ Type | Description
 {{/if}}
 
 {{#if has_outdated}}
+:warning: **Warning**! We found some outdated Nixpkgs dependencies:
+
+{{#each outdated}}
+* `{{this.details.input}}` is **{{this.details.num_days_old}}** days old
+{{/each}}
+
+The maximum age is **{{max_days}}** days.
+
 <details>
   <summary>Why keeping Nix dependencies up to date is important</summary>
   Insert info here.
@@ -21,6 +33,12 @@ Type | Description
 {{/if}}
 
 {{#if has_non_upstream}}
+:warning: **Warning**! We found some non-upstream Nixpkgs dependencies:
+
+{{#each non_upstream}}
+* `{{this.details.input}}` has `{{this.details.owner}}` as an owner rather than `NixOS`
+{{/each}}
+
 <details>
   <summary>Why using upstream Nixpkgs is important</summary>
   Insert info here.
