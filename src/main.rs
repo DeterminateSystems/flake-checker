@@ -32,8 +32,10 @@ enum Error {
 struct Original {
     owner: Option<String>,
     repo: Option<String>,
-    r#type: String,
-    r#ref: Option<String>,
+    #[serde(alias = "type")]
+    node_type: String,
+    #[serde(alias = "ref")]
+    git_ref: Option<String>,
 }
 
 #[derive(Clone, Deserialize)]
@@ -45,7 +47,8 @@ struct Locked {
     owner: Option<String>,
     repo: Option<String>,
     rev: Option<String>,
-    r#type: String,
+    #[serde(alias = "type")]
+    node_type: String,
 }
 
 #[derive(Clone, Deserialize)]
@@ -108,7 +111,7 @@ fn check_for_non_allowed_refs(nodes: &HashMap<String, Node>, config: &Config) ->
     let nixpkgs_deps = nixpkgs_deps(nodes);
     for (name, dep) in nixpkgs_deps {
         if let Some(original) = &dep.original {
-            if let Some(ref git_ref) = original.r#ref {
+            if let Some(ref git_ref) = original.git_ref {
                 if !config.allowed_refs.contains(git_ref) {
                     issues.push(Issue {
                         kind: IssueKind::Disallowed,
