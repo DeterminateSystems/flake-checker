@@ -176,24 +176,23 @@ struct Summary {
 }
 
 impl Summary {
-    fn generate_markdown(&self) -> String {
+    fn generate_markdown(&self) {
         let mut data = BTreeMap::new();
         data.insert("issues", &self.issues);
         let mut handlebars = Handlebars::new();
         handlebars.register_template_string("summary.md", include_str!("./templates/summary.md")).unwrap();
-        handlebars.render("summary.md", &data).unwrap()
+        let summary_md = handlebars.render("summary.md", &data).unwrap();
+        let summary_md_filepath = std::env::var("GITHUB_STEP_SUMMARY").unwrap();
+        let mut summary_md_file = OpenOptions::new()
+            .append(true)
+            .create(true)
+            .open(&summary_md_filepath)
+            .unwrap();
+        summary_md_file.write_all(summary_md.as_bytes()).unwrap();
     }
 }
 
 fn main() -> Result<(), Error> {
-    let filepath = std::env::var("GITHUB_STEP_SUMMARY").unwrap();
-    println!("Filepath: {filepath}");
-    let mut summary_md_file = OpenOptions::new()
-        .append(true)
-        .create(true)
-        .open(&filepath)
-        .unwrap();
-
     let Cli { flake_lock_path } = Cli::parse();
     let flake_lock_path = flake_lock_path.as_path().to_str().unwrap(); // TODO: handle this better
     let flake_lock_file = read_to_string(flake_lock_path)?;
@@ -205,10 +204,7 @@ fn main() -> Result<(), Error> {
 
     let issues = check_flake_lock(&flake_lock, &config);
     let summary = Summary { issues };
-    let summary_md = summary.generate_markdown();
-
-    summary_md_file.write_all(summary_md.as_bytes()).unwrap();
-
+    let _ = summary.generate_markdown();
 
     Ok(())
 }

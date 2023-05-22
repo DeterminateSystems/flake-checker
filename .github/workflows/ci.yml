@@ -6,7 +6,7 @@ on:
     branches: [main]
 
 jobs:
-  check-clake:
+  check-flake:
     name: Check flake.lock
     runs-on: ubuntu-22.04
     steps:
@@ -14,5 +14,4 @@ jobs:
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@v2
       - run: |
-          nix build .#gha
-          ./result/bin/flake-checker ./flake.bad.lock
+          nix develop -c "cargo run -- ./flake.bad.lock"

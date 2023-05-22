@@ -44,16 +44,8 @@
               pname = meta.name;
               version = meta.version;
               src = ./.;
-              cargoHash = "sha256-8UWTu62VjoOJJ9UExSXnqodYYZbpPmvYLI/bvUsCZp0=";
+              cargoHash = "sha256-toXBfFKKa1Vk3aeafPVLwHN3M5IW9BZckRv/9CLsJZA=";
             };
-
-          gha = rust.buildRustPackage {
-            pname = meta.name;
-            version = meta.version;
-            src = ./.;
-            cargoHash = "sha256-8UWTu62VjoOJJ9UExSXnqodYYZbpPmvYLI/bvUsCZp0=";
-            buildFeatures = ["gha"];
-          };
         });
     };
 }
