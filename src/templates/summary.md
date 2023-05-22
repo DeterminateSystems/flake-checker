@@ -2,6 +2,6 @@ This Markdown document provides a neat and tidy summary of this Determinate Nix 
 
 Type | Description
 :----|:-----------
-{% for issue in issues %}
-{{ error.kind }} | {{ error.message }}
-{% endfor %}
+{{#each issues}}
+`{{ this.kind }}` | {{ this.message }}
+{{/each}}

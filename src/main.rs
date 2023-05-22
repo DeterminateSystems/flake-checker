@@ -96,7 +96,7 @@ fn check_for_outdated_nixpkgs(nodes: &HashMap<String, Node>, config: &Config) ->
                 issues.push(Issue {
                     kind: IssueKind::Outdated,
                     message: format!(
-                        "dependency {name} is {num_days_old} days old, which is over the max of {}",
+                        "dependency `{name}` is **{num_days_old}** days old, which is over the max of **{}**",
                         config.max_days
                     ),
                 });
@@ -115,7 +115,7 @@ fn check_for_non_allowed_refs(nodes: &HashMap<String, Node>, config: &Config) ->
                 if !config.allowed_refs.contains(git_ref) {
                     issues.push(Issue {
                         kind: IssueKind::Disallowed,
-                        message: format!("dependency {name} has a Git ref of {git_ref} which is not explicitly allowed"),
+                        message: format!("dependency `{name}` has a Git ref of `{git_ref}` which is not explicitly allowed"),
                     });
                 }
             }
@@ -146,7 +146,9 @@ fn warn(path: &str, message: &str) {
 
 #[derive(Serialize)]
 enum IssueKind {
+    #[serde(rename = "disallowed")]
     Disallowed,
+    #[serde(rename = "outdated")]
     Outdated,
 }
 
