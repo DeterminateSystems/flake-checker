@@ -26,6 +26,9 @@
             cargo-edit
             cargo-watch
             rust-analyzer
+
+            # for reqwest
+            openssl
           ];
         };
       });
