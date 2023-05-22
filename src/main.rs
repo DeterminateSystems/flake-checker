@@ -78,12 +78,24 @@ enum Input {
     List(Vec<String>),
 }
 
+#[derive(Clone, Deserialize)]
+#[serde(untagged)]
+enum Node {
+    Dependency(DependencyNode),
+    Root(RootNode),
+}
+
+#[derive(Clone, Deserialize)]
+struct RootNode {
+    inputs: HashMap<String, String>,
+}
+
 // TODO: make this an enum rather than a struct
 #[derive(Clone, Deserialize)]
-struct Node {
+struct DependencyNode {
     inputs: Option<HashMap<String, Input>>,
-    locked: Option<Locked>,
-    original: Option<Original>,
+    locked: Locked,
+    original: Original,
 }
 
 #[derive(Clone, Deserialize)]
@@ -107,8 +119,8 @@ impl Check for Refs {
         let mut issues = vec![];
         let nixpkgs_deps = nixpkgs_deps(&flake_lock.nodes);
         for (name, dep) in nixpkgs_deps {
-            if let Some(original) = &dep.original {
-                if let Some(ref git_ref) = original.git_ref {
+            if let Node::Dependency(dep) = dep {
+                if let Some(ref git_ref) = dep.original.git_ref {
                     if !allowed_refs.contains(git_ref) {
                         issues.push(Issue {
                         kind: IssueKind::Disallowed,
@@ -129,9 +141,9 @@ impl Check for MaxAge {
         let mut issues = vec![];
         let nixpkgs_deps = nixpkgs_deps(&flake_lock.nodes);
         for (name, dep) in nixpkgs_deps {
-            if let Some(locked) = &dep.locked {
+            if let Node::Dependency(dep) = dep {
                 let now_timestamp = Utc::now().timestamp();
-                let diff = now_timestamp - locked.last_modified;
+                let diff = now_timestamp - dep.locked.last_modified;
                 let num_days_old = Duration::seconds(diff).num_days();
 
                 if num_days_old > MAX_DAYS {

@@ -21,7 +21,7 @@
     {
       devShells = forAllSystems ({ pkgs }: {
         default = pkgs.mkShell {
-          packages = with pkgs; [
+          packages = (with pkgs; [
             rustToolchain
             cargo-edit
             cargo-watch
@@ -29,7 +29,7 @@
 
             # for reqwest
             openssl
-          ];
+          ]) ++ pkgs.lib.optionals pkgs.stdenv.isDarwin (with pkgs.darwin.apple_sdk.frameworks; [ Security ]);
         };
       });
 
