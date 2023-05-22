@@ -26,9 +26,6 @@
             cargo-edit
             cargo-watch
             rust-analyzer
-
-            # for reqwest
-            openssl
           ]) ++ pkgs.lib.optionals pkgs.stdenv.isDarwin (with pkgs.darwin.apple_sdk.frameworks; [ Security ]);
         };
       });

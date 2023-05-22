@@ -1,6 +1,4 @@
 #![allow(dead_code)]
-extern crate flake_checker;
-
 use std::collections::{BTreeMap, HashMap};
 use std::fs::{read_to_string, OpenOptions};
 use std::io::Write;
@@ -11,23 +9,16 @@ use clap::Parser;
 use handlebars::Handlebars;
 use serde::{Deserialize, Serialize};
 
-use flake_checker::NixOsRefsQuery;
-
-const ALLOWED_REFS_ENDPOINT: &str = "https://monitoring.nixos.org/prometheus/api/v1/query?query=channel_revision";
+const ALLOWED_REFS: &[&str; 6] = &[
+    "nixos-22.11",
+    "nixos-22.11-small",
+    "nixos-unstable",
+    "nixos-unstable-small",
+    "nixpkgs-22.11-darwin",
+    "nixpkgs-unstable",
+];
 const MAX_DAYS: i64 = 30;
 
-fn get_allowed_refs() -> Result<Vec<String>, FlakeCheckerError> {
-    let resp = reqwest::blocking::get(ALLOWED_REFS_ENDPOINT)?
-        .json::<NixOsRefsQuery>()?;
-
-    let mut branches = vec![];
-    for result in resp.data.result {
-        if result.metric.current == "1" {
-            branches.push(result.metric.channel);
-        }
-    }
-    Ok(branches)
-}
 
 /// A flake.lock checker for Nix projects.
 #[derive(Parser)]
@@ -40,8 +31,6 @@ struct Cli {
 
 #[derive(Debug, thiserror::Error)]
 enum FlakeCheckerError {
-    #[error("http error: {0}")]
-    Http(#[from] reqwest::Error),
     #[error("couldn't access flake.lock: {0}")]
     Io(#[from] std::io::Error),
     #[error("couldn't parse flake.lock: {0}")]
@@ -88,7 +77,9 @@ enum Node {
 impl Node {
     fn is_nixpkgs(&self) -> bool {
         match self {
-            Self::Dependency(dep) => dep.locked.node_type == "github" && dep.original.repo == "nixpkgs",
+            Self::Dependency(dep) => {
+                dep.locked.node_type == "github" && dep.original.repo == "nixpkgs"
+            }
             _ => false,
         }
     }
@@ -114,7 +105,6 @@ struct FlakeLock {
     version: usize,
 }
 
-
 trait Check {
     fn run(&self, flake_lock: &FlakeLock) -> Vec<Issue>;
 }
@@ -123,14 +113,12 @@ struct Refs;
 
 impl Check for Refs {
     fn run(&self, flake_lock: &FlakeLock) -> Vec<Issue> {
-        let allowed_refs = get_allowed_refs().unwrap(); // TODO: handle this better
-
         let mut issues = vec![];
         let nixpkgs_deps = nixpkgs_deps(&flake_lock.nodes);
         for (name, dep) in nixpkgs_deps {
             if let Node::Dependency(dep) = dep {
                 if let Some(ref git_ref) = dep.original.git_ref {
-                    if !allowed_refs.contains(git_ref) {
+                    if !ALLOWED_REFS.contains(&git_ref.as_str()) {
                         issues.push(Issue {
                         kind: IssueKind::Disallowed,
                         message: format!("dependency `{name}` has a Git ref of `{git_ref}` which is not explicitly allowed"),
@@ -177,11 +165,9 @@ struct Config {
 }
 
 fn check_flake_lock(flake_lock: &FlakeLock) -> Vec<Issue> {
-    let mut is1 = (MaxAge)
-    .run(flake_lock);
+    let mut is1 = (MaxAge).run(flake_lock);
 
-    let mut is2 = (Refs)
-    .run(flake_lock);
+    let mut is2 = (Refs).run(flake_lock);
 
     // TODO: find a more elegant way to concat results
     is1.append(&mut is2);
