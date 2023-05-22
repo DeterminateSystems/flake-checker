@@ -50,8 +50,8 @@ enum FlakeCheckerError {
 
 #[derive(Clone, Deserialize)]
 struct Original {
-    owner: Option<String>,
-    repo: Option<String>,
+    owner: String,
+    repo: String,
     #[serde(alias = "type")]
     node_type: String,
     #[serde(alias = "ref")]
@@ -64,9 +64,9 @@ struct Locked {
     last_modified: i64,
     #[serde(alias = "narHash")]
     nar_hash: String,
-    owner: Option<String>,
-    repo: Option<String>,
-    rev: Option<String>,
+    owner: String,
+    repo: String,
+    rev: String,
     #[serde(alias = "type")]
     node_type: String,
 }
@@ -83,6 +83,15 @@ enum Input {
 enum Node {
     Dependency(DependencyNode),
     Root(RootNode),
+}
+
+impl Node {
+    fn is_nixpkgs(&self) -> bool {
+        match self {
+            Self::Dependency(dep) => dep.locked.node_type == "github" && dep.original.repo == "nixpkgs",
+            _ => false,
+        }
+    }
 }
 
 #[derive(Clone, Deserialize)]
@@ -183,7 +192,7 @@ fn nixpkgs_deps(nodes: &HashMap<String, Node>) -> HashMap<String, Node> {
     // TODO: select based on locked.type="github" and original.repo="nixpkgs"
     nodes
         .iter()
-        .filter(|(k, _)| k.starts_with("nixpkgs"))
+        .filter(|(_, v)| v.is_nixpkgs())
         .map(|(k, v)| (k.clone(), v.clone()))
         .collect()
 }
