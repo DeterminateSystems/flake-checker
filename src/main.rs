@@ -1,4 +1,5 @@
 #![allow(dead_code)]
+extern crate flake_checker;
 
 use std::collections::{BTreeMap, HashMap};
 use std::fs::{read_to_string, OpenOptions};
@@ -10,6 +11,24 @@ use clap::Parser;
 use handlebars::Handlebars;
 use serde::{Deserialize, Serialize};
 
+use flake_checker::TopLevel;
+
+const ALLOWED_REFS_ENDPOINT: &str = "hhttps://monitoring.nixos.org/prometheus/api/v1/query?query=channel_revision";
+
+fn get_allowed_refs() -> Result<Vec<String>, FlakeCheckerError> {
+    let resp: TopLevel = reqwest::blocking::get(ALLOWED_REFS_ENDPOINT)?
+        .json::<TopLevel>()?;
+
+    let mut branches = vec![];
+    for result in resp.data.result {
+        if result.metric.current == "1" {
+            branches.push(result.metric.channel);
+        }
+    }
+    println!("branches: {:?}", branches);
+    Ok(branches)
+}
+
 /// A flake.lock checker for Nix projects.
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -20,10 +39,11 @@ struct Cli {
 }
 
 #[derive(Debug, thiserror::Error)]
-enum Error {
+enum FlakeCheckerError {
+    #[error("http error: {0}")]
+    Http(#[from] reqwest::Error),
     #[error("couldn't access flake.lock: {0}")]
     Io(#[from] std::io::Error),
-
     #[error("couldn't parse flake.lock: {0}")]
     Json(#[from] serde_json::Error),
 }
@@ -73,22 +93,23 @@ struct FlakeLock {
     version: usize,
 }
 
+
 trait Check {
     fn run(&self, flake_lock: &FlakeLock) -> Vec<Issue>;
 }
 
-struct Refs {
-    allowed_refs: Vec<String>,
-}
+struct Refs;
 
 impl Check for Refs {
     fn run(&self, flake_lock: &FlakeLock) -> Vec<Issue> {
+        let allowed_refs = get_allowed_refs().unwrap(); // TODO: handle this better
+
         let mut issues = vec![];
         let nixpkgs_deps = nixpkgs_deps(&flake_lock.nodes);
         for (name, dep) in nixpkgs_deps {
             if let Some(original) = &dep.original {
                 if let Some(ref git_ref) = original.git_ref {
-                    if !self.allowed_refs.contains(git_ref) {
+                    if !allowed_refs.contains(git_ref) {
                         issues.push(Issue {
                         kind: IssueKind::Disallowed,
                         message: format!("dependency `{name}` has a Git ref of `{git_ref}` which is not explicitly allowed"),
@@ -101,12 +122,11 @@ impl Check for Refs {
     }
 }
 
-struct MaxAge {
-    max_days: i64,
-}
+struct MaxAge;
 
 impl Check for MaxAge {
     fn run(&self, flake_lock: &FlakeLock) -> Vec<Issue> {
+        let max_days = 30;
         let mut issues = vec![];
         let nixpkgs_deps = nixpkgs_deps(&flake_lock.nodes);
         for (name, dep) in nixpkgs_deps {
@@ -115,12 +135,12 @@ impl Check for MaxAge {
                 let diff = now_timestamp - locked.last_modified;
                 let num_days_old = Duration::seconds(diff).num_days();
 
-                if num_days_old > self.max_days {
+                if num_days_old > max_days {
                     issues.push(Issue {
                         kind: IssueKind::Outdated,
                         message: format!(
                             "dependency `{name}` is **{num_days_old}** days old, which is over the max of **{}**",
-                            self.max_days
+                            max_days
                         ),
                     });
                 }
@@ -136,15 +156,11 @@ struct Config {
     max_days: i64,
 }
 
-fn check_flake_lock(flake_lock: &FlakeLock, config: &Config) -> Vec<Issue> {
-    let mut is1 = (MaxAge {
-        max_days: config.max_days,
-    })
+fn check_flake_lock(flake_lock: &FlakeLock) -> Vec<Issue> {
+    let mut is1 = (MaxAge)
     .run(flake_lock);
 
-    let mut is2 = (Refs {
-        allowed_refs: config.allowed_refs.to_vec(),
-    })
+    let mut is2 = (Refs)
     .run(flake_lock);
 
     // TODO: find a more elegant way to concat results
@@ -208,7 +224,7 @@ impl Summary {
     }
 }
 
-fn main() -> Result<(), Error> {
+fn main() -> Result<(), FlakeCheckerError> {
     let Cli { flake_lock_path } = Cli::parse();
     let flake_lock_path = flake_lock_path
         .as_path()
@@ -217,11 +233,7 @@ fn main() -> Result<(), Error> {
     let flake_lock_file = read_to_string(flake_lock_path)?;
     let flake_lock: FlakeLock = serde_json::from_str(&flake_lock_file)?;
 
-    let config_file = include_str!("./policy.json");
-    let config: Config =
-        serde_json::from_str(config_file).expect("inline policy.json file is malformed");
-
-    let issues = check_flake_lock(&flake_lock, &config);
+    let issues = check_flake_lock(&flake_lock);
     let summary = Summary { issues };
     summary.generate_markdown();
 

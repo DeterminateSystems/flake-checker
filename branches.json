@@ -1,0 +1,167 @@
+{
+  "status": "success",
+  "data": {
+    "resultType": "vector",
+    "result": [
+      {
+        "metric": {
+          "__name__": "channel_revision",
+          "channel": "nixos-22.05",
+          "current": "0",
+          "instance": "127.0.0.1:9402",
+          "job": "channel-updates",
+          "revision": "50fc86b75d2744e1ab3837ef74b53f103a9b55a0",
+          "status": "unmaintained",
+          "variant": "primary"
+        },
+        "value": [
+          1684771544.208,
+          "1"
+        ]
+      },
+      {
+        "metric": {
+          "__name__": "channel_revision",
+          "channel": "nixos-22.05-aarch64",
+          "current": "0",
+          "instance": "127.0.0.1:9402",
+          "job": "channel-updates",
+          "revision": "50fc86b75d2744e1ab3837ef74b53f103a9b55a0",
+          "status": "unmaintained",
+          "variant": "aarch64"
+        },
+        "value": [
+          1684771544.208,
+          "1"
+        ]
+      },
+      {
+        "metric": {
+          "__name__": "channel_revision",
+          "channel": "nixos-22.05-small",
+          "current": "0",
+          "instance": "127.0.0.1:9402",
+          "job": "channel-updates",
+          "revision": "50fc86b75d2744e1ab3837ef74b53f103a9b55a0",
+          "status": "unmaintained",
+          "variant": "small"
+        },
+        "value": [
+          1684771544.208,
+          "1"
+        ]
+      },
+      {
+        "metric": {
+          "__name__": "channel_revision",
+          "channel": "nixos-22.11",
+          "current": "1",
+          "instance": "127.0.0.1:9402",
+          "job": "channel-updates",
+          "revision": "7dc71aef32e8faf065cb171700792cf8a65c152d",
+          "status": "stable",
+          "variant": "primary"
+        },
+        "value": [
+          1684771544.208,
+          "1"
+        ]
+      },
+      {
+        "metric": {
+          "__name__": "channel_revision",
+          "channel": "nixos-22.11-small",
+          "current": "1",
+          "instance": "127.0.0.1:9402",
+          "job": "channel-updates",
+          "revision": "1f01751b96488f1d0eadffc1916c87b452bd406b",
+          "status": "stable",
+          "variant": "small"
+        },
+        "value": [
+          1684771544.208,
+          "1"
+        ]
+      },
+      {
+        "metric": {
+          "__name__": "channel_revision",
+          "channel": "nixos-unstable",
+          "current": "1",
+          "instance": "127.0.0.1:9402",
+          "job": "channel-updates",
+          "revision": "50a183182d7ae39133555414d48d5d609a28a57d",
+          "status": "rolling",
+          "variant": "primary"
+        },
+        "value": [
+          1684771544.208,
+          "1"
+        ]
+      },
+      {
+        "metric": {
+          "__name__": "channel_revision",
+          "channel": "nixos-unstable-small",
+          "current": "1",
+          "instance": "127.0.0.1:9402",
+          "job": "channel-updates",
+          "revision": "a4b25ea80898ea87ec2427719f2ec2dee427019a",
+          "status": "rolling",
+          "variant": "small"
+        },
+        "value": [
+          1684771544.208,
+          "1"
+        ]
+      },
+      {
+        "metric": {
+          "__name__": "channel_revision",
+          "channel": "nixpkgs-22.05-darwin",
+          "current": "0",
+          "instance": "127.0.0.1:9402",
+          "job": "channel-updates",
+          "revision": "50fc86b75d2744e1ab3837ef74b53f103a9b55a0",
+          "status": "unmaintained",
+          "variant": "darwin"
+        },
+        "value": [
+          1684771544.208,
+          "1"
+        ]
+      },
+      {
+        "metric": {
+          "__name__": "channel_revision",
+          "channel": "nixpkgs-22.11-darwin",
+          "current": "1",
+          "instance": "127.0.0.1:9402",
+          "job": "channel-updates",
+          "revision": "e31e2ce559a628995f6f564a80a2074b7f5dcd25",
+          "status": "stable",
+          "variant": "darwin"
+        },
+        "value": [
+          1684771544.208,
+          "1"
+        ]
+      },
+      {
+        "metric": {
+          "__name__": "channel_revision",
+          "channel": "nixpkgs-unstable",
+          "current": "1",
+          "instance": "127.0.0.1:9402",
+          "job": "channel-updates",
+          "revision": "9356eead97d8d16956b0226d78f76bd66e06cb60",
+          "status": "rolling"
+        },
+        "value": [
+          1684771544.208,
+          "1"
+        ]
+      }
+    ]
+  }
+}
