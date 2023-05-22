@@ -77,7 +77,7 @@ impl Summary {
                 .render("summary.md", &data)
                 .expect("markdown render error")
         } else {
-            String::from("Your `flake.lock` has a clean bill of health :healthy:")
+            String::from("## Nix flake dependency check\n\n:check: Your `flake.lock` has a clean bill of health.")
         };
 
         let summary_md_filepath =
