@@ -1,5 +1,5 @@
 {
-  "allowed_branches": [
+  "allowed_refs": [
     "nixos-22.11",
     "nixos-22.11-small",
     "nixos-unstable",

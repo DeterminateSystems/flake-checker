@@ -14,7 +14,7 @@
           get-refs = prev.writeScriptBin "get-refs" ''
             ${prev.curl}/bin/curl --fail --silent \
               'https://monitoring.nixos.org/prometheus/api/v1/query?query=channel_revision' \
-              | ${prev.jq}/bin/jq -r '{ "allowed_branches": [(.data.result[] | select(.metric.current == "1") | .metric.channel)] | sort, "max_days": 30 }' \
+              | ${prev.jq}/bin/jq -r '{ "allowed_refs": [(.data.result[] | select(.metric.current == "1") | .metric.channel)] | sort, "max_days": 30 }' \
               > src/policy.json
           '';
         })
