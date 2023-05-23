@@ -91,3 +91,6 @@ While <a href="https://github.com/NixOS/nixpkgs">upstream Nixpkgs</a> isn't bull
 [nixos]: https://github.com/nixos
 [overlays]: https://nixos.wiki/wiki/Overlays
 [overrides]: https://ryantm.github.io/nixpkgs/using/overrides
+# Nix flake dependency check
+
+:check: Your `flake.lock` has a clean bill of health.

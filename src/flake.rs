@@ -29,47 +29,49 @@ impl FlakeLock {
 
         for (name, dep) in self.nixpkgs_deps() {
             if let Node::Dependency(dep) = dep {
-                // Check if not explicitly supported
-                if let Some(ref git_ref) = dep.original.git_ref {
-                    if !ALLOWED_REFS.contains(&git_ref.as_str()) {
+                if let Original::Repo(repo) = dep.original {
+                    // Check if not explicitly supported
+                    if let Some(ref git_ref) = repo.git_ref {
+                        if !ALLOWED_REFS.contains(&git_ref.as_str()) {
+                            issues.push(Issue {
+                                dependency: name.clone(),
+                                kind: IssueKind::Disallowed,
+                                details: json!({
+                                    "input": name,
+                                    "ref": git_ref
+                                }),
+                            });
+                        }
+                    }
+
+                    // Check if outdated
+                    let now_timestamp = Utc::now().timestamp();
+                    let diff = now_timestamp - dep.locked.last_modified;
+                    let num_days_old = Duration::seconds(diff).num_days();
+
+                    if num_days_old > MAX_DAYS {
                         issues.push(Issue {
                             dependency: name.clone(),
-                            kind: IssueKind::Disallowed,
+                            kind: IssueKind::Outdated,
                             details: json!({
                                 "input": name,
-                                "ref": git_ref
+                                "num_days_old": num_days_old,
                             }),
                         });
                     }
-                }
 
-                // Check if outdated
-                let now_timestamp = Utc::now().timestamp();
-                let diff = now_timestamp - dep.locked.last_modified;
-                let num_days_old = Duration::seconds(diff).num_days();
-
-                if num_days_old > MAX_DAYS {
-                    issues.push(Issue {
-                        dependency: name.clone(),
-                        kind: IssueKind::Outdated,
-                        details: json!({
-                            "input": name,
-                            "num_days_old": num_days_old,
-                        }),
-                    });
-                }
-
-                // Check that the GitHub owner is NixOS
-                let owner = dep.original.owner;
-                if owner.to_lowercase() != "nixos" {
-                    issues.push(Issue {
-                        dependency: name.clone(),
-                        kind: IssueKind::NonUpstream,
-                        details: json!({
-                            "input": name,
-                            "owner": owner,
-                        }),
-                    });
+                    // Check that the GitHub owner is NixOS
+                    let owner = repo.owner;
+                    if owner.to_lowercase() != "nixos" {
+                        issues.push(Issue {
+                            dependency: name.clone(),
+                            kind: IssueKind::NonUpstream,
+                            details: json!({
+                                "input": name,
+                                "owner": owner,
+                            }),
+                        });
+                    }
                 }
             }
         }
@@ -87,9 +89,10 @@ enum Node {
 impl Node {
     fn is_nixpkgs(&self) -> bool {
         match self {
-            Self::Dependency(dep) => {
-                dep.locked.node_type == "github" && dep.original.repo == "nixpkgs"
-            }
+            Self::Dependency(dep) => match &dep.original {
+                Original::Repo(repo) => dep.locked.node_type == "github" && repo.repo == "nixpkgs",
+                _ => false,
+            },
             _ => false,
         }
     }
@@ -128,11 +131,25 @@ struct Locked {
 }
 
 #[derive(Clone, Deserialize)]
-struct Original {
+#[serde(untagged)]
+enum Original {
+    Repo(Repo),
+    Path(Path),
+}
+
+#[derive(Clone, Deserialize)]
+struct Repo {
     owner: String,
     repo: String,
     #[serde(alias = "type")]
     node_type: String,
     #[serde(alias = "ref")]
     git_ref: Option<String>,
+}
+
+#[derive(Clone, Deserialize)]
+struct Path {
+    path: String,
+    #[serde(alias = "type")]
+    node_type: String,
 }
