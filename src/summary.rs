@@ -31,13 +31,13 @@ impl Summary {
             "max_days": MAX_DAYS,
             "supported_ref_names": supported_ref_names,
             // Text snippets
-            "supported_refs_explainer": include_str!("./explainers/supported_refs.md"),
-            "outdated_deps_explainer": include_str!("./explainers/outdated_deps.md"),
-            "upstream_nixpkgs_explainer": include_str!("./explainers/upstream_nixpkgs.md"),
+            "supported_refs_explainer": include_str!("explainers/supported_refs.md"),
+            "outdated_deps_explainer": include_str!("explainers/outdated_deps.md"),
+            "upstream_nixpkgs_explainer": include_str!("explainers/upstream_nixpkgs.md"),
         });
 
         handlebars
-            .register_template_string("summary.md", include_str!("./templates/summary.md"))
+            .register_template_string("summary.md", include_str!("templates/summary.md"))
             .map_err(Box::new)?;
         let summary_md = handlebars.render("summary.md", &data)?;
 
