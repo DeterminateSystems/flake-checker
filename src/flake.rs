@@ -75,21 +75,19 @@ impl Summary {
 
             let mut handlebars = Handlebars::new();
             handlebars
-                .register_template_string("summary.md", include_str!("./templates/summary.md"))?;
-            handlebars
-                .render("summary.md", &data)?
+                .register_template_string("summary.md", include_str!("./templates/summary.md"))
+                .map_err(Box::new)?;
+            handlebars.render("summary.md", &data)?
         } else {
             String::from("## Nix flake dependency check\n\n:check: Your `flake.lock` has a clean bill of health.")
         };
 
-        let summary_md_filepath =
-            std::env::var("GITHUB_STEP_SUMMARY")?;
+        let summary_md_filepath = std::env::var("GITHUB_STEP_SUMMARY")?;
         let mut summary_md_file = OpenOptions::new()
             .append(true)
             .create(true)
             .open(summary_md_filepath)?;
-        summary_md_file
-            .write_all(summary_md.as_bytes())?;
+        summary_md_file.write_all(summary_md.as_bytes())?;
 
         Ok(())
     }

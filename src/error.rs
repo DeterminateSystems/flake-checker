@@ -9,5 +9,5 @@ pub enum FlakeCheckerError {
     #[error("handlebars render error: {0}")]
     Render(#[from] handlebars::RenderError),
     #[error("handlebars template error: {0}")]
-    Template(#[from] handlebars::TemplateError),
+    Template(#[from] Box<handlebars::TemplateError>),
 }
