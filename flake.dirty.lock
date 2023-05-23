@@ -20,7 +20,7 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1684464849,
+        "lastModified": 1681358109,
         "narHash": "sha256-f8th/GWE9M2hePTMZc0YyFboigt9AG/ioEcyHcdFK2I=",
         "owner": "bitcoin-miner-org",
         "repo": "nixpkgs",
@@ -29,7 +29,7 @@
       },
       "original": {
         "owner": "bitcoin-miner-org",
-        "ref": "nixpkgs-unstable",
+        "ref": "this-should-fail",
         "repo": "nixpkgs",
         "type": "github"
       }
@@ -60,7 +60,7 @@
         "type": "github"
       },
       "original": {
-        "ref": "this-should-fail",
+        "ref": "nixpkgs-unstable",
         "owner": "NixOS",
         "repo": "nixpkgs",
         "type": "github"
