@@ -10,7 +10,7 @@
 {{/each}}
 
 <details>
-<summary>:hammer: What to do</summary>
+<summary>What to do :toolbox:</summary>
 Use one of these branches instead:
 
 {{{supported_ref_names}}}
@@ -25,7 +25,7 @@ Here's an example:
 </details>
 
 <details>
-<summary>Why it's important to use supported branches</summary>
+<summary>Why it's important to use supported branches :books:</summary>
 {{{supported_refs_explainer}}}
 </details>
 {{/if}}
@@ -40,8 +40,7 @@ Here's an example:
 The maximum recommended age is **{{max_days}}** days.
 
 <details>
-<summary>:hammer: What to do</summary>
-
+<summary>What to do :toolbox:</summary>
 Use the [`update-flake-lock`][flake-lock-action] GitHub Action to automate updates:
 
 ```yaml
@@ -55,7 +54,7 @@ steps:
 </details>
 
 <details>
-<summary>Why it's important to keep Nix dependencies up to date</summary>
+<summary>Why it's important to keep Nix dependencies up to date :books:</summary>
 {{{ outdated_deps_explainer }}}
 </details>
 {{/if}}
@@ -68,7 +67,7 @@ steps:
 {{/each}}
 
 <details>
-<summary>:hammer: What to do</summary>
+<summary>What to do :toolbox:</summary>
 Use a Nixpkgs dependency from the [`NixOS`][nixos] org.
 Here's an example:
 
@@ -82,8 +81,8 @@ If you need a customized version of Nixpkgs, we recommend that you use [overlays
 </details>
 
 <details>
-  <summary>Why it's important to use upstream Nixpkgs</summary>
-  {{{ upstream_nixpkgs_explainer }}}
+<summary>Why it's important to use upstream Nixpkgs :books:</summary>
+{{{ upstream_nixpkgs_explainer }}}
 </details>
 {{/if}}
 
