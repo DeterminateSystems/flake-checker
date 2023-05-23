@@ -77,6 +77,8 @@ Here's an example:
   inputs.nixpkgs.url = "github:NixOS/nixpkgs";
 }
 ```
+
+If you need a customized version of Nixpkgs, we recommend using methods like [overlays] and per-package [overrides].
 </details>
 
 <details>
@@ -87,3 +89,5 @@ Here's an example:
 
 [flake-lock-action]: https://github.com/determinateSystems/update-flake-lock
 [nixos]: https://github.com/nixos
+[overlays]: https://nixos.wiki/wiki/Overlays
+[overrides]: https://ryantm.github.io/nixpkgs/using/overrides
