@@ -6,7 +6,7 @@
 ## Non-supported branches
 
 {{#each disallowed}}
-* `{{this.details.input}}` uses ref `{{this.details.ref}}`
+* The `{{this.details.input}}` input uses Git ref `{{this.details.ref}}`
 {{/each}}
 
 <details>
@@ -34,7 +34,7 @@ Here's an example:
 ## Outdated Nixpkgs dependencies
 
 {{#each outdated}}
-* `{{this.details.input}}` is **{{this.details.num_days_old}}** days old
+* The `{{this.details.input}}` input is **{{this.details.num_days_old}}** days old
 {{/each}}
 
 The maximum recommended age is **{{max_days}}** days.
@@ -64,7 +64,7 @@ steps:
 ## Non-upstream Nixpkgs dependencies
 
 {{#each non_upstream}}
-* `{{this.details.input}}` has `{{this.details.owner}}` as an owner rather than `NixOS`
+* The `{{this.details.input}}` input has `{{this.details.owner}}` as an owner rather than `NixOS`
 {{/each}}
 
 <details>
