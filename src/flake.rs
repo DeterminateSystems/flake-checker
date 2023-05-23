@@ -19,7 +19,7 @@ impl FlakeLock {
         // TODO: make this more robust for real-world use cases
         self.nodes
             .iter()
-            .filter(|(k, v)| matches!(v, Node::Dependency(_)) && k == &"nixpkgs")
+            .filter(|(k, v)| matches!(v, Node::Repo(_)) && k == &"nixpkgs")
             .map(|(k, v)| (k.clone(), v.clone()))
             .collect()
     }
@@ -28,50 +28,48 @@ impl FlakeLock {
         let mut issues = vec![];
 
         for (name, dep) in self.nixpkgs_deps() {
-            if let Node::Dependency(dep) = dep {
-                if let Original::Repo(repo) = dep.original {
-                    // Check if not explicitly supported
-                    if let Some(ref git_ref) = repo.git_ref {
-                        if !ALLOWED_REFS.contains(&git_ref.as_str()) {
-                            issues.push(Issue {
-                                dependency: name.clone(),
-                                kind: IssueKind::Disallowed,
-                                details: json!({
-                                    "input": name,
-                                    "ref": git_ref
-                                }),
-                            });
-                        }
-                    }
-
-                    // Check if outdated
-                    let now_timestamp = Utc::now().timestamp();
-                    let diff = now_timestamp - dep.locked.last_modified;
-                    let num_days_old = Duration::seconds(diff).num_days();
-
-                    if num_days_old > MAX_DAYS {
+            if let Node::Repo(repo) = dep {
+                // Check if not explicitly supported
+                if let Some(ref git_ref) = repo.original.git_ref {
+                    if !ALLOWED_REFS.contains(&git_ref.as_str()) {
                         issues.push(Issue {
                             dependency: name.clone(),
-                            kind: IssueKind::Outdated,
+                            kind: IssueKind::Disallowed,
                             details: json!({
                                 "input": name,
-                                "num_days_old": num_days_old,
+                                "ref": git_ref
                             }),
                         });
                     }
+                }
 
-                    // Check that the GitHub owner is NixOS
-                    let owner = repo.owner;
-                    if owner.to_lowercase() != "nixos" {
-                        issues.push(Issue {
-                            dependency: name.clone(),
-                            kind: IssueKind::NonUpstream,
-                            details: json!({
-                                "input": name,
-                                "owner": owner,
-                            }),
-                        });
-                    }
+                // Check if outdated
+                let now_timestamp = Utc::now().timestamp();
+                let diff = now_timestamp - repo.locked.last_modified;
+                let num_days_old = Duration::seconds(diff).num_days();
+
+                if num_days_old > MAX_DAYS {
+                    issues.push(Issue {
+                        dependency: name.clone(),
+                        kind: IssueKind::Outdated,
+                        details: json!({
+                            "input": name,
+                            "num_days_old": num_days_old,
+                        }),
+                    });
+                }
+
+                // Check that the GitHub owner is NixOS
+                let owner = repo.original.owner;
+                if owner.to_lowercase() != "nixos" {
+                    issues.push(Issue {
+                        dependency: name.clone(),
+                        kind: IssueKind::NonUpstream,
+                        details: json!({
+                            "input": name,
+                            "owner": owner,
+                        }),
+                    });
                 }
             }
         }
@@ -83,16 +81,16 @@ impl FlakeLock {
 #[serde(untagged)]
 enum Node {
     Root(RootNode),
-    Dependency(Box<DependencyNode>),
+    Repo(RepoNode),
+    Path(PathNode),
 }
 
 impl Node {
     fn is_nixpkgs(&self) -> bool {
         match self {
-            Self::Dependency(dep) => match &dep.original {
-                Original::Repo(repo) => dep.locked.node_type == "github" && repo.repo == "nixpkgs",
-                _ => false,
-            },
+            Self::Repo(repo) => {
+                repo.locked.node_type == "github" && repo.original.repo == "nixpkgs"
+            }
             _ => false,
         }
     }
@@ -104,10 +102,17 @@ struct RootNode {
 }
 
 #[derive(Clone, Deserialize)]
-struct DependencyNode {
+struct RepoNode {
     inputs: Option<HashMap<String, Input>>,
-    locked: Locked,
-    original: Original,
+    locked: LockedRepo,
+    original: OriginalRepo,
+}
+
+#[derive(Clone, Deserialize)]
+struct PathNode {
+    inputs: Option<HashMap<String, Input>>,
+    locked: LockedPath,
+    original: OriginalPath,
 }
 
 #[derive(Clone, Deserialize)]
@@ -118,7 +123,7 @@ enum Input {
 }
 
 #[derive(Clone, Deserialize)]
-struct Locked {
+struct LockedRepo {
     #[serde(alias = "lastModified")]
     last_modified: i64,
     #[serde(alias = "narHash")]
@@ -131,14 +136,18 @@ struct Locked {
 }
 
 #[derive(Clone, Deserialize)]
-#[serde(untagged)]
-enum Original {
-    Repo(Repo),
-    Path(Path),
+struct LockedPath {
+    #[serde(alias = "lastModified")]
+    last_modified: i64,
+    #[serde(alias = "narHash")]
+    nar_hash: String,
+    path: String,
+    #[serde(alias = "type")]
+    node_type: String,
 }
 
 #[derive(Clone, Deserialize)]
-struct Repo {
+struct OriginalRepo {
     owner: String,
     repo: String,
     #[serde(alias = "type")]
@@ -148,7 +157,7 @@ struct Repo {
 }
 
 #[derive(Clone, Deserialize)]
-struct Path {
+struct OriginalPath {
     path: String,
     #[serde(alias = "type")]
     node_type: String,
