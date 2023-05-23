@@ -69,7 +69,7 @@ steps:
 
 <details>
 <summary>What to do :hammer:</summary>
-Use a Nixpkgs dependency from the [`NixOS`][nixoks] org.
+Use a Nixpkgs dependency from the [`NixOS`][nixos] org.
 Here's an example:
 
 ```nix
