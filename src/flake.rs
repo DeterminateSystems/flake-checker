@@ -71,6 +71,10 @@ impl Summary {
                 // Constants
                 "max_days": MAX_DAYS,
                 "supported_ref_names": supported_ref_names,
+                // Text snippets
+                "supported_refs_explainer": include_str!("./explainers/supported_refs.md"),
+                "outdated_deps_explainer": include_str!("./explainers/outdated_deps.md"),
+                "upstream_nixpkgs_explainer": include_str!("./explainers/upstream_nixpkgs.md"),
             });
 
             let mut handlebars = Handlebars::new();

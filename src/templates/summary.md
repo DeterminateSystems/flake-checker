@@ -25,7 +25,7 @@ Here's an example:
 
 <details>
   <summary>Why using supported branches is important</summary>
-  Insert info here.
+  {{{ supported_refs_explainer }}}
 </details>
 {{/if}}
 
@@ -44,7 +44,7 @@ Use the [`update-flake-lock`][flake-lock-action] GitHub Action to automate updat
 
 <details>
   <summary>Why keeping Nix dependencies up to date is important</summary>
-  Insert info here.
+  {{{ outdated_deps_explainer }}}
 </details>
 {{/if}}
 
@@ -68,7 +68,7 @@ Here's an example:
 
 <details>
   <summary>Why using upstream Nixpkgs is important</summary>
-  Insert info here.
+  {{{ upstream_nixpkgs_explainer }}}
 </details>
 {{/if}}
 
