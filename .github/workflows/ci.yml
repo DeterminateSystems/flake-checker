@@ -1,4 +1,4 @@
-name: CI
+name: Flake checker CI
 
 on:
   pull_request:
@@ -6,8 +6,8 @@ on:
     branches: [main]
 
 jobs:
-  check-flake:
-    name: Check flake.lock test
+  check-flake-dirty:
+    name: Check flake.lock test (dirty)
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
@@ -15,4 +15,14 @@ jobs:
         uses: DeterminateSystems/nix-installer-action@v2
       - name: Check flake.lock
         run: |
-          nix develop .#ci -c cargo run -- ./flake.bad.lock
+          nix develop .#ci -c cargo run -- ./flake.dirty.lock
+  check-flake-clean:
+    name: Check flake.lock test (dirty)
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v2
+      - name: Check flake.lock
+        run: |
+          nix develop .#ci -c cargo run

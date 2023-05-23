@@ -13,11 +13,6 @@ pub struct Summary {
 impl Summary {
     pub fn generate_markdown(&self) -> Result<(), FlakeCheckerError> {
         let summary_md = if !self.issues.is_empty() {
-            // TODO: make this more elegant
-            let has_disallowed = !&self.disallowed().is_empty();
-            let has_outdated = !&self.outdated().is_empty();
-            let has_non_upstream = !&self.non_upstream().is_empty();
-
             let supported_ref_names = ALLOWED_REFS.map(|r| format!("* `{r}`")).join("\n");
 
             let data = json!({
@@ -25,9 +20,9 @@ impl Summary {
                 "disallowed": &self.disallowed(),
                 "outdated": &self.outdated(),
                 "non_upstream": &self.non_upstream(),
-                "has_disallowed": has_disallowed,
-                "has_outdated": has_outdated,
-                "has_non_upstream": has_non_upstream,
+                "has_disallowed": !&self.disallowed().is_empty(),
+                "has_outdated": !&self.outdated().is_empty(),
+                "has_non_upstream": !&self.non_upstream().is_empty(),
                 // Constants
                 "max_days": MAX_DAYS,
                 "supported_ref_names": supported_ref_names,
