@@ -1,16 +1,16 @@
 # Nix flake dependency check
 
-:warning: Scanning your `flake.lock` has turned up a few issues we recommend looking into.
+> :warning: The Nix Installer Action scanned your `flake.lock` and discovered a few issues that we recommend looking into.
 
 {{#if has_disallowed}}
-## Non-supported branches
+## Non-supported Git branches for Nixpkgs
 
 {{#each disallowed}}
-* The `{{this.details.input}}` input uses Git ref `{{this.details.ref}}`
+* The `{{this.details.input}}` input uses the `{{this.details.ref}}` branch
 {{/each}}
 
 <details>
-<summary>What to do :hammer:</summary>
+<summary>:hammer: What to do</summary>
 Use one of these branches instead:
 
 {{{supported_ref_names}}}
@@ -25,7 +25,7 @@ Here's an example:
 </details>
 
 <details>
-<summary>Why using supported branches is important</summary>
+<summary>Why it's important to use supported branches</summary>
 {{{supported_refs_explainer}}}
 </details>
 {{/if}}
@@ -40,7 +40,7 @@ Here's an example:
 The maximum recommended age is **{{max_days}}** days.
 
 <details>
-<summary>What to do :hammer:</summary>
+<summary>:hammer: What to do</summary>
 
 Use the [`update-flake-lock`][flake-lock-action] GitHub Action to automate updates:
 
@@ -55,7 +55,7 @@ steps:
 </details>
 
 <details>
-<summary>Why keeping Nix dependencies up to date is important</summary>
+<summary>Why it's important to keep Nix dependencies up to date</summary>
 {{{ outdated_deps_explainer }}}
 </details>
 {{/if}}
@@ -68,7 +68,7 @@ steps:
 {{/each}}
 
 <details>
-<summary>What to do :hammer:</summary>
+<summary>:hammer: What to do</summary>
 Use a Nixpkgs dependency from the [`NixOS`][nixos] org.
 Here's an example:
 
@@ -78,11 +78,11 @@ Here's an example:
 }
 ```
 
-If you need a customized version of Nixpkgs, we recommend using methods like [overlays] and per-package [overrides].
+If you need a customized version of Nixpkgs, we recommend that you use [overlays] and per-package [overrides].
 </details>
 
 <details>
-  <summary>Why using upstream Nixpkgs is important</summary>
+  <summary>Why it's important to use upstream Nixpkgs</summary>
   {{{ upstream_nixpkgs_explainer }}}
 </details>
 {{/if}}

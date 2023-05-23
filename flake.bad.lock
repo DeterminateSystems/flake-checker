@@ -22,13 +22,13 @@
       "locked": {
         "lastModified": 1684464849,
         "narHash": "sha256-f8th/GWE9M2hePTMZc0YyFboigt9AG/ioEcyHcdFK2I=",
-        "owner": "NixOS",
+        "owner": "bitcoin-miner-org",
         "repo": "nixpkgs",
         "rev": "b969a89c3e84a121c9b3af2e4ef277cd822b988a",
         "type": "github"
       },
       "original": {
-        "owner": "NixOS",
+        "owner": "bitcoin-miner-org",
         "ref": "nixpkgs-unstable",
         "repo": "nixpkgs",
         "type": "github"
