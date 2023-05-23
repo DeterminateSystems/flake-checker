@@ -15,4 +15,4 @@ jobs:
         uses: DeterminateSystems/nix-installer-action@v2
       - name: Check flake.lock
         run: |
-          nix develop -c cargo run -- ./flake.bad.lock
+          nix develop .#ci -c cargo run -- ./flake.bad.lock

@@ -28,6 +28,12 @@
             rust-analyzer
           ];
         };
+
+        ci = pkgs.mkShell {
+          packages = with pkgs; [
+            rustToolchain
+          ];
+        };
       });
 
       packages = forAllSystems ({ pkgs }:
