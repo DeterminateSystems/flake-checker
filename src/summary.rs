@@ -13,37 +13,33 @@ pub struct Summary {
 impl Summary {
     pub fn generate_markdown(&self) -> Result<(), FlakeCheckerError> {
         let mut handlebars = Handlebars::new();
-        let summary_md = if !self.issues.is_empty() {
-            let supported_ref_names = ALLOWED_REFS.map(|r| format!("* `{r}`")).join("\n");
+        let supported_ref_names = ALLOWED_REFS.map(|r| format!("* `{r}`")).join("\n");
+        let data = json!({
+            "issues": &self.issues,
+            "clean": self.issues.is_empty(),
+            "dirty": !self.issues.is_empty(),
+            // Disallowed refs
+            "has_disallowed": !&self.disallowed().is_empty(),
+            "disallowed": &self.disallowed(),
+            // Outdated refs
+            "has_outdated": !&self.outdated().is_empty(),
+            "outdated": &self.outdated(),
+            // Non-upstream refs
+            "has_non_upstream": !&self.non_upstream().is_empty(),
+            "non_upstream": &self.non_upstream(),
+            // Constants
+            "max_days": MAX_DAYS,
+            "supported_ref_names": supported_ref_names,
+            // Text snippets
+            "supported_refs_explainer": include_str!("./explainers/supported_refs.md"),
+            "outdated_deps_explainer": include_str!("./explainers/outdated_deps.md"),
+            "upstream_nixpkgs_explainer": include_str!("./explainers/upstream_nixpkgs.md"),
+        });
 
-            let data = json!({
-                "issues": &self.issues,
-                "disallowed": &self.disallowed(),
-                "outdated": &self.outdated(),
-                "non_upstream": &self.non_upstream(),
-                "has_disallowed": !&self.disallowed().is_empty(),
-                "has_outdated": !&self.outdated().is_empty(),
-                "has_non_upstream": !&self.non_upstream().is_empty(),
-                // Constants
-                "max_days": MAX_DAYS,
-                "supported_ref_names": supported_ref_names,
-                // Text snippets
-                "supported_refs_explainer": include_str!("./explainers/supported_refs.md"),
-                "outdated_deps_explainer": include_str!("./explainers/outdated_deps.md"),
-                "upstream_nixpkgs_explainer": include_str!("./explainers/upstream_nixpkgs.md"),
-            });
-
-            handlebars
-                .register_template_string("dirty.md", include_str!("./templates/dirty.md"))
-                .map_err(Box::new)?;
-            handlebars.render("dirty.md", &data)?
-        } else {
-            let data = json!({});
-            handlebars
-                .register_template_string("clean.md", include_str!("./templates/clean.md"))
-                .map_err(Box::new)?;
-            handlebars.render("clean.md", &data)?
-        };
+        handlebars
+            .register_template_string("summary.md", include_str!("./templates/summary.md"))
+            .map_err(Box::new)?;
+        let summary_md = handlebars.render("summary.md", &data)?;
 
         let summary_md_filepath = std::env::var("GITHUB_STEP_SUMMARY")?;
         let mut summary_md_file = OpenOptions::new()
