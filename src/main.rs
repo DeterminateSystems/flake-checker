@@ -18,15 +18,11 @@ struct Cli {
 
 fn main() -> Result<(), FlakeCheckerError> {
     let Cli { flake_lock_path } = Cli::parse();
-    let flake_lock_path = flake_lock_path
-        .as_path()
-        .to_str()
-        .expect("flake.lock file not found based on supplied path"); // TODO: handle this better
     let flake_lock_file = read_to_string(flake_lock_path)?;
     let flake_lock: FlakeLock = serde_json::from_str(&flake_lock_file)?;
     let issues = flake_lock.check();
     let summary = Summary { issues };
-    summary.generate_markdown();
+    summary.generate_markdown()?;
 
     Ok(())
 }

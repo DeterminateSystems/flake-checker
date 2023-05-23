@@ -8,6 +8,10 @@ use handlebars::Handlebars;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
+use crate::FlakeCheckerError;
+
+// Update this when necessary by running the get-allowed-refs.sh script to fetch
+// the current values from monitoring.nixos.org
 const ALLOWED_REFS: &[&str; 6] = &[
     "nixos-22.11",
     "nixos-22.11-small",
@@ -47,7 +51,7 @@ pub struct Summary {
 }
 
 impl Summary {
-    pub fn generate_markdown(&self) {
+    pub fn generate_markdown(&self) -> Result<(), FlakeCheckerError> {
         let summary_md = if !self.issues.is_empty() {
             // TODO: make this more elegant
             let has_disallowed = !&self.disallowed().is_empty();
@@ -71,25 +75,23 @@ impl Summary {
 
             let mut handlebars = Handlebars::new();
             handlebars
-                .register_template_string("summary.md", include_str!("./templates/summary.md"))
-                .expect("summary template not found");
+                .register_template_string("summary.md", include_str!("./templates/summary.md"))?;
             handlebars
-                .render("summary.md", &data)
-                .expect("markdown render error")
+                .render("summary.md", &data)?
         } else {
             String::from("## Nix flake dependency check\n\n:check: Your `flake.lock` has a clean bill of health.")
         };
 
         let summary_md_filepath =
-            std::env::var("GITHUB_STEP_SUMMARY").expect("summary markdown file not found");
+            std::env::var("GITHUB_STEP_SUMMARY")?;
         let mut summary_md_file = OpenOptions::new()
             .append(true)
             .create(true)
-            .open(summary_md_filepath)
-            .expect("error creating/reading summary markdown file");
+            .open(summary_md_filepath)?;
         summary_md_file
-            .write_all(summary_md.as_bytes())
-            .expect("error writing summary markdown to file");
+            .write_all(summary_md.as_bytes())?;
+
+        Ok(())
     }
 
     fn disallowed(&self) -> Vec<&Issue> {
