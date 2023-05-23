@@ -1,6 +1,6 @@
 # Nix flake dependency check
 
-> :warning: The Nix Installer Action scanned your `flake.lock` and discovered a few issues that we recommend looking into.
+:warning: The Nix Installer Action scanned your `flake.lock` and discovered a few issues that we recommend looking into.
 
 {{#if has_disallowed}}
 ## Non-supported Git branches for Nixpkgs

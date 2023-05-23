@@ -12,6 +12,7 @@ pub struct Summary {
 
 impl Summary {
     pub fn generate_markdown(&self) -> Result<(), FlakeCheckerError> {
+        let mut handlebars = Handlebars::new();
         let summary_md = if !self.issues.is_empty() {
             let supported_ref_names = ALLOWED_REFS.map(|r| format!("* `{r}`")).join("\n");
 
@@ -32,13 +33,16 @@ impl Summary {
                 "upstream_nixpkgs_explainer": include_str!("./explainers/upstream_nixpkgs.md"),
             });
 
-            let mut handlebars = Handlebars::new();
             handlebars
-                .register_template_string("summary.md", include_str!("./templates/summary.md"))
+                .register_template_string("dirty.md", include_str!("./templates/dirty.md"))
                 .map_err(Box::new)?;
-            handlebars.render("summary.md", &data)?
+            handlebars.render("dirty.md", &data)?
         } else {
-            String::from("## Nix flake dependency check\n\n:check: Your `flake.lock` has a clean bill of health.")
+            let data = json!({});
+            handlebars
+                .register_template_string("clean.md", include_str!("./templates/clean.md"))
+                .map_err(Box::new)?;
+            handlebars.render("clean.md", &data)?
         };
 
         let summary_md_filepath = std::env::var("GITHUB_STEP_SUMMARY")?;

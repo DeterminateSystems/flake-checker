@@ -16,9 +16,10 @@ pub struct FlakeLock {
 
 impl FlakeLock {
     fn nixpkgs_deps(&self) -> HashMap<String, Node> {
+        // TODO: make this more robust for real-world use cases
         self.nodes
             .iter()
-            .filter(|(_, v)| v.is_nixpkgs())
+            .filter(|(k, v)| matches!(v, Node::Dependency(_)) && k == &"nixpkgs")
             .map(|(k, v)| (k.clone(), v.clone()))
             .collect()
     }
