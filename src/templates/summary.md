@@ -45,7 +45,7 @@ The maximum recommended age is **{{max_days}}** days.
 
 <details>
 <summary>What to do 🧰</summary>
-Use the [`update-flake-lock`][flake-lock-action] GitHub Action to automate updates:
+Use the <a href="https://github.com/determinateSystems/update-flake-lock"><code>update-flake-lock</code></a> GitHub Action to automate updates:
 
 ```yaml
 steps:
@@ -90,7 +90,6 @@ If you need a customized version of Nixpkgs, we recommend that you use [overlays
 </details>
 {{/if}}
 
-[flake-lock-action]: https://github.com/determinateSystems/update-flake-lock
 [nixos]: https://github.com/nixos
 [overlays]: https://nixos.wiki/wiki/Overlays
 [overrides]: https://ryantm.github.io/nixpkgs/using/overrides
