@@ -83,6 +83,7 @@ enum Node {
     Root(RootNode),
     Repo(RepoNode),
     Path(PathNode),
+    Url(UrlNode),
 }
 
 impl Node {
@@ -113,6 +114,13 @@ struct PathNode {
     inputs: Option<HashMap<String, Input>>,
     locked: LockedPath,
     original: OriginalPath,
+}
+
+#[derive(Clone, Deserialize)]
+struct UrlNode {
+    #[serde(alias = "type")]
+    node_type: String,
+    url: String,
 }
 
 #[derive(Clone, Deserialize)]
