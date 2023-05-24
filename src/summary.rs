@@ -41,7 +41,8 @@ impl Summary {
             .map_err(Box::new)?;
         let summary_md = handlebars.render("summary.md", &data)?;
 
-        let summary_md_filepath = std::env::var("GITHUB_STEP_SUMMARY")?;
+        let summary_md_filepath =
+            std::env::var("GITHUB_STEP_SUMMARY").unwrap_or("/dev/stdout".to_string());
         let mut summary_md_file = OpenOptions::new()
             .append(true)
             .create(true)
