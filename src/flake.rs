@@ -85,6 +85,7 @@ enum Node {
     Repo(RepoNode),
     Path(PathNode),
     Url(UrlNode),
+    Fallthrough(serde_json::value::Value), // For misc node types
 }
 
 impl Node {
