@@ -15,11 +15,11 @@
 
 <details>
 <summary>What to do 🧰</summary>
-Use one of these branches instead:
+<p>Use one of these branches instead:</p>
 
 {{{supported_ref_names}}}
 
-Here's an example:
+<p>Here's an example:</p>
 
 ```nix
 {
@@ -45,7 +45,8 @@ The maximum recommended age is **{{max_days}}** days.
 
 <details>
 <summary>What to do 🧰</summary>
-Use the <a href="https://github.com/determinateSystems/update-flake-lock"><code>update-flake-lock</code></a> GitHub Action to automate updates:
+<p>Use the <a href="https://github.com/determinateSystems/update-flake-lock"><code>update-flake-lock</code></a>
+GitHub Action to automate updates:</p>
 
 ```yaml
 steps:
@@ -72,8 +73,7 @@ steps:
 
 <details>
 <summary>What to do 🧰</summary>
-Use a Nixpkgs dependency from the [`NixOS`][nixos] org.
-Here's an example:
+<p>Use a Nixpkgs dependency from the <a href="https://github.com/nixos"><code>NixOS</code></a> org. Here's an example:</p>
 
 ```nix
 {
@@ -81,7 +81,9 @@ Here's an example:
 }
 ```
 
-If you need a customized version of Nixpkgs, we recommend that you use [overlays] and per-package [overrides].
+<p>If you need a customized version of Nixpkgs, we recommend that you use
+<a href="https://nixos.wiki/wiki/Overlays">overlays</a> and
+per-package <a href="https://ryantm.github.io/nixpkgs/using/overrides">overrides</a>.</p>
 </details>
 
 <details>
@@ -89,8 +91,4 @@ If you need a customized version of Nixpkgs, we recommend that you use [overlays
 {{{ upstream_nixpkgs_explainer }}}
 </details>
 {{/if}}
-
-[nixos]: https://github.com/nixos
-[overlays]: https://nixos.wiki/wiki/Overlays
-[overrides]: https://ryantm.github.io/nixpkgs/using/overrides
 {{/if}}
