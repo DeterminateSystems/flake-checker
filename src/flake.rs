@@ -118,9 +118,9 @@ struct PathNode {
 
 #[derive(Clone, Deserialize)]
 struct UrlNode {
-    #[serde(alias = "type")]
-    node_type: String,
-    url: String,
+    inputs: Option<HashMap<String, Input>>,
+    locked: LockedUrl,
+    original: OriginalUrl,
 }
 
 #[derive(Clone, Deserialize)]
@@ -155,6 +155,22 @@ struct LockedPath {
 }
 
 #[derive(Clone, Deserialize)]
+struct LockedUrl {
+    #[serde(alias = "lastModified")]
+    last_modified: i64,
+    #[serde(alias = "narHash")]
+    nar_hash: String,
+    #[serde(alias = "ref")]
+    git_ref: String,
+    rev: String,
+    #[serde(alias = "revCount")]
+    rev_count: usize,
+    #[serde(alias = "type")]
+    node_type: String,
+    url: String,
+}
+
+#[derive(Clone, Deserialize)]
 struct OriginalRepo {
     owner: String,
     repo: String,
@@ -169,4 +185,11 @@ struct OriginalPath {
     path: String,
     #[serde(alias = "type")]
     node_type: String,
+}
+
+#[derive(Clone, Deserialize)]
+struct OriginalUrl {
+    #[serde(alias = "type")]
+    node_type: String,
+    url: String,
 }
