@@ -79,7 +79,6 @@ impl FlakeLock {
 
 #[derive(Clone, Deserialize)]
 #[serde(untagged)]
-#[non_exhaustive]
 enum Node {
     Root(RootNode),
     Repo(RepoNode),
