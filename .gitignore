@@ -5,5 +5,6 @@
 result
 
 # Generated
-./summary.md
+summary.md
+!src/templates/summary.md
 src/policy.json
