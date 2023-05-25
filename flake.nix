@@ -1,58 +1,66 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs";
-    rust-overlay.url = "github:oxalica/rust-overlay";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    flake-utils.url = "github:numtide/flake-utils";
+
+    rust-overlay = {
+      url = "github:oxalica/rust-overlay";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.flake-utils.follows = "flake-utils";
+    };
+
+    crane = {
+      url = "github:ipetkov/crane";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.flake-compat.follows = "flake-compat";
+      inputs.flake-utils.follows = "flake-utils";
+    };
+
+    flake-compat = {
+      url = "github:edolstra/flake-compat";
+      flake = false;
+    };
   };
 
-  outputs = { self, nixpkgs, ... }@inputs:
+  outputs = { self, nixpkgs, flake-utils, rust-overlay, crane, ... }:
     let
-      overlays = [
-        inputs.rust-overlay.overlays.default
-        (final: prev: {
-          rustToolchain = prev.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
-        })
-      ];
-      systems = [ "aarch64-linux" "aarch64-darwin" "x86_64-linux" "x86_64-darwin" ];
-      forAllSystems = f: nixpkgs.lib.genAttrs systems (system: f {
-        pkgs = import nixpkgs { inherit system overlays; };
-      });
+      supportedSystems = flake-utils.lib.defaultSystems;
     in
-
-    {
-      devShells = forAllSystems ({ pkgs }: {
-        default = pkgs.mkShell {
-          packages = (with pkgs; [
-            rustToolchain
-            cargo-edit
-            cargo-watch
-            rust-analyzer
-          ]) ++ pkgs.lib.optionals pkgs.stdenv.isDarwin (with pkgs.darwin.apple_sdk.frameworks; [ Security ]);
-        };
-
-        ci = pkgs.mkShell {
-          packages = with pkgs; [
-            rustToolchain
+    flake-utils.lib.eachSystem supportedSystems (system:
+      let
+        pkgs = import nixpkgs {
+          inherit system;
+          overlays = [
+            rust-overlay.overlay
           ];
         };
-      });
 
-      packages = forAllSystems ({ pkgs }:
-        let
-          meta = (builtins.fromTOML (builtins.readFile ./Cargo.toml)).package;
-          rust = pkgs.makeRustPlatform {
-            cargo = pkgs.rustToolchain;
-            rustc = pkgs.rustToolchain;
-          };
-        in
-        {
-          default =
-            rust.buildRustPackage {
-              pname = meta.name;
-              version = meta.version;
-              buildInputs = pkgs.lib.optionals pkgs.stdenv.isDarwin (with pkgs.darwin.apple_sdk.frameworks; [ Security ]);
-              src = ./.;
-              cargoHash = "sha256-DhtMnZ0bh3GDLlphQtuifFJJ/VRkRE7X+eDeWdii82c=";
-            };
-        });
-    };
+        inherit (pkgs) lib;
+
+        cranePkgs = pkgs.callPackage ./crane.nix {
+          inherit crane supportedSystems;
+        };
+      in
+      {
+        packages = rec {
+          inherit (cranePkgs) flake-checker;
+          default = flake-checker;
+        };
+        devShells = {
+          default = pkgs.mkShell ({
+            inputsFrom = [ cranePkgs.flake-checker ];
+            packages = with pkgs; [
+              bashInteractive
+              cranePkgs.rustNightly
+
+              cargo-bloat
+              cargo-edit
+              cargo-udeps
+              cargo-edit
+              cargo-watch
+              rust-analyzer
+            ];
+          } // cranePkgs.cargoCrossEnvs);
+        };
+      });
 }

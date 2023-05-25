@@ -1,10 +1,10 @@
-# Nix flake dependency check
+# ![](https://avatars.githubusercontent.com/u/80991770?s=30) Flake Checkup
 
 {{#if clean}}
-✅ Your `flake.lock` has a clean bill of health.
+✅ The Determinate Nix Installer Action scanned your `flake.lock` and didn't identify any problems.
 {{/if}}
 {{#if dirty}}
-⚠️ The Nix Installer Action scanned your `flake.lock` and discovered a few issues that we recommend looking into.
+⚠️ The Determinate Nix Installer Action scanned your `flake.lock` and discovered a few issues that we recommend looking into.
 
 {{#if has_disallowed}}
 ## Non-supported Git branches for Nixpkgs
@@ -92,3 +92,5 @@ per-package <a href="https://ryantm.github.io/nixpkgs/using/overrides">overrides
 </details>
 {{/if}}
 {{/if}}
+
+<p>Feedback? Let us know at <a href="https://github.com/DeterminateSystems/flake-checker">DeterminateSystems/flake-checker</a>.</p>

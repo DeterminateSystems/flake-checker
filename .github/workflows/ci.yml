@@ -18,10 +18,10 @@ jobs:
         uses: DeterminateSystems/nix-installer-action@v2
       - name: cargo test
         run:
-          nix develop .#ci -c cargo test
+          nix develop -c cargo test
       - name: cargo build
         run:
-          nix develop .#ci -c cargo build
+          nix develop -c cargo build
       - name: nix build
         run:
           nix build
@@ -35,8 +35,7 @@ jobs:
         uses: DeterminateSystems/nix-installer-action@v2
       - name: Check flake.lock
         run: |
-          nix develop .#ci -c cargo run -- ./flake.dirty.lock
-
+          nix develop -c cargo run -- ./flake.dirty.lock
   check-flake-clean:
     name: Check flake.lock test (clean 👼)
     runs-on: ubuntu-22.04
@@ -46,4 +45,4 @@ jobs:
         uses: DeterminateSystems/nix-installer-action@v2
       - name: Check flake.lock
         run: |
-          nix develop .#ci -c cargo run
+          nix develop -c cargo run
