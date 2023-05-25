@@ -13,12 +13,21 @@ use clap::Parser;
 struct Cli {
     /// Send aggregate sums of each issue type,
     /// see: https://github.com/determinateSystems/flake-checker
+    #[clap(long, env = "NIX_FLAKE_CHECKER_NO_TELEMETRY", default_value = "false")]
+    no_telemetry: bool,
+
+    #[clap(long, env = "NIX_FLAKE_CHECKER_CHECK_OUTDATED", default_value = "true")]
+    check_outdated: bool,
+
     #[clap(
         long,
-        env = "NIX_FLAKE_CHECKER_NO_TELEMETRY",
-        default_value = "false"
+        env = "NIX_FLAKE_CHECKER_CHECK_SUPPORTED",
+        default_value = "true"
     )]
-    no_telemetry: bool,
+    check_supported: bool,
+
+    #[clap(long, env = "NIX_FLAKE_CHECKER_CHECK_OWNER", default_value = "true")]
+    check_owner: bool,
 
     /// The path to the flake.lock file to check.
     #[clap(default_value = "flake.lock")]
@@ -29,10 +38,13 @@ fn main() -> Result<(), FlakeCheckerError> {
     let Cli {
         flake_lock_path,
         no_telemetry,
+        check_supported,
+        check_outdated,
+        check_owner,
     } = Cli::parse();
     let flake_lock_file = read_to_string(flake_lock_path)?;
     let flake_lock: FlakeLock = serde_json::from_str(&flake_lock_file)?;
-    let issues = flake_lock.check();
+    let issues = flake_lock.check(check_supported, check_outdated, check_owner);
 
     if !no_telemetry {
         telemetry::TelemetryReport::make_and_send(&issues);

@@ -24,52 +24,63 @@ impl FlakeLock {
             .collect()
     }
 
-    pub fn check(&self) -> Vec<Issue> {
+    pub fn check(
+        &self,
+        check_supported: bool,
+        check_outdated: bool,
+        check_owner: bool,
+    ) -> Vec<Issue> {
         let mut issues = vec![];
 
         for (name, dep) in self.nixpkgs_deps() {
             if let Node::Repo(repo) = dep {
                 // Check if not explicitly supported
-                if let Some(ref git_ref) = repo.original.git_ref {
-                    if !ALLOWED_REFS.contains(&git_ref.as_str()) {
+                if check_supported {
+                    if let Some(ref git_ref) = repo.original.git_ref {
+                        if !ALLOWED_REFS.contains(&git_ref.as_str()) {
+                            issues.push(Issue {
+                                dependency: name.clone(),
+                                kind: IssueKind::Disallowed,
+                                details: json!({
+                                    "input": name,
+                                    "ref": git_ref
+                                }),
+                            });
+                        }
+                    }
+                }
+
+                // Check if outdated
+                if check_outdated {
+                    let now_timestamp = Utc::now().timestamp();
+                    let diff = now_timestamp - repo.locked.last_modified;
+                    let num_days_old = Duration::seconds(diff).num_days();
+
+                    if num_days_old > MAX_DAYS {
                         issues.push(Issue {
                             dependency: name.clone(),
-                            kind: IssueKind::Disallowed,
+                            kind: IssueKind::Outdated,
                             details: json!({
                                 "input": name,
-                                "ref": git_ref
+                                "num_days_old": num_days_old,
                             }),
                         });
                     }
                 }
 
-                // Check if outdated
-                let now_timestamp = Utc::now().timestamp();
-                let diff = now_timestamp - repo.locked.last_modified;
-                let num_days_old = Duration::seconds(diff).num_days();
-
-                if num_days_old > MAX_DAYS {
-                    issues.push(Issue {
-                        dependency: name.clone(),
-                        kind: IssueKind::Outdated,
-                        details: json!({
-                            "input": name,
-                            "num_days_old": num_days_old,
-                        }),
-                    });
-                }
-
                 // Check that the GitHub owner is NixOS
-                let owner = repo.original.owner;
-                if owner.to_lowercase() != "nixos" {
-                    issues.push(Issue {
-                        dependency: name.clone(),
-                        kind: IssueKind::NonUpstream,
-                        details: json!({
-                            "input": name,
-                            "owner": owner,
-                        }),
-                    });
+                if check_owner {
+                    let owner = repo.original.owner;
+                    if owner.to_lowercase() != "nixos" {
+                        issues.push(Issue {
+                            dependency: name.clone(),
+                            kind: IssueKind::NonUpstream,
+                            details: json!({
+                                "input": name,
+                                "owner": owner,
+                            }),
+                        });
+                    }
                 }
             }
         }
