@@ -3,6 +3,7 @@ use serde::Serialize;
 mod error;
 mod flake;
 mod summary;
+pub mod telemetry;
 
 pub use error::FlakeCheckerError;
 pub use flake::FlakeLock;
@@ -27,7 +28,7 @@ pub struct Issue {
     details: serde_json::Value,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, PartialEq)]
 enum IssueKind {
     #[serde(rename = "disallowed")]
     Disallowed,
