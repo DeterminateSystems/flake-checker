@@ -21,12 +21,12 @@
     {
       devShells = forAllSystems ({ pkgs }: {
         default = pkgs.mkShell {
-          packages = with pkgs; [
+          packages = (with pkgs; [
             rustToolchain
             cargo-edit
             cargo-watch
             rust-analyzer
-          ];
+          ]) ++ pkgs.lib.optionals pkgs.stdenv.isDarwin (with pkgs.darwin.apple_sdk.frameworks; [ Security ]);
         };
 
         ci = pkgs.mkShell {
@@ -49,8 +49,9 @@
             rust.buildRustPackage {
               pname = meta.name;
               version = meta.version;
+              buildInputs = pkgs.lib.optionals pkgs.stdenv.isDarwin (with pkgs.darwin.apple_sdk.frameworks; [ Security ]);
               src = ./.;
-              cargoHash = "sha256-toXBfFKKa1Vk3aeafPVLwHN3M5IW9BZckRv/9CLsJZA=";
+              cargoHash = "sha256-DhtMnZ0bh3GDLlphQtuifFJJ/VRkRE7X+eDeWdii82c=";
             };
         });
     };
