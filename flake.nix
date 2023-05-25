@@ -31,11 +31,9 @@
         pkgs = import nixpkgs {
           inherit system;
           overlays = [
-            rust-overlay.overlay
+            rust-overlay.overlays.default
           ];
         };
-
-        inherit (pkgs) lib;
 
         cranePkgs = pkgs.callPackage ./crane.nix {
           inherit crane supportedSystems;
@@ -47,9 +45,8 @@
           default = flake-checker;
         };
         devShells = {
-          default = pkgs.mkShell ({
-            inputsFrom = [ cranePkgs.flake-checker ];
-            packages = with pkgs; [
+          default = pkgs.mkShell {
+            packages = (with pkgs; [
               bashInteractive
               cranePkgs.rustNightly
 
@@ -59,8 +56,8 @@
               cargo-edit
               cargo-watch
               rust-analyzer
-            ];
-          } // cranePkgs.cargoCrossEnvs);
+            ]) ++ pkgs.lib.optionals pkgs.stdenv.isDarwin (with pkgs.darwin.apple_sdk.frameworks; [ Security ]);
+          };
         };
       });
 }
