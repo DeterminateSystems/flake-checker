@@ -15,7 +15,7 @@ jobs:
         uses: DeterminateSystems/nix-installer-action@v2
       - name: Check flake.lock
         run: |
-          nix develop .#ci -c cargo run -- ./flake.dirty.lock
+          nix develop -c cargo run -- ./flake.dirty.lock
   check-flake-clean:
     name: Check flake.lock test (clean 👼)
     runs-on: ubuntu-22.04
@@ -25,4 +25,4 @@ jobs:
         uses: DeterminateSystems/nix-installer-action@v2
       - name: Check flake.lock
         run: |
-          nix develop .#ci -c cargo run
+          nix develop -c cargo run
