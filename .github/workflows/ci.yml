@@ -6,6 +6,26 @@ on:
     branches: [main]
 
 jobs:
+  build-and-test:
+    name: Build and test
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, macos-13]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v2
+      - name: cargo test
+        run:
+          nix develop .#ci -c cargo test
+      - name: cargo build
+        run:
+          nix develop .#ci -c cargo build
+      - name: nix build
+        run:
+          nix build
+
   check-flake-dirty:
     name: Check flake.lock test (dirty 😈)
     runs-on: ubuntu-22.04
@@ -16,6 +36,7 @@ jobs:
       - name: Check flake.lock
         run: |
           nix develop .#ci -c cargo run -- ./flake.dirty.lock
+
   check-flake-clean:
     name: Check flake.lock test (clean 👼)
     runs-on: ubuntu-22.04
