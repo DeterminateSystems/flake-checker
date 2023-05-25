@@ -1,5 +1,5 @@
 {
-   inputs = {
+  inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
 
@@ -22,41 +22,45 @@
     };
   };
 
-  outputs = { self, nixpkgs, flake-utils, rust-overlay, crane, ... }: let
-    supportedSystems = flake-utils.lib.defaultSystems;
-  in flake-utils.lib.eachSystem supportedSystems (system: let
-    pkgs = import nixpkgs {
-      inherit system;
-      overlays = [
-        rust-overlay.overlay
-      ];
-    };
+  outputs = { self, nixpkgs, flake-utils, rust-overlay, crane, ... }:
+    let
+      supportedSystems = flake-utils.lib.defaultSystems;
+    in
+    flake-utils.lib.eachSystem supportedSystems (system:
+      let
+        pkgs = import nixpkgs {
+          inherit system;
+          overlays = [
+            rust-overlay.overlay
+          ];
+        };
 
-    inherit (pkgs) lib;
+        inherit (pkgs) lib;
 
-    cranePkgs = pkgs.callPackage ./crane.nix {
-      inherit crane supportedSystems;
-    };
-  in {
-    packages = rec {
-      inherit (cranePkgs) flake-checker;
-      default = flake-checker;
-    };
-    devShells = {
-      default = pkgs.mkShell ({
-        inputsFrom = [ cranePkgs.flake-checker ];
-        packages = with pkgs; [
-          bashInteractive
-          cranePkgs.rustNightly
+        cranePkgs = pkgs.callPackage ./crane.nix {
+          inherit crane supportedSystems;
+        };
+      in
+      {
+        packages = rec {
+          inherit (cranePkgs) flake-checker;
+          default = flake-checker;
+        };
+        devShells = {
+          default = pkgs.mkShell ({
+            inputsFrom = [ cranePkgs.flake-checker ];
+            packages = with pkgs; [
+              bashInteractive
+              cranePkgs.rustNightly
 
-          cargo-bloat
-          cargo-edit
-          cargo-udeps
-          cargo-edit
-          cargo-watch
-          rust-analyzer
-        ];
-      } // cranePkgs.cargoCrossEnvs);
-    };
-  });
+              cargo-bloat
+              cargo-edit
+              cargo-udeps
+              cargo-edit
+              cargo-watch
+              rust-analyzer
+            ];
+          } // cranePkgs.cargoCrossEnvs);
+        };
+      });
 }
