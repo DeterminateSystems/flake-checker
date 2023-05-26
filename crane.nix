@@ -97,9 +97,8 @@ let
 
       crate = craneLib.buildPackage (commonArgs // {
         cargoArtifacts = craneLib.buildDepsOnly commonArgs;
-
-        # The resulting executable must be standalone
-        allowedRequisites = [ ];
+      } // lib.optionalAttrs (!stdenv.isDarwin) {
+        allowedRequisites = [];
       });
     in
     crate;
