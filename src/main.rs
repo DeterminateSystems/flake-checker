@@ -1,6 +1,6 @@
 extern crate flake_checker;
 
-use flake_checker::{telemetry, FlakeCheckerError, FlakeLock, Summary};
+use flake_checker::{check_flake_lock, telemetry, FlakeCheckerError, FlakeLock, Summary};
 
 use std::fs::read_to_string;
 use std::path::PathBuf;
@@ -44,7 +44,7 @@ fn main() -> Result<(), FlakeCheckerError> {
     } = Cli::parse();
     let flake_lock_file = read_to_string(flake_lock_path)?;
     let flake_lock: FlakeLock = serde_json::from_str(&flake_lock_file)?;
-    let issues = flake_lock.check(check_supported, check_outdated, check_owner);
+    let issues = check_flake_lock(&flake_lock, check_supported, check_outdated, check_owner);
 
     if !no_telemetry {
         telemetry::TelemetryReport::make_and_send(&issues);
