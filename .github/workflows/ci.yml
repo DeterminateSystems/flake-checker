@@ -6,6 +6,18 @@ on:
     branches: [main]
 
 jobs:
+  formatting-checks:
+    name: Check Nix and Rust formatting
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v2
+      - name: Check Nix formatting
+        run: nix develop -c check-nixpkgs-fmt
+      - name: Check Rust formatting
+        run: nix develop -c check-rustfmt
+
   check-flake-dirty:
     name: Check flake.lock test (dirty 😈)
     runs-on: ubuntu-22.04

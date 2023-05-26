@@ -1,9 +1,11 @@
 #![allow(dead_code)]
 use std::collections::HashMap;
+use std::fmt;
 
 use crate::{Issue, IssueKind, ALLOWED_REFS, MAX_DAYS};
 
 use chrono::{Duration, Utc};
+use serde::de::{self, Deserializer, MapAccess, Visitor};
 use serde::Deserialize;
 use serde_json::json;
 
@@ -70,11 +72,90 @@ pub fn check_flake_lock(
     issues
 }
 
-#[derive(Clone, Deserialize)]
+#[derive(Clone)]
 pub struct FlakeLock {
     nodes: HashMap<String, Node>,
-    root: String,
+    root: HashMap<String, Node>,
     version: usize,
+}
+
+impl<'de> Deserialize<'de> for FlakeLock {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        #[serde(field_identifier, rename_all = "lowercase")]
+        enum Field {
+            Nodes,
+            Root,
+            Version,
+        }
+
+        struct FlakeLockVisitor;
+
+        impl<'de> Visitor<'de> for FlakeLockVisitor {
+            type Value = FlakeLock;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                formatter.write_str("struct FlakeLock")
+            }
+
+            fn visit_map<V>(self, mut map: V) -> Result<Self::Value, V::Error>
+            where
+                V: MapAccess<'de>,
+            {
+                let mut nodes = None;
+                let mut root = None;
+                let mut version = None;
+                while let Some(key) = map.next_key()? {
+                    match key {
+                        Field::Nodes => {
+                            if nodes.is_some() {
+                                return Err(de::Error::duplicate_field("nodes"));
+                            }
+                            nodes = Some(map.next_value()?);
+                        }
+                        Field::Root => {
+                            if root.is_some() {
+                                return Err(de::Error::duplicate_field("root"));
+                            }
+                            root = Some(map.next_value()?);
+                        }
+                        Field::Version => {
+                            if version.is_some() {
+                                return Err(de::Error::duplicate_field("version"));
+                            }
+                            version = Some(map.next_value()?);
+                        }
+                    }
+                }
+                let nodes: HashMap<String, Node> =
+                    nodes.ok_or_else(|| de::Error::missing_field("nodes"))?;
+                let root: String = root.ok_or_else(|| de::Error::missing_field("root"))?;
+                let version: usize = version.ok_or_else(|| de::Error::missing_field("version"))?;
+
+                let mut root_nodes = HashMap::new();
+                let root_node = &nodes[&root];
+                let Node::Root(root_node) = root_node else {
+                    panic!("root node was not a Root node, but was a {} node", root_node.variant());
+                };
+                for (root_name, root_reference) in root_node.inputs.iter() {
+                    let root_reference = root_reference.as_str();
+                    let root_node = nodes[root_reference].to_owned();
+                    root_nodes.insert(root_name.to_owned(), root_node);
+                }
+
+                Ok(FlakeLock {
+                    nodes,
+                    root: root_nodes,
+                    version,
+                })
+            }
+        }
+
+        deserializer.deserialize_any(FlakeLockVisitor)
+    }
 }
 
 impl FlakeLock {
@@ -99,6 +180,16 @@ enum Node {
 }
 
 impl Node {
+    fn variant(&self) -> &'static str {
+        match self {
+            Node::Root(_) => "Root",
+            Node::Repo(_) => "Repo",
+            Node::Path(_) => "Path",
+            Node::Url(_) => "Url",
+            Node::Fallthrough(_) => "Fallthrough",
+        }
+    }
+
     fn is_nixpkgs(&self) -> bool {
         match self {
             Self::Repo(repo) => {
