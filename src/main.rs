@@ -13,11 +13,7 @@ use clap::Parser;
 struct Cli {
     /// Send aggregate sums of each issue type,
     /// see: https://github.com/determinateSystems/flake-checker
-    #[clap(
-        long,
-        env = "NIX_FLAKE_CHECKER_NO_TELEMETRY",
-        default_value = "false"
-    )]
+    #[clap(long, env = "NIX_FLAKE_CHECKER_NO_TELEMETRY", default_value = "false")]
     no_telemetry: bool,
 
     /// The path to the flake.lock file to check.

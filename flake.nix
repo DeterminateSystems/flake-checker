@@ -44,19 +44,42 @@
       });
 
       devShells = forAllSystems ({ pkgs, cranePkgs }: {
-        default = pkgs.mkShell {
-          packages = (with pkgs; [
-            bashInteractive
-            cranePkgs.rustNightly
+        default =
+          let
+            check-nixpkgs-fmt = pkgs.writeShellApplication {
+              name = "check-nixpkgs-fmt";
+              runtimeInputs = with pkgs; [ git nixpkgs-fmt ];
+              text = ''
+                git ls-files '*.nix' | xargs nixpkgs-fmt --check
+              '';
+            };
+            check-rustfmt = pkgs.writeShellApplication {
+              name = "check-rustfmt";
+              runtimeInputs = [ cranePkgs.rustNightly ];
+              text = "cargo fmt --check";
+            };
+          in
+          pkgs.mkShell {
+            packages = (with pkgs; [
+              bashInteractive
 
-            cargo-bloat
-            cargo-edit
-            cargo-udeps
-            cargo-edit
-            cargo-watch
-            rust-analyzer
-          ]) ++ pkgs.lib.optionals pkgs.stdenv.isDarwin (with pkgs.darwin.apple_sdk.frameworks; [ Security ]);
-        };
+              # Rust
+              cranePkgs.rustNightly
+              cargo-bloat
+              cargo-edit
+              cargo-udeps
+              cargo-edit
+              cargo-watch
+              rust-analyzer
+
+              # Nix
+              nixpkgs-fmt
+
+              # CI checks
+              check-nixpkgs-fmt
+              check-rustfmt
+            ]) ++ pkgs.lib.optionals pkgs.stdenv.isDarwin (with pkgs.darwin.apple_sdk.frameworks; [ Security ]);
+          };
       });
     };
 }
