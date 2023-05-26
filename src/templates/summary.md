@@ -1,4 +1,4 @@
-# ![](https://avatars.githubusercontent.com/u/80991770?s=30) Flake Checkup
+# ![](https://avatars.githubusercontent.com/u/80991770?s=30) Flake checkup
 
 {{#if clean}}
 ✅ The Determinate Nix Installer Action scanned your `flake.lock` and didn't identify any problems.
