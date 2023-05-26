@@ -1,12 +1,10 @@
 # flake-checker
 
 ```shell
-nix build
-
-./result/bin/flake-checker
+nix run github:DeterminateSystems/flake-checker
 
 # Or point to an explicit path
-./result/bin/flake-checker /path/to/flake.lock
+nix run github:DeterminateSystems/flake-checker /path/to/flake.lock
 ```
 
 Currently performs two checks:
