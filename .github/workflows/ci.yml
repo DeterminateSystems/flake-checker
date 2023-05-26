@@ -11,6 +11,8 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v2
       - name: Check Nix formatting
         run: nix develop -c check-nixpkgs-fmt
       - name: Check Rust formatting
