@@ -98,7 +98,7 @@ let
       crate = craneLib.buildPackage (commonArgs // {
         cargoArtifacts = craneLib.buildDepsOnly commonArgs;
       } // lib.optionalAttrs (!stdenv.isDarwin) {
-        allowedRequisites = [];
+        allowedRequisites = [ ];
       });
     in
     crate;
