@@ -1,7 +1,6 @@
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    flake-utils.url = "github:numtide/flake-utils";
 
     rust-overlay = {
       url = "github:oxalica/rust-overlay";
@@ -24,10 +23,8 @@
 
   outputs = { self, nixpkgs, flake-utils, rust-overlay, crane, ... }:
     let
-      supportedSystems = flake-utils.lib.defaultSystems;
-    in
-    flake-utils.lib.eachSystem supportedSystems (system:
-      let
+      supportedSystems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
+      forAllSystems = f: nixpkgs.lib.genAttrs supportedSystems (system: f rec {
         pkgs = import nixpkgs {
           inherit system;
           overlays = [
@@ -38,26 +35,28 @@
         cranePkgs = pkgs.callPackage ./crane.nix {
           inherit crane supportedSystems;
         };
-      in
-      {
-        packages = rec {
-          inherit (cranePkgs) flake-checker;
-          default = flake-checker;
-        };
-        devShells = {
-          default = pkgs.mkShell {
-            packages = (with pkgs; [
-              bashInteractive
-              cranePkgs.rustNightly
+      });
+    in
+    {
+      packages = forAllSystems ({ cranePkgs, ... }: rec {
+        inherit (cranePkgs) flake-checker;
+        default = flake-checker;
+      });
 
-              cargo-bloat
-              cargo-edit
-              cargo-udeps
-              cargo-edit
-              cargo-watch
-              rust-analyzer
-            ]) ++ pkgs.lib.optionals pkgs.stdenv.isDarwin (with pkgs.darwin.apple_sdk.frameworks; [ Security ]);
-          };
+      devShells = forAllSystems ({ pkgs, cranePkgs }: {
+        default = pkgs.mkShell {
+          packages = (with pkgs; [
+            bashInteractive
+            cranePkgs.rustNightly
+
+            cargo-bloat
+            cargo-edit
+            cargo-udeps
+            cargo-edit
+            cargo-watch
+            rust-analyzer
+          ]) ++ pkgs.lib.optionals pkgs.stdenv.isDarwin (with pkgs.darwin.apple_sdk.frameworks; [ Security ]);
         };
       });
+    };
 }
