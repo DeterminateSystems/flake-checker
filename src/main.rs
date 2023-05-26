@@ -30,7 +30,10 @@ struct Cli {
     check_owner: bool,
 
     /// The path to the flake.lock file to check.
-    #[clap(default_value = "flake.lock")]
+    #[clap(
+        env = "NIX_FLAKE_CHECKER_FLAKE_LOCK_PATH",
+        default_value = "flake.lock"
+    )]
     flake_lock_path: PathBuf,
 }
 
