@@ -11,26 +11,25 @@ use clap::Parser;
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 struct Cli {
-    /// Send aggregate sums of each issue type,
-    /// see: https://github.com/determinateSystems/flake-checker
-    #[clap(long, env = "NIX_FLAKE_CHECKER_NO_TELEMETRY", default_value = "false")]
+    /// Send aggregate sums of each issue type. See: https://github.com/determinateSystems/flake-checker.
+    #[arg(long, env = "NIX_FLAKE_CHECKER_NO_TELEMETRY", default_value_t = true)]
     no_telemetry: bool,
 
-    #[clap(long, env = "NIX_FLAKE_CHECKER_CHECK_OUTDATED", default_value = "true")]
+    #[arg(long, env = "NIX_FLAKE_CHECKER_CHECK_OUTDATED", default_value_t = true)]
     check_outdated: bool,
 
-    #[clap(
+    #[arg(long, env = "NIX_FLAKE_CHECKER_CHECK_OWNER", default_value_t = true)]
+    check_owner: bool,
+
+    #[arg(
         long,
         env = "NIX_FLAKE_CHECKER_CHECK_SUPPORTED",
-        default_value = "true"
+        default_value_t = true
     )]
     check_supported: bool,
 
-    #[clap(long, env = "NIX_FLAKE_CHECKER_CHECK_OWNER", default_value = "true")]
-    check_owner: bool,
-
     /// The path to the flake.lock file to check.
-    #[clap(
+    #[arg(
         env = "NIX_FLAKE_CHECKER_FLAKE_LOCK_PATH",
         default_value = "flake.lock"
     )]
@@ -39,11 +38,11 @@ struct Cli {
 
 fn main() -> Result<(), FlakeCheckerError> {
     let Cli {
-        flake_lock_path,
         no_telemetry,
-        check_supported,
         check_outdated,
         check_owner,
+        check_supported,
+        flake_lock_path,
     } = Cli::parse();
     let flake_lock_file = read_to_string(flake_lock_path)?;
     let flake_lock: FlakeLock = serde_json::from_str(&flake_lock_file)?;
