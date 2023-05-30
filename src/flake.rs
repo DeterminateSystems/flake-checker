@@ -9,6 +9,69 @@ use serde::de::{self, Deserializer, MapAccess, Visitor};
 use serde::Deserialize;
 use serde_json::json;
 
+pub fn check_flake_lock(
+    flake_lock: &FlakeLock,
+    check_supported: bool,
+    check_outdated: bool,
+    check_owner: bool,
+) -> Vec<Issue> {
+    let mut issues = vec![];
+
+    for (name, dep) in flake_lock.nixpkgs_deps() {
+        if let Node::Repo(repo) = dep {
+            // Check if not explicitly supported
+            if check_supported {
+                if let Some(ref git_ref) = repo.original.git_ref {
+                    if !ALLOWED_REFS.contains(&git_ref.as_str()) {
+                        issues.push(Issue {
+                            dependency: name.clone(),
+                            kind: IssueKind::Disallowed,
+                            details: json!({
+                                "input": name,
+                                "ref": git_ref
+                            }),
+                        });
+                    }
+                }
+            }
+
+            // Check if outdated
+            if check_outdated {
+                let now_timestamp = Utc::now().timestamp();
+                let diff = now_timestamp - repo.locked.last_modified;
+                let num_days_old = Duration::seconds(diff).num_days();
+
+                if num_days_old > MAX_DAYS {
+                    issues.push(Issue {
+                        dependency: name.clone(),
+                        kind: IssueKind::Outdated,
+                        details: json!({
+                            "input": name,
+                            "num_days_old": num_days_old,
+                        }),
+                    });
+                }
+            }
+
+            // Check that the GitHub owner is NixOS
+            if check_owner {
+                let owner = repo.original.owner;
+                if owner.to_lowercase() != "nixos" {
+                    issues.push(Issue {
+                        dependency: name.clone(),
+                        kind: IssueKind::NonUpstream,
+                        details: json!({
+                            "input": name,
+                            "owner": owner,
+                        }),
+                    });
+                }
+            }
+        }
+    }
+    issues
+}
+
 #[derive(Clone)]
 pub struct FlakeLock {
     nodes: HashMap<String, Node>,
@@ -103,58 +166,6 @@ impl FlakeLock {
             .filter(|(k, v)| matches!(v, Node::Repo(_)) && k == &"nixpkgs")
             .map(|(k, v)| (k.clone(), v.clone()))
             .collect()
-    }
-
-    pub fn check(&self) -> Vec<Issue> {
-        let mut issues = vec![];
-
-        for (name, dep) in self.nixpkgs_deps() {
-            if let Node::Repo(repo) = dep {
-                // Check if not explicitly supported
-                if let Some(ref git_ref) = repo.original.git_ref {
-                    if !ALLOWED_REFS.contains(&git_ref.as_str()) {
-                        issues.push(Issue {
-                            dependency: name.clone(),
-                            kind: IssueKind::Disallowed,
-                            details: json!({
-                                "input": name,
-                                "ref": git_ref
-                            }),
-                        });
-                    }
-                }
-
-                // Check if outdated
-                let now_timestamp = Utc::now().timestamp();
-                let diff = now_timestamp - repo.locked.last_modified;
-                let num_days_old = Duration::seconds(diff).num_days();
-
-                if num_days_old > MAX_DAYS {
-                    issues.push(Issue {
-                        dependency: name.clone(),
-                        kind: IssueKind::Outdated,
-                        details: json!({
-                            "input": name,
-                            "num_days_old": num_days_old,
-                        }),
-                    });
-                }
-
-                // Check that the GitHub owner is NixOS
-                let owner = repo.original.owner;
-                if owner.to_lowercase() != "nixos" {
-                    issues.push(Issue {
-                        dependency: name.clone(),
-                        kind: IssueKind::NonUpstream,
-                        details: json!({
-                            "input": name,
-                            "owner": owner,
-                        }),
-                    });
-                }
-            }
-        }
-        issues
     }
 }
 

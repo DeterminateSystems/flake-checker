@@ -6,7 +6,7 @@ mod summary;
 pub mod telemetry;
 
 pub use error::FlakeCheckerError;
-pub use flake::FlakeLock;
+pub use flake::{check_flake_lock, FlakeLock};
 pub use summary::Summary;
 
 // Update this when necessary by running the get-allowed-refs.sh script to fetch
