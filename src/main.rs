@@ -17,15 +17,15 @@ struct Cli {
     #[arg(long, env = "NIX_FLAKE_CHECKER_NO_TELEMETRY", default_value_t = true)]
     no_telemetry: bool,
 
-    /// TODO.
+    /// Check for outdated Nixpkgs inputs.
     #[arg(long, env = "NIX_FLAKE_CHECKER_CHECK_OUTDATED", default_value_t = true)]
     check_outdated: bool,
 
-    /// TODO.
+    /// Check that Nixpkgs inputs have "NixOS" as the GitHub owner.
     #[arg(long, env = "NIX_FLAKE_CHECKER_CHECK_OWNER", default_value_t = true)]
     check_owner: bool,
 
-    /// TODO.
+    /// Check that Git refs for Nixpkgs inputs are supported.
     #[arg(
         long,
         env = "NIX_FLAKE_CHECKER_CHECK_SUPPORTED",
