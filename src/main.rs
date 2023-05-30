@@ -11,16 +11,21 @@ use clap::Parser;
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 struct Cli {
-    /// Send aggregate sums of each issue type. See: https://github.com/determinateSystems/flake-checker.
+    /// Send aggregate sums of each issue type.
+    ///
+    /// See: https://github.com/determinateSystems/flake-checker.
     #[arg(long, env = "NIX_FLAKE_CHECKER_NO_TELEMETRY", default_value_t = true)]
     no_telemetry: bool,
 
+    /// TODO.
     #[arg(long, env = "NIX_FLAKE_CHECKER_CHECK_OUTDATED", default_value_t = true)]
     check_outdated: bool,
 
+    /// TODO.
     #[arg(long, env = "NIX_FLAKE_CHECKER_CHECK_OWNER", default_value_t = true)]
     check_owner: bool,
 
+    /// TODO.
     #[arg(
         long,
         env = "NIX_FLAKE_CHECKER_CHECK_SUPPORTED",
