@@ -4,6 +4,7 @@ use flake_checker::{check_flake_lock, telemetry, FlakeCheckerError, FlakeLock, S
 
 use std::fs::read_to_string;
 use std::path::PathBuf;
+use std::process::exit;
 
 use clap::Parser;
 
@@ -33,6 +34,14 @@ struct Cli {
     )]
     check_supported: bool,
 
+    /// Ignore a missing flake.lock file.
+    #[arg(
+        long,
+        env = "NIX_FLAKE_CHECKER_IGNORE_MISSING_FLAKE_LOCK",
+        default_value_t = true
+    )]
+    ignore_missing_flake_lock: bool,
+
     /// The path to the flake.lock file to check.
     #[arg(
         env = "NIX_FLAKE_CHECKER_FLAKE_LOCK_PATH",
@@ -47,8 +56,20 @@ fn main() -> Result<(), FlakeCheckerError> {
         check_outdated,
         check_owner,
         check_supported,
+        ignore_missing_flake_lock,
         flake_lock_path,
     } = Cli::parse();
+
+    if !flake_lock_path.exists() {
+        if ignore_missing_flake_lock {
+            println!("no flake lockfile found at {:?}; ignoring", flake_lock_path);
+            exit(0);
+        } else {
+            println!("no flake lockfile found at {:?}", flake_lock_path);
+            exit(1);
+        }
+    }
+
     let flake_lock_file = read_to_string(flake_lock_path)?;
     let flake_lock: FlakeLock = serde_json::from_str(&flake_lock_file)?;
     let issues = check_flake_lock(&flake_lock, check_supported, check_outdated, check_owner);
