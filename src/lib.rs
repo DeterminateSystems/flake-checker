@@ -14,9 +14,12 @@ pub use summary::Summary;
 const ALLOWED_REFS: &[&str; 6] = &[
     "nixos-22.11",
     "nixos-22.11-small",
+    "nixos-23.05",
+    "nixos-23.05-small",
     "nixos-unstable",
     "nixos-unstable-small",
     "nixpkgs-22.11-darwin",
+    "nixpkgs-23.05-darwin",
     "nixpkgs-unstable",
 ];
 const MAX_DAYS: i64 = 30;
