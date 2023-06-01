@@ -173,10 +173,8 @@ impl FlakeLock {
 #[serde(untagged)]
 enum Node {
     Root(RootNode),
-    Repo(RepoNode),
-    Path(PathNode),
-    Url(UrlNode),
-    Fallthrough(serde_json::value::Value), // For misc node types
+    Repo(Box<RepoNode>),
+    Fallthrough(serde_json::value::Value), // Covers all other node types
 }
 
 impl Node {
@@ -184,9 +182,7 @@ impl Node {
         match self {
             Node::Root(_) => "Root",
             Node::Repo(_) => "Repo",
-            Node::Path(_) => "Path",
-            Node::Url(_) => "Url",
-            Node::Fallthrough(_) => "Fallthrough",
+            Node::Fallthrough(_) => "Fallthrough", // Covers all other node types
         }
     }
 
@@ -201,32 +197,6 @@ impl Node {
 }
 
 #[derive(Clone, Deserialize)]
-struct RootNode {
-    inputs: HashMap<String, String>,
-}
-
-#[derive(Clone, Deserialize)]
-struct RepoNode {
-    inputs: Option<HashMap<String, Input>>,
-    locked: LockedRepo,
-    original: OriginalRepo,
-}
-
-#[derive(Clone, Deserialize)]
-struct PathNode {
-    inputs: Option<HashMap<String, Input>>,
-    locked: LockedPath,
-    original: OriginalPath,
-}
-
-#[derive(Clone, Deserialize)]
-struct UrlNode {
-    inputs: Option<HashMap<String, Input>>,
-    locked: LockedUrl,
-    original: OriginalUrl,
-}
-
-#[derive(Clone, Deserialize)]
 #[serde(untagged)]
 enum Input {
     String(String),
@@ -234,7 +204,19 @@ enum Input {
 }
 
 #[derive(Clone, Deserialize)]
-struct LockedRepo {
+struct RootNode {
+    inputs: HashMap<String, String>,
+}
+
+#[derive(Clone, Deserialize)]
+struct RepoNode {
+    inputs: Option<HashMap<String, Input>>,
+    locked: RepoLocked,
+    original: RepoOriginal,
+}
+
+#[derive(Clone, Deserialize)]
+struct RepoLocked {
     #[serde(alias = "lastModified")]
     last_modified: i64,
     #[serde(alias = "narHash")]
@@ -247,52 +229,11 @@ struct LockedRepo {
 }
 
 #[derive(Clone, Deserialize)]
-struct LockedPath {
-    #[serde(alias = "lastModified")]
-    last_modified: i64,
-    #[serde(alias = "narHash")]
-    nar_hash: String,
-    path: String,
-    #[serde(alias = "type")]
-    node_type: String,
-}
-
-#[derive(Clone, Deserialize)]
-struct LockedUrl {
-    #[serde(alias = "lastModified")]
-    last_modified: i64,
-    #[serde(alias = "narHash")]
-    nar_hash: String,
-    #[serde(alias = "ref")]
-    git_ref: String,
-    rev: String,
-    #[serde(alias = "revCount")]
-    rev_count: usize,
-    #[serde(alias = "type")]
-    node_type: String,
-    url: String,
-}
-
-#[derive(Clone, Deserialize)]
-struct OriginalRepo {
+struct RepoOriginal {
     owner: String,
     repo: String,
     #[serde(alias = "type")]
     node_type: String,
     #[serde(alias = "ref")]
     git_ref: Option<String>,
-}
-
-#[derive(Clone, Deserialize)]
-struct OriginalPath {
-    path: String,
-    #[serde(alias = "type")]
-    node_type: String,
-}
-
-#[derive(Clone, Deserialize)]
-struct OriginalUrl {
-    #[serde(alias = "type")]
-    node_type: String,
-    url: String,
 }
