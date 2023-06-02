@@ -13,7 +13,11 @@ pub struct Summary {
 impl Summary {
     pub fn generate_markdown(&self) -> Result<(), FlakeCheckerError> {
         let mut handlebars = Handlebars::new();
-        let supported_ref_names = ALLOWED_REFS.map(|r| format!("* `{r}`")).join("\n");
+        let supported_ref_names = ALLOWED_REFS
+            .iter()
+            .map(|r| format!("* `{r}`"))
+            .collect::<Vec<_>>()
+            .join("\n");
         let data = json!({
             "issues": &self.issues,
             "clean": self.issues.is_empty(),
