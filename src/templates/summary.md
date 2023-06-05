@@ -57,7 +57,7 @@ steps:
       pr-labels: [dependencies, automated] # PR labels
 ```
 
-<p>For a more ad hoc approach, use the <a href="https://nixos.org/manual/nix/stable/command-ref/new-cli/nix3-flake-update.html"><code>nix flake update</code></a> utility</p>:
+<p>For a more ad hoc approach, use the <a href="https://nixos.org/manual/nix/stable/command-ref/new-cli/nix3-flake-update.html"><code>nix flake update</code></a> utility:</p>
 
 ```shell
 nix flake update
