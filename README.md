@@ -29,7 +29,7 @@ Here is a table of the [telemetry data we collect][diagnosticdata]:
 | -------------- | ------------------------------------------------------------------------------------------------------ |
 | `distinct_id`  | An opaque string which represents your project, by sha256 hashing repository and organization details. |
 | `version`      | The version of the Determinate Flake Checker.                                                          |
-| `is_ci`        | Whether the installer is being used in CI (e.g. GitHub Actions).                                       |
+| `is_ci`        | Whether the checker is being used in CI (e.g. GitHub Actions).                                         |
 | `disallowed`   | The number of inputs using unsupported branches of Nixpkgs.                                            |
 | `outdated`     | The number of inputs using outdated versions of Nixpkgs.                                               |
 | `non_upstream` | The number of inputs using forks of Nixpkgs.                                                           |
