@@ -32,7 +32,9 @@
 
 <details>
 <summary>Why it's important to use supported branches 📚</summary>
-{{{supported_refs_explainer}}}
+<a href="https://zero-to-nix.com/concepts/nixos">NixOS</a>'s release branches stop receiving updates roughly 7 months after release and then gradually become more and more insecure over time.
+Non-release branches receive unpredictable updates and should be avoided as dependencies.
+Release branches are also certain to have good <a href="https://zero-to-nix.com/concepts/caching">binary cache</a> coverage, which other branches can't promise.
 </details>
 {{/if}}
 
@@ -62,7 +64,8 @@ steps:
 
 <details>
 <summary>Why it's important to keep Nix dependencies up to date 📚</summary>
-{{{outdated_deps_explainer}}}
+<a href="https://github.com/NixOS/nixpkgs">Nixpkgs</a> receives a continuous stream of security patches to keep your software and systems secure.
+Using outdated revisions of Nixpkgs can inadvertently expose you to software security risks that have been resolved in more recent releases.
 </details>
 {{/if}}
 
@@ -90,7 +93,9 @@ per-package <a href="https://ryantm.github.io/nixpkgs/using/overrides">overrides
 
 <details>
 <summary>Why it's important to use upstream Nixpkgs 📚</summary>
-{{{upstream_nixpkgs_explainer}}}
+We don't recommend using forked or re-exported versions of Nixpkgs.
+While this may be convenient in some cases, it can introduce unexpected behaviors and unwanted security risks.
+While <a href="https://github.com/NixOS/nixpkgs">upstream Nixpkgs</a> isn't bulletproof&mdash;nothing in software is!&mdash;it has a wide range of security measures in place, most notably continuous integration testing with <a href="https://hydra.nixos.org/">Hydra</a>, that mitigate a great deal of supply chain risk.
 </details>
 {{/if}}
 {{/if}}
