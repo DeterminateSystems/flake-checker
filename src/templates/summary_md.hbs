@@ -4,7 +4,7 @@
 ✅ The Determinate Nix Installer Action scanned your `flake.lock` and didn't identify any problems.
 {{/if}}
 {{#if dirty}}
-⚠️ The Determinate Nix Installer Action scanned your `flake.lock` and discovered a few issues that we recommend looking into.
+⚠️ The Determinate Nix Installer Action scanned your `flake.lock` and discovered {{num_issues}} issues that we recommend looking into.
 
 {{#if has_disallowed}}
 ## Non-supported Git branches for Nixpkgs
@@ -17,7 +17,9 @@
 <summary>What to do 🧰</summary>
 <p>Use one of these branches instead:</p>
 
-{{{supported_ref_names}}}
+{{#each supported_ref_names}}
+* `{{this}}`
+{{/each}}
 
 <p>Here's an example:</p>
 
@@ -60,7 +62,7 @@ steps:
 
 <details>
 <summary>Why it's important to keep Nix dependencies up to date 📚</summary>
-{{{ outdated_deps_explainer }}}
+{{{outdated_deps_explainer}}}
 </details>
 {{/if}}
 
@@ -68,7 +70,7 @@ steps:
 ## Non-upstream Nixpkgs dependencies
 
 {{#each non_upstream}}
-* The `{{this.details.input}}` input has `{{this.details.owner}}` as an owner rather than `NixOS`
+* The `{{this.details.input}}` input has `{{this.details.owner}}` as an owner rather than the `NixOS` org
 {{/each}}
 
 <details>
@@ -88,7 +90,7 @@ per-package <a href="https://ryantm.github.io/nixpkgs/using/overrides">overrides
 
 <details>
 <summary>Why it's important to use upstream Nixpkgs 📚</summary>
-{{{ upstream_nixpkgs_explainer }}}
+{{{upstream_nixpkgs_explainer}}}
 </details>
 {{/if}}
 {{/if}}

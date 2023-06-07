@@ -1,0 +1,80 @@
+Flake checker results:
+
+{{#if clean}}
+The flake checker scanned your flake.lock and didn't identify any problems
+{{else}}
+The flake checker scanned your flake.lock and discovered {{num_issues}} issues
+that we recommend looking into:
+
+{{#if has_disallowed}}
+>>> Non-supported Git branches for Nixpkgs
+
+{{#each disallowed}}
+> The {{this.details.input}} input uses the {{this.details.ref}} branch
+{{/each}}
+
+>> What to do
+
+Use one of these branches instead:
+
+{{#each supported_ref_names}}
+* {{this}}
+{{/each}}
+
+>> Why it's important to use supported branches
+
+NixOS's release branches stop receiving updates roughly 7 months after release
+and then gradually become more and more insecure over time. Non-release branches
+receive unpredictable updates and should be avoided as dependencies. Release
+branches are also certain to have good binary cache coverage, which other
+branches can't promise.
+
+{{#if has_outdated}}
+>>> Outdated Nixpkgs dependencies
+
+{{#each outdated}}
+> The {{this.details.input}} input is {{this.details.num_days_old}} days old
+{{/each}}
+
+The maximum recommended age is {{max_days}} days.
+
+>> What to do
+
+For a more automated approach, use the update-flake-lock GitHub Action to create
+create pull requests to update your flake.lock (if you're using Github Actions).
+
+For a more ad hoc approach, use the nix flake update utility.
+
+>> Why it's important to keep Nix dependencies up to date
+
+Nixpkgs receives a continuous stream of security patches to keep your software
+and systems secure. Using outdated revisions of Nixpkgs can inadvertently expose
+you to software security risks that have been resolved in more recent releases.
+{{/if}}
+
+{{#if has_non_upstream}}
+>>> Non-upstream Nixpkgs dependencies
+
+{{#each non_upstream}}
+> The {{this.details.input}} input has {{this.details.owner}} as an owner rather
+  than the NixOS org
+{{/each}}
+`
+>> What to do
+
+Use a Nixpkgs dependency from the NixOS org, such as github:NixOS/nixpkgs.
+
+If you need a customized version of Nixpkgs, we recommend that you use overlays
+and per-package overrides.
+
+>> Why it's important to use upstream Nixpkgs
+
+We don't recommend using forked or re-exported versions of Nixpkgs. While this
+may be convenient in some cases, it can introduce unexpected behaviors and
+unwanted security risks. While upstream Nixpkgs isn't bulletproof (nothing in
+software is!) it has a wide range of security measures in place, most notably
+continuous integration testing with Hydra, that mitigate a great deal of supply
+chain risk.
+{{/if}}
+{{/if}}
+{{/if}}

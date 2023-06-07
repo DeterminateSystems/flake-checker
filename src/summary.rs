@@ -13,12 +13,6 @@ pub struct Summary {
 
 impl Summary {
     pub fn new(issues: Vec<Issue>) -> Self {
-        let supported_ref_names = ALLOWED_REFS
-            .iter()
-            .map(|r| format!("* `{r}`"))
-            .collect::<Vec<_>>()
-            .join("\n");
-
         let disallowed: Vec<&Issue> = issues
             .iter()
             .filter(|i| matches!(i.kind, IssueKind::Disallowed))
@@ -50,7 +44,7 @@ impl Summary {
             "non_upstream": non_upstream,
             // Constants
             "max_days": MAX_DAYS,
-            "supported_ref_names": supported_ref_names,
+            "supported_ref_names": ALLOWED_REFS,
             // Text snippets
             "supported_refs_explainer": include_str!("explainers/supported_refs.md"),
             "outdated_deps_explainer": include_str!("explainers/outdated_deps.md"),
@@ -64,7 +58,7 @@ impl Summary {
         let mut handlebars = Handlebars::new();
 
         handlebars
-            .register_template_string("summary.md", include_str!("templates/summary.md"))
+            .register_template_string("summary.md", include_str!("templates/summary_md.hbs"))
             .map_err(Box::new)?;
         let summary_md = handlebars.render("summary.md", &self.data)?;
 
@@ -81,7 +75,7 @@ impl Summary {
     pub fn generate_text(&self) -> Result<(), FlakeCheckerError> {
         let mut handlebars = Handlebars::new();
         handlebars
-            .register_template_string("summary.txt", include_str!("templates/summary.txt"))
+            .register_template_string("summary.txt", include_str!("templates/summary_txt.hbs"))
             .map_err(Box::new)?;
 
         let summary_txt = handlebars.render("summary.txt", &self.data)?;
