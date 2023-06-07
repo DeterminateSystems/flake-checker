@@ -12,9 +12,12 @@ Currently performs two checks:
 - Checks that any explicit Nixpkgs Git refs are in this list:
   - `nixos-22.11`
   - `nixos-22.11-small`
+  - `nixos-23.05`
+  - `nixos-23.05-small`
   - `nixos-unstable`
   - `nixos-unstable-small`
   - `nixpkgs-22.11-darwin`
+  - `nixpkgs-23.05-darwin`
   - `nixpkgs-unstable`
 - Checks that any Nixpkgs dependencies are less than 30 days old
 
