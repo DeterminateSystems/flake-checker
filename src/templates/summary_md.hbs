@@ -49,8 +49,8 @@ The maximum recommended age is **{{max_days}}** days.
 
 <details>
 <summary>What to do 🧰</summary>
-<p>Use the <a href="https://github.com/determinateSystems/update-flake-lock"><code>update-flake-lock</code></a>
-GitHub Action to automate updates:</p>
+<p>For a more automated approach, use the <a href="https://github.com/determinateSystems/update-flake-lock"><code>update-flake-lock</code></a>
+GitHub Action to create pull requests to update your <code>flake.lock</code>. Here's an example Actions workflow:</p>
 
 ```yaml
 steps:
@@ -59,6 +59,12 @@ steps:
     with:
       pr-title: "Update flake.lock"        # PR title
       pr-labels: [dependencies, automated] # PR labels
+```
+
+<p>For a more ad hoc approach, use the <a href="https://nixos.org/manual/nix/stable/command-ref/new-cli/nix3-flake-update.html"><code>nix flake update</code></a> utility:</p>
+
+```shell
+nix flake update
 ```
 </details>
 
