@@ -8,29 +8,46 @@ use serde_json::json;
 
 pub struct Summary {
     pub issues: Vec<Issue>,
+    data: serde_json::Value,
 }
 
 impl Summary {
-    pub fn generate_markdown(&self) -> Result<(), FlakeCheckerError> {
-        let mut handlebars = Handlebars::new();
+    pub fn new(issues: Vec<Issue>) -> Self {
         let supported_ref_names = ALLOWED_REFS
             .iter()
             .map(|r| format!("* `{r}`"))
             .collect::<Vec<_>>()
             .join("\n");
+
+        let disallowed: Vec<&Issue> = issues
+            .iter()
+            .filter(|i| matches!(i.kind, IssueKind::Disallowed))
+            .collect();
+
+        let outdated: Vec<&Issue> = issues
+            .iter()
+            .filter(|i| matches!(i.kind, IssueKind::Outdated))
+            .collect();
+
+        let non_upstream: Vec<&Issue> = issues
+            .iter()
+            .filter(|i| matches!(i.kind, IssueKind::NonUpstream))
+            .collect();
+
         let data = json!({
-            "issues": &self.issues,
-            "clean": self.issues.is_empty(),
-            "dirty": !self.issues.is_empty(),
+            "issues": issues,
+            "num_issues": issues.len(),
+            "clean": issues.is_empty(),
+            "dirty": !issues.is_empty(),
             // Disallowed refs
-            "has_disallowed": !&self.disallowed().is_empty(),
-            "disallowed": &self.disallowed(),
+            "has_disallowed": !disallowed.is_empty(),
+            "disallowed": disallowed,
             // Outdated refs
-            "has_outdated": !&self.outdated().is_empty(),
-            "outdated": &self.outdated(),
+            "has_outdated": !outdated.is_empty(),
+            "outdated": outdated,
             // Non-upstream refs
-            "has_non_upstream": !&self.non_upstream().is_empty(),
-            "non_upstream": &self.non_upstream(),
+            "has_non_upstream": !non_upstream.is_empty(),
+            "non_upstream": non_upstream,
             // Constants
             "max_days": MAX_DAYS,
             "supported_ref_names": supported_ref_names,
@@ -40,13 +57,18 @@ impl Summary {
             "upstream_nixpkgs_explainer": include_str!("explainers/upstream_nixpkgs.md"),
         });
 
+        Self { issues, data }
+    }
+
+    pub fn generate_markdown(&self) -> Result<(), FlakeCheckerError> {
+        let mut handlebars = Handlebars::new();
+
         handlebars
             .register_template_string("summary.md", include_str!("templates/summary.md"))
             .map_err(Box::new)?;
-        let summary_md = handlebars.render("summary.md", &data)?;
+        let summary_md = handlebars.render("summary.md", &self.data)?;
 
-        let summary_md_filepath =
-            std::env::var("GITHUB_STEP_SUMMARY").unwrap_or("/dev/stdout".to_string());
+        let summary_md_filepath = std::env::var("GITHUB_STEP_SUMMARY")?;
         let mut summary_md_file = OpenOptions::new()
             .append(true)
             .create(true)
@@ -56,24 +78,16 @@ impl Summary {
         Ok(())
     }
 
-    fn disallowed(&self) -> Vec<&Issue> {
-        self.issues
-            .iter()
-            .filter(|i| matches!(i.kind, IssueKind::Disallowed))
-            .collect()
-    }
+    pub fn generate_text(&self) -> Result<(), FlakeCheckerError> {
+        let mut handlebars = Handlebars::new();
+        handlebars
+            .register_template_string("summary.txt", include_str!("templates/summary.txt"))
+            .map_err(Box::new)?;
 
-    fn outdated(&self) -> Vec<&Issue> {
-        self.issues
-            .iter()
-            .filter(|i| matches!(i.kind, IssueKind::Outdated))
-            .collect()
-    }
+        let summary_txt = handlebars.render("summary.txt", &self.data)?;
 
-    fn non_upstream(&self) -> Vec<&Issue> {
-        self.issues
-            .iter()
-            .filter(|i| matches!(i.kind, IssueKind::NonUpstream))
-            .collect()
+        std::io::stdout().write_all(summary_txt.as_bytes())?;
+
+        Ok(())
     }
 }

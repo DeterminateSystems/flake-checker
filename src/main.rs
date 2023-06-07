@@ -72,14 +72,20 @@ fn main() -> Result<(), FlakeCheckerError> {
 
     let flake_lock_file = read_to_string(flake_lock_path)?;
     let flake_lock: FlakeLock = serde_json::from_str(&flake_lock_file)?;
+
     let issues = check_flake_lock(&flake_lock, check_supported, check_outdated, check_owner);
 
     if !no_telemetry {
         telemetry::TelemetryReport::make_and_send(&issues);
     }
 
-    let summary = Summary { issues };
-    summary.generate_markdown()?;
+    let summary = Summary::new(issues);
+
+    if std::env::var("GITHUB_ACTIONS").is_ok() {
+        summary.generate_markdown()?;
+    } else {
+        summary.generate_text()?;
+    }
 
     Ok(())
 }
