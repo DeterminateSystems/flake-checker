@@ -50,7 +50,12 @@ struct Cli {
     flake_lock_path: PathBuf,
 
     /// Fail with an exit code of 1 if any issues are encountered.
-    #[arg(long, short, env = "NIX_FLAKE_CHECKER_FAIL_MODE", default_value_t = false)]
+    #[arg(
+        long,
+        short,
+        env = "NIX_FLAKE_CHECKER_FAIL_MODE",
+        default_value_t = false
+    )]
     fail_mode: bool,
 }
 

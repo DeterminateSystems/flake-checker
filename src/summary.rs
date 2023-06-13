@@ -47,7 +47,10 @@ impl Summary {
             "supported_ref_names": ALLOWED_REFS,
         });
 
-        Self { issues: issues.to_vec(), data }
+        Self {
+            issues: issues.to_vec(),
+            data,
+        }
     }
 
     pub fn generate_markdown(&self) -> Result<(), FlakeCheckerError> {
