@@ -12,7 +12,7 @@ pub struct Summary {
 }
 
 impl Summary {
-    pub fn new(issues: Vec<Issue>) -> Self {
+    pub fn new(issues: &Vec<Issue>) -> Self {
         let disallowed: Vec<&Issue> = issues
             .iter()
             .filter(|i| matches!(i.kind, IssueKind::Disallowed))
@@ -47,7 +47,7 @@ impl Summary {
             "supported_ref_names": ALLOWED_REFS,
         });
 
-        Self { issues, data }
+        Self { issues: issues.to_vec(), data }
     }
 
     pub fn generate_markdown(&self) -> Result<(), FlakeCheckerError> {
