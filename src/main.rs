@@ -4,7 +4,7 @@ use flake_checker::{check_flake_lock, telemetry, FlakeCheckerError, FlakeLock, S
 
 use std::fs::read_to_string;
 use std::path::PathBuf;
-use std::process::exit;
+use std::process::ExitCode;
 
 use clap::Parser;
 
@@ -48,9 +48,18 @@ struct Cli {
         default_value = "flake.lock"
     )]
     flake_lock_path: PathBuf,
+
+    /// Fail with an exit code of 1 if any issues are encountered.
+    #[arg(
+        long,
+        short,
+        env = "NIX_FLAKE_CHECKER_FAIL_MODE",
+        default_value_t = false
+    )]
+    fail_mode: bool,
 }
 
-fn main() -> Result<(), FlakeCheckerError> {
+fn main() -> Result<ExitCode, FlakeCheckerError> {
     let Cli {
         no_telemetry,
         check_outdated,
@@ -58,15 +67,16 @@ fn main() -> Result<(), FlakeCheckerError> {
         check_supported,
         ignore_missing_flake_lock,
         flake_lock_path,
+        fail_mode,
     } = Cli::parse();
 
     if !flake_lock_path.exists() {
         if ignore_missing_flake_lock {
             println!("no flake lockfile found at {:?}; ignoring", flake_lock_path);
-            exit(0);
+            return Ok(ExitCode::SUCCESS);
         } else {
             println!("no flake lockfile found at {:?}", flake_lock_path);
-            exit(1);
+            return Ok(ExitCode::FAILURE);
         }
     }
 
@@ -79,7 +89,7 @@ fn main() -> Result<(), FlakeCheckerError> {
         telemetry::TelemetryReport::make_and_send(&issues);
     }
 
-    let summary = Summary::new(issues);
+    let summary = Summary::new(&issues);
 
     if std::env::var("GITHUB_ACTIONS").is_ok() {
         summary.generate_markdown()?;
@@ -87,5 +97,9 @@ fn main() -> Result<(), FlakeCheckerError> {
         summary.generate_text()?;
     }
 
-    Ok(())
+    if fail_mode && !issues.is_empty() {
+        return Ok(ExitCode::FAILURE);
+    }
+
+    Ok(ExitCode::SUCCESS)
 }

@@ -24,14 +24,14 @@ const ALLOWED_REFS: &[&str] = &[
 ];
 const MAX_DAYS: i64 = 30;
 
-#[derive(Serialize)]
+#[derive(Clone, Serialize)]
 pub struct Issue {
     dependency: String,
     kind: IssueKind,
     details: serde_json::Value,
 }
 
-#[derive(Serialize, PartialEq)]
+#[derive(Clone, PartialEq, Serialize)]
 enum IssueKind {
     #[serde(rename = "disallowed")]
     Disallowed,

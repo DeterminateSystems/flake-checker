@@ -39,3 +39,15 @@ jobs:
       - name: Check flake.lock
         run: |
           nix develop -c cargo run
+
+  check-flake-dirty-fail-mode:
+    name: Check flake.lock test (dirty 😈 plus fail mode activated)
+    runs-on: ubuntu-22.04
+    if: false
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v2
+      - name: Check flake.lock
+        run: |
+          nix develop -c cargo run -- ./flake.dirty.lock --fail-mode
