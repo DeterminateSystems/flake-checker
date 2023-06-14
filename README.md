@@ -54,19 +54,20 @@ Here is a table of the [telemetry data we collect][telemetry]:
 | Field          | Use                                                                                                    |
 | -------------- | ------------------------------------------------------------------------------------------------------ |
 | `distinct_id`  | An opaque string that represents your project, by sha256 hashing repository and organization details.  |
-| `version`      | The version of the Determinate Flake Checker.                                                          |
-| `is_ci`        | Whether the checker is being used in CI (e.g. GitHub Actions).                                         |
+| `version`      | The version of Flake Checker.                                                                          |
+| `is_ci`        | Whether the checker is being used in CI (GitHub Actions).                                              |
 | `disallowed`   | The number of inputs using unsupported branches of Nixpkgs.                                            |
 | `outdated`     | The number of inputs using outdated versions of Nixpkgs.                                               |
 | `non_upstream` | The number of inputs using forks of Nixpkgs.                                                           |
 
 To disable diagnostic reporting, set the diagnostics URL to an empty string by passing `--no-telemetry` or setting `FLAKE_CHECKER_NO_TELEMETRY=true`.
 
-You can read the full privacy policy for [Determinate Systems][detsys], the creators of the Determinate Nix Installer, [here][privacy].
+You can read the full privacy policy for [Determinate Systems][detsys], the creators of Flake Checker and the [Determinate Nix Installer][installer], [here][privacy].
 
 [action]: https://github.com/DeterminateSystems/flake-checker-action
 [detsys]: https://determinate.systems
 [flakes]: https://zero-to-nix.com/concepts/flakes
+[installer]: https://github.com/DeterminateSystems/nix-installer
 [lockfile]: https://zero-to-nix.com/concepts/flakes#lockfile
 [md]: https://github.blog/2022-05-09-supercharging-github-actions-with-job-summaries
 [nixos-org]: https://github.com/NixOS
