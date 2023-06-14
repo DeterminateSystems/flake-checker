@@ -8,3 +8,6 @@ result
 summary.md
 !src/templates/summary.md
 src/policy.json
+
+# Release script artifacts
+releases
