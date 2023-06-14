@@ -1,9 +1,9 @@
-# Flake Checker
+# Nix Flake Checker
 
-**Flake Checker** is a tool from [Determinate Systems][detsys] that performs "health" checks on the [`flake.lock`][lockfile] files in your [flake][flakes]-powered Nix projects.
+**Nix Flake Checker** is a tool from [Determinate Systems][detsys] that performs "health" checks on the [`flake.lock`][lockfile] files in your [flake][flakes]-powered Nix projects.
 Its goal is to help your Nix projects stay on recent and supported versions of [Nixpkgs].
 
-To run Flake Checker in the root of a Nix project:
+To run the checker in the root of a Nix project:
 
 ```shell
 nix run github:DeterminateSystems/flake-checker
@@ -12,7 +12,7 @@ nix run github:DeterminateSystems/flake-checker
 nix run github:DeterminateSystems/flake-checker /path/to/flake.lock
 ```
 
-Flake Checker looks at your `flake.lock`'s root-level [Nixpkgs] inputs and checks that:
+Nix Flake Checker looks at your `flake.lock`'s root-level [Nixpkgs] inputs and checks that:
 
 - Any explicit Nixpkgs Git refs are in this list:
   - `nixos-22.11`
@@ -27,12 +27,12 @@ Flake Checker looks at your `flake.lock`'s root-level [Nixpkgs] inputs and check
 - Any Nixpkgs dependencies are less than 30 days old
 - Any Nixpkgs dependencies are have the [`NixOS`][nixos-org] org as the GitHub owner (and thus that the dependency isn't a fork or non-upstream variant)
 
-If you're running it locally, Flake Checker reports any issues via text output in your terminal.
-But you can also use Flake Checker [in CI](#the-flake-checker-action).
+If you're running it locally, Nix Flake Checker reports any issues via text output in your terminal.
+But you can also use Nix Flake Checker [in CI](#the-flake-checker-action).
 
-## The Flake Checker Action
+## The Nix Flake Checker Action
 
-You can automate Flake Checker by adding Determinate Systems' [Flake Checker Action][action] to your GitHub Actions workflows:
+You can automate Nix Flake Checker by adding Determinate Systems' [Nix Flake Checker Action][action] to your GitHub Actions workflows:
 
 ```yaml
 checks:
@@ -42,11 +42,11 @@ checks:
       uses: DeterminateSystems/flake-checker-action@main
 ```
 
-When run in GitHub Actions, Flake Checker always exits with a status code of 0&mdash;and thus will never fail your workflows&mdash;and reports its findings as a [Markdown summary][md].
+When run in GitHub Actions, Nix Flake Checker always exits with a status code of 0 by default&mdash;and thus never fails your workflows&mdash;and reports its findings as a [Markdown summary][md].
 
 ## Telemetry
 
-The goal of Flake Checker is to help teams stay on recent and supported versions of Nixpkgs.
+The goal of Nix Flake Checker is to help teams stay on recent and supported versions of Nixpkgs.
 The flake checker collects a little bit of telemetry information to help us make that true.
 
 Here is a table of the [telemetry data we collect][telemetry]:
@@ -54,7 +54,7 @@ Here is a table of the [telemetry data we collect][telemetry]:
 | Field          | Use                                                                                                    |
 | -------------- | ------------------------------------------------------------------------------------------------------ |
 | `distinct_id`  | An opaque string that represents your project, by sha256 hashing repository and organization details.  |
-| `version`      | The version of Flake Checker.                                                                          |
+| `version`      | The version of Nix Flake Checker.                                                                      |
 | `is_ci`        | Whether the checker is being used in CI (GitHub Actions).                                              |
 | `disallowed`   | The number of inputs using unsupported branches of Nixpkgs.                                            |
 | `outdated`     | The number of inputs using outdated versions of Nixpkgs.                                               |
@@ -62,11 +62,12 @@ Here is a table of the [telemetry data we collect][telemetry]:
 
 To disable diagnostic reporting, set the diagnostics URL to an empty string by passing `--no-telemetry` or setting `FLAKE_CHECKER_NO_TELEMETRY=true`.
 
-You can read the full privacy policy for [Determinate Systems][detsys], the creators of Flake Checker and the [Determinate Nix Installer][installer], [here][privacy].
+You can read the full privacy policy for [Determinate Systems][detsys], the creators of this tool and the [Determinate Nix Installer][installer], [here][privacy].
 
 [action]: https://github.com/DeterminateSystems/flake-checker-action
 [detsys]: https://determinate.systems
 [flakes]: https://zero-to-nix.com/concepts/flakes
+[install]: https://zero-to-nix.com/start/install
 [installer]: https://github.com/DeterminateSystems/nix-installer
 [lockfile]: https://zero-to-nix.com/concepts/flakes#lockfile
 [md]: https://github.blog/2022-05-09-supercharging-github-actions-with-job-summaries
