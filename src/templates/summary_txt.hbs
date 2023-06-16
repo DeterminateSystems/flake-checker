@@ -2,7 +2,8 @@ Flake checker results:
 
 {{#if clean}}
 The flake checker scanned your flake.lock and didn't identify any issues.
-{{else}}
+{{/if}}
+{{#if dirty}}
 The flake checker scanned your flake.lock and discovered {{num_issues}} {{issue_word}}
 that we recommend looking into:
 
@@ -76,6 +77,5 @@ unwanted security risks. While upstream Nixpkgs isn't bulletproof (nothing in
 software is!) it has a wide range of security measures in place, most notably
 continuous integration testing with Hydra, that mitigate a great deal of supply
 chain risk.
-{{/if}}
 {{/if}}
 {{/if}}
