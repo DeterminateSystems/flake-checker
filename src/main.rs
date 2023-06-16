@@ -1,6 +1,12 @@
-extern crate flake_checker;
+mod error;
+mod flake;
+mod issue;
+mod summary;
+pub mod telemetry;
 
-use flake_checker::{check_flake_lock, telemetry, FlakeCheckerError, FlakeLock, Summary};
+pub use error::FlakeCheckerError;
+pub use flake::{check_flake_lock, FlakeLock};
+pub use summary::Summary;
 
 use std::fs::read_to_string;
 use std::path::PathBuf;
