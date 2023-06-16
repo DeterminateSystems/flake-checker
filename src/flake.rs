@@ -2,12 +2,27 @@
 use std::collections::HashMap;
 use std::fmt;
 
-use crate::{Issue, IssueKind, ALLOWED_REFS, MAX_DAYS};
+use crate::issue::{Issue, IssueKind};
 
 use chrono::{Duration, Utc};
 use serde::de::{self, Deserializer, MapAccess, Visitor};
 use serde::Deserialize;
 use serde_json::json;
+
+// Update this when necessary by running the get-allowed-refs.sh script to fetch
+// the current values from monitoring.nixos.org
+pub const ALLOWED_REFS: &[&str] = &[
+    "nixos-22.11",
+    "nixos-22.11-small",
+    "nixos-23.05",
+    "nixos-23.05-small",
+    "nixos-unstable",
+    "nixos-unstable-small",
+    "nixpkgs-22.11-darwin",
+    "nixpkgs-23.05-darwin",
+    "nixpkgs-unstable",
+];
+pub const MAX_DAYS: i64 = 30;
 
 pub fn check_flake_lock(
     flake_lock: &FlakeLock,

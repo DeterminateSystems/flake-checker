@@ -1,3 +1,5 @@
+use crate::issue::{Issue, IssueKind};
+
 use std::env;
 
 use is_ci;
@@ -19,7 +21,7 @@ pub struct TelemetryReport {
 }
 
 impl TelemetryReport {
-    pub fn new(issues: &[crate::Issue]) -> Result<TelemetryReport, env::VarError> {
+    pub fn new(issues: &[Issue]) -> Result<TelemetryReport, env::VarError> {
         Ok(TelemetryReport {
             distinct_id: calculate_opaque_id()?,
 
@@ -28,20 +30,20 @@ impl TelemetryReport {
 
             disallowed: issues
                 .iter()
-                .filter(|issue| issue.kind == crate::IssueKind::Disallowed)
+                .filter(|issue| issue.kind == IssueKind::Disallowed)
                 .count(),
             outdated: issues
                 .iter()
-                .filter(|issue| issue.kind == crate::IssueKind::Outdated)
+                .filter(|issue| issue.kind == IssueKind::Outdated)
                 .count(),
             non_upstream: issues
                 .iter()
-                .filter(|issue| issue.kind == crate::IssueKind::NonUpstream)
+                .filter(|issue| issue.kind == IssueKind::NonUpstream)
                 .count(),
         })
     }
 
-    pub fn make_and_send(issues: &[crate::Issue]) {
+    pub fn make_and_send(issues: &[Issue]) {
         if let Ok(report) = TelemetryReport::new(issues) {
             if let Ok(serialized) = serde_json::to_string_pretty(&report) {
                 let _ = reqwest::blocking::Client::new()

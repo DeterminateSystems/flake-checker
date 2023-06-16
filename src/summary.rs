@@ -1,4 +1,6 @@
-use crate::{FlakeCheckerError, Issue, IssueKind, ALLOWED_REFS, MAX_DAYS};
+use crate::error::FlakeCheckerError;
+use crate::flake::{ALLOWED_REFS, MAX_DAYS};
+use crate::issue::{Issue, IssueKind};
 
 use std::fs::OpenOptions;
 use std::io::Write;
