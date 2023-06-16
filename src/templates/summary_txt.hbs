@@ -1,9 +1,9 @@
 Flake checker results:
 
 {{#if clean}}
-The flake checker scanned your flake.lock and didn't identify any problems
+The flake checker scanned your flake.lock and didn't identify any issues.
 {{else}}
-The flake checker scanned your flake.lock and discovered {{num_issues}} issues
+The flake checker scanned your flake.lock and discovered {{num_issues}} {{issue_word}}
 that we recommend looking into:
 
 {{#if has_disallowed}}
