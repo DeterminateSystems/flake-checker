@@ -35,6 +35,7 @@ impl Summary {
             "num_issues": issues.len(),
             "clean": issues.is_empty(),
             "dirty": !issues.is_empty(),
+            "issue_word": if issues.len() == 1 { "issue" } else { "issues" },
             // Disallowed refs
             "has_disallowed": !disallowed.is_empty(),
             "disallowed": disallowed,

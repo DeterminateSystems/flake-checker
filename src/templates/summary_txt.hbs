@@ -1,9 +1,9 @@
 Flake checker results:
 
 {{#if clean}}
-The flake checker scanned your flake.lock and didn't identify any problems
+The flake checker scanned your flake.lock and didn't identify any issues.
 {{else}}
-The flake checker scanned your flake.lock and discovered {{num_issues}} issues
+The flake checker scanned your flake.lock and discovered {{num_issues}} {{issue_word}}
 that we recommend looking into:
 
 {{#if has_disallowed}}
@@ -28,6 +28,7 @@ and then gradually become more and more insecure over time. Non-release branches
 receive unpredictable updates and should be avoided as dependencies. Release
 branches are also certain to have good binary cache coverage, which other
 branches can't promise.
+{{/if}}
 
 {{#if has_outdated}}
 >>> Outdated Nixpkgs dependencies

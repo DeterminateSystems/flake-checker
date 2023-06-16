@@ -1,10 +1,10 @@
 # ![](https://avatars.githubusercontent.com/u/80991770?s=30) Flake checkup
 
 {{#if clean}}
-✅ The Determinate Flake Checker Action scanned your `flake.lock` and didn't identify any problems.
+✅ The Determinate Flake Checker Action scanned your `flake.lock` and didn't identify any issues.
 {{/if}}
 {{#if dirty}}
-⚠️ The Determinate Nix Installer Action scanned your `flake.lock` and discovered {{num_issues}} issues that we recommend looking into.
+⚠️ The Determinate Nix Installer Action scanned your `flake.lock` and discovered {{num_issues}} {{issue_word}} that we recommend looking into.
 
 {{#if has_disallowed}}
 ## Non-supported Git branches for Nixpkgs
