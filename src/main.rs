@@ -21,7 +21,7 @@ struct Cli {
     /// Send aggregate sums of each issue type.
     ///
     /// See: https://github.com/determinateSystems/flake-checker.
-    #[arg(long, env = "NIX_FLAKE_CHECKER_NO_TELEMETRY", default_value_t = true)]
+    #[arg(long, env = "NIX_FLAKE_CHECKER_NO_TELEMETRY", default_value_t = false)]
     no_telemetry: bool,
 
     /// Check for outdated Nixpkgs inputs.
