@@ -277,7 +277,11 @@ struct RepoOriginal {
 
 #[cfg(test)]
 mod test {
-    use crate::{check_flake_lock, FlakeCheckConfig, FlakeLock, issue::{Issue, IssueKind}};
+    use crate::{
+        check_flake_lock,
+        issue::{Issue, IssueKind},
+        FlakeCheckConfig, FlakeLock,
+    };
     use serde_json::json;
 
     #[test]
@@ -296,8 +300,9 @@ mod test {
 
     #[test]
     fn test_dirty_flake_locks() {
-        let cases: Vec<(&str, Vec<Issue>)> = vec![
-            ("flake.dirty.0.lock", vec![
+        let cases: Vec<(&str, Vec<Issue>)> = vec![(
+            "flake.dirty.0.lock",
+            vec![
                 Issue {
                     dependency: String::from("nixpkgs"),
                     kind: IssueKind::Disallowed,
@@ -314,8 +319,8 @@ mod test {
                         "owner": String::from("bitcoin-miner-org"),
                     }),
                 },
-            ]),
-        ];
+            ],
+        )];
 
         for (file, expected_issues) in cases {
             let path = format!("tests/{file}");
