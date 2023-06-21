@@ -1,8 +1,11 @@
 #![allow(dead_code)]
 use std::collections::HashMap;
 use std::fmt;
+use std::fs::read_to_string;
+use std::path::PathBuf;
 
 use crate::issue::{Issue, IssueKind};
+use crate::FlakeCheckerError;
 
 use chrono::{Duration, Utc};
 use serde::de::{self, Deserializer, MapAccess, Visitor};
@@ -24,18 +27,29 @@ pub const ALLOWED_REFS: &[&str] = &[
 ];
 pub const MAX_DAYS: i64 = 30;
 
-pub fn check_flake_lock(
-    flake_lock: &FlakeLock,
-    check_supported: bool,
-    check_outdated: bool,
-    check_owner: bool,
-) -> Vec<Issue> {
+pub struct FlakeCheckConfig {
+    pub check_supported: bool,
+    pub check_outdated: bool,
+    pub check_owner: bool,
+}
+
+impl Default for FlakeCheckConfig {
+    fn default() -> Self {
+        Self {
+            check_supported: true,
+            check_outdated: true,
+            check_owner: true,
+        }
+    }
+}
+
+pub fn check_flake_lock(flake_lock: &FlakeLock, config: &FlakeCheckConfig) -> Vec<Issue> {
     let mut issues = vec![];
 
     for (name, dep) in flake_lock.nixpkgs_deps() {
         if let Node::Repo(repo) = dep {
             // Check if not explicitly supported
-            if check_supported {
+            if config.check_supported {
                 if let Some(ref git_ref) = repo.original.git_ref {
                     if !ALLOWED_REFS.contains(&git_ref.as_str()) {
                         issues.push(Issue {
@@ -51,7 +65,7 @@ pub fn check_flake_lock(
             }
 
             // Check if outdated
-            if check_outdated {
+            if config.check_outdated {
                 let now_timestamp = Utc::now().timestamp();
                 let diff = now_timestamp - repo.locked.last_modified;
                 let num_days_old = Duration::seconds(diff).num_days();
@@ -69,7 +83,7 @@ pub fn check_flake_lock(
             }
 
             // Check that the GitHub owner is NixOS
-            if check_owner {
+            if config.check_owner {
                 let owner = repo.original.owner;
                 if owner.to_lowercase() != "nixos" {
                     issues.push(Issue {
@@ -92,6 +106,14 @@ pub struct FlakeLock {
     nodes: HashMap<String, Node>,
     root: HashMap<String, Node>,
     version: usize,
+}
+
+impl FlakeLock {
+    pub fn new(path: &PathBuf) -> Result<Self, FlakeCheckerError> {
+        let flake_lock_file = read_to_string(path)?;
+        let flake_lock: FlakeLock = serde_json::from_str(&flake_lock_file)?;
+        Ok(flake_lock)
+    }
 }
 
 impl<'de> Deserialize<'de> for FlakeLock {
@@ -251,4 +273,87 @@ struct RepoOriginal {
     node_type: String,
     #[serde(alias = "ref")]
     git_ref: Option<String>,
+}
+
+#[cfg(test)]
+mod test {
+    use crate::{
+        check_flake_lock,
+        issue::{Issue, IssueKind},
+        FlakeCheckConfig, FlakeLock,
+    };
+    use serde_json::json;
+
+    #[test]
+    fn test_clean_flake_locks() {
+        for n in 0..=2 {
+            let path = format!("tests/flake.clean.{n}.lock");
+            let flake_lock = FlakeLock::new(&path.into()).expect("couldn't create flake.lock");
+            let config = FlakeCheckConfig {
+                check_outdated: false,
+                ..Default::default()
+            };
+            let issues = check_flake_lock(&flake_lock, &config);
+            assert!(issues.is_empty());
+        }
+    }
+
+    #[test]
+    fn test_dirty_flake_locks() {
+        let cases: Vec<(&str, Vec<Issue>)> = vec![
+            (
+                "flake.dirty.0.lock",
+                vec![
+                    Issue {
+                        dependency: String::from("nixpkgs"),
+                        kind: IssueKind::Disallowed,
+                        details: json!({
+                            "input": String::from("nixpkgs"),
+                            "ref": String::from("this-should-fail"),
+                        }),
+                    },
+                    Issue {
+                        dependency: String::from("nixpkgs"),
+                        kind: IssueKind::NonUpstream,
+                        details: json!({
+                            "input": String::from("nixpkgs"),
+                            "owner": String::from("bitcoin-miner-org"),
+                        }),
+                    },
+                ],
+            ),
+            (
+                "flake.dirty.1.lock",
+                vec![
+                    Issue {
+                        dependency: String::from("nixpkgs"),
+                        kind: IssueKind::Disallowed,
+                        details: json!({
+                            "input": String::from("nixpkgs"),
+                            "ref": String::from("probably-nefarious"),
+                        }),
+                    },
+                    Issue {
+                        dependency: String::from("nixpkgs"),
+                        kind: IssueKind::NonUpstream,
+                        details: json!({
+                            "input": String::from("nixpkgs"),
+                            "owner": String::from("pretty-shady"),
+                        }),
+                    },
+                ],
+            ),
+        ];
+
+        for (file, expected_issues) in cases {
+            let path = format!("tests/{file}");
+            let flake_lock = FlakeLock::new(&path.into()).expect("couldn't create flake.lock");
+            let config = FlakeCheckConfig {
+                check_outdated: false,
+                ..Default::default()
+            };
+            let issues = check_flake_lock(&flake_lock, &config);
+            assert_eq!(issues, expected_issues);
+        }
+    }
 }

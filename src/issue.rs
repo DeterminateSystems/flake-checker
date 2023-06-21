@@ -1,13 +1,13 @@
 use serde::Serialize;
 
-#[derive(Clone, Serialize)]
+#[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct Issue {
     pub dependency: String,
     pub kind: IssueKind,
     pub details: serde_json::Value,
 }
 
-#[derive(Clone, PartialEq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Serialize)]
 pub enum IssueKind {
     #[serde(rename = "disallowed")]
     Disallowed,

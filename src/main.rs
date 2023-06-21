@@ -5,10 +5,9 @@ mod summary;
 pub mod telemetry;
 
 pub use error::FlakeCheckerError;
-pub use flake::{check_flake_lock, FlakeLock};
+pub use flake::{check_flake_lock, FlakeCheckConfig, FlakeLock};
 pub use summary::Summary;
 
-use std::fs::read_to_string;
 use std::path::PathBuf;
 use std::process::ExitCode;
 
@@ -86,10 +85,15 @@ fn main() -> Result<ExitCode, FlakeCheckerError> {
         }
     }
 
-    let flake_lock_file = read_to_string(flake_lock_path)?;
-    let flake_lock: FlakeLock = serde_json::from_str(&flake_lock_file)?;
+    let flake_lock = FlakeLock::new(&flake_lock_path)?;
 
-    let issues = check_flake_lock(&flake_lock, check_supported, check_outdated, check_owner);
+    let flake_check_config = FlakeCheckConfig {
+        check_supported,
+        check_outdated,
+        check_owner,
+    };
+
+    let issues = check_flake_lock(&flake_lock, &flake_check_config);
 
     if !no_telemetry {
         telemetry::TelemetryReport::make_and_send(&issues);

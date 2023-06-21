@@ -17,6 +17,18 @@ jobs:
         run: nix develop -c check-nixpkgs-fmt
       - name: Check Rust formatting
         run: nix develop -c check-rustfmt
+      - name: Clippy
+        run: nix develop -c cargo clippy
+
+  rust-tests:
+    name: Test Rust
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v4
+      - name: cargo test
+        run: nix develop -c cargo test
 
   check-flake-dirty:
     name: Check flake.lock test (dirty 😈)
@@ -27,7 +39,7 @@ jobs:
         uses: DeterminateSystems/nix-installer-action@v4
       - name: Check flake.lock
         run: |
-          nix develop -c cargo run -- ./flake.dirty.lock
+          nix develop -c cargo run -- ./tests/flake.dirty.0.lock
 
   check-flake-clean:
     name: Check flake.lock test (clean 👼)
@@ -50,4 +62,4 @@ jobs:
         uses: DeterminateSystems/nix-installer-action@v2
       - name: Check flake.lock
         run: |
-          nix develop -c cargo run -- ./flake.dirty.lock --fail-mode
+          nix develop -c cargo run -- --fail-mode ./tests/flake.dirty.0.lock
