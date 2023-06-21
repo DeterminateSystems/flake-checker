@@ -300,27 +300,50 @@ mod test {
 
     #[test]
     fn test_dirty_flake_locks() {
-        let cases: Vec<(&str, Vec<Issue>)> = vec![(
-            "flake.dirty.0.lock",
-            vec![
-                Issue {
-                    dependency: String::from("nixpkgs"),
-                    kind: IssueKind::Disallowed,
-                    details: json!({
-                        "input": String::from("nixpkgs"),
-                        "ref": String::from("this-should-fail"),
-                    }),
-                },
-                Issue {
-                    dependency: String::from("nixpkgs"),
-                    kind: IssueKind::NonUpstream,
-                    details: json!({
-                        "input": String::from("nixpkgs"),
-                        "owner": String::from("bitcoin-miner-org"),
-                    }),
-                },
-            ],
-        )];
+        let cases: Vec<(&str, Vec<Issue>)> = vec![
+            (
+                "flake.dirty.0.lock",
+                vec![
+                    Issue {
+                        dependency: String::from("nixpkgs"),
+                        kind: IssueKind::Disallowed,
+                        details: json!({
+                            "input": String::from("nixpkgs"),
+                            "ref": String::from("this-should-fail"),
+                        }),
+                    },
+                    Issue {
+                        dependency: String::from("nixpkgs"),
+                        kind: IssueKind::NonUpstream,
+                        details: json!({
+                            "input": String::from("nixpkgs"),
+                            "owner": String::from("bitcoin-miner-org"),
+                        }),
+                    },
+                ],
+            ),
+            (
+                "flake.dirty.1.lock",
+                vec![
+                    Issue {
+                        dependency: String::from("nixpkgs"),
+                        kind: IssueKind::Disallowed,
+                        details: json!({
+                            "input": String::from("nixpkgs"),
+                            "ref": String::from("probably-nefarious"),
+                        }),
+                    },
+                    Issue {
+                        dependency: String::from("nixpkgs"),
+                        kind: IssueKind::NonUpstream,
+                        details: json!({
+                            "input": String::from("nixpkgs"),
+                            "owner": String::from("pretty-shady"),
+                        }),
+                    },
+                ],
+            ),
+        ];
 
         for (file, expected_issues) in cases {
             let path = format!("tests/{file}");
