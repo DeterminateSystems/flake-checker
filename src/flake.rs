@@ -114,6 +114,14 @@ impl FlakeLock {
         let flake_lock: FlakeLock = serde_json::from_str(&flake_lock_file)?;
         Ok(flake_lock)
     }
+
+    fn nixpkgs_deps(&self) -> HashMap<String, Node> {
+        self.nodes
+            .iter()
+            .filter(|(k, v)| matches!(v, Node::Repo(_)) && k == &"nixpkgs")
+            .map(|(k, v)| (k.clone(), v.clone()))
+            .collect()
+    }
 }
 
 impl<'de> Deserialize<'de> for FlakeLock {
@@ -192,17 +200,6 @@ impl<'de> Deserialize<'de> for FlakeLock {
         }
 
         deserializer.deserialize_any(FlakeLockVisitor)
-    }
-}
-
-impl FlakeLock {
-    fn nixpkgs_deps(&self) -> HashMap<String, Node> {
-        // TODO: make this more robust for real-world use cases
-        self.nodes
-            .iter()
-            .filter(|(k, v)| matches!(v, Node::Repo(_)) && k == &"nixpkgs")
-            .map(|(k, v)| (k.clone(), v.clone()))
-            .collect()
     }
 }
 
