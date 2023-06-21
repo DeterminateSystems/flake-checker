@@ -186,11 +186,15 @@ impl<'de> Deserialize<'de> for FlakeLock {
                     panic!("root node was not a Root node, but was a {} node", root_node.variant());
                 };
                 for (root_name, root_reference) in root_node.inputs.iter() {
-                    if let Input::String(s) = root_reference {
-                        let root_node = nodes[s].to_owned();
+                    let node_keys: Vec<String> = match root_reference {
+                        Input::String(ref s) => vec![s.to_string()],
+                        Input::List(keys) => keys.to_owned(),
+                    };
+
+                    for key in node_keys {
+                        let root_node = nodes[&key].to_owned();
                         root_nodes.insert(root_name.to_owned(), root_node);
                     }
-                    // TODO: handle Input::List case
                 }
 
                 Ok(FlakeLock {
