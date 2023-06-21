@@ -186,9 +186,11 @@ impl<'de> Deserialize<'de> for FlakeLock {
                     panic!("root node was not a Root node, but was a {} node", root_node.variant());
                 };
                 for (root_name, root_reference) in root_node.inputs.iter() {
-                    let root_reference = root_reference.as_str();
-                    let root_node = nodes[root_reference].to_owned();
-                    root_nodes.insert(root_name.to_owned(), root_node);
+                    if let Input::String(s) = root_reference {
+                        let root_node = nodes[s].to_owned();
+                        root_nodes.insert(root_name.to_owned(), root_node);
+                    }
+                    // TODO: handle Input::List case
                 }
 
                 Ok(FlakeLock {
@@ -231,15 +233,15 @@ impl Node {
 }
 
 #[derive(Clone, Deserialize)]
+struct RootNode {
+    inputs: HashMap<String, Input>,
+}
+
+#[derive(Clone, Deserialize)]
 #[serde(untagged)]
 enum Input {
     String(String),
     List(Vec<String>),
-}
-
-#[derive(Clone, Deserialize)]
-struct RootNode {
-    inputs: HashMap<String, String>,
 }
 
 #[derive(Clone, Deserialize)]
