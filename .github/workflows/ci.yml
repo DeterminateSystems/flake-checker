@@ -17,6 +17,8 @@ jobs:
         run: nix develop -c check-nixpkgs-fmt
       - name: Check Rust formatting
         run: nix develop -c check-rustfmt
+      - name: Clippy
+        run: nix develop -c cargo clippy
 
   rust-tests:
     name: Test Rust
