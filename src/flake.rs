@@ -283,7 +283,7 @@ mod test {
 
     #[test]
     fn test_clean_flake_locks() {
-        for n in 0..=3 {
+        for n in 0..=4 {
             let path = format!("tests/flake.clean.{n}.lock");
             let flake_lock = FlakeLock::new(&path.into()).expect("couldn't create flake.lock");
             let config = FlakeCheckConfig {
