@@ -6,11 +6,15 @@ on:
     branches: [main]
 
 jobs:
-  formatting-checks:
-    name: Check Nix and Rust formatting
+  checks:
+    name: Nix and Rust checks
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
+      - name: Check flake.lock
+        uses: DeterminateSystems/flake-checker-action@v4
+        with:
+          fail-mode: true
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@v4
       - name: Check Nix formatting
