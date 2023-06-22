@@ -204,7 +204,7 @@ dependencies = [
 
 [[package]]
 name = "flake-checker"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "chrono",
  "clap",
