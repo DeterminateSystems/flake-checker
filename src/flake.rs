@@ -187,7 +187,7 @@ impl<'de> Deserialize<'de> for FlakeLock {
                 };
                 for (root_name, root_reference) in root_node.inputs.iter() {
                     let node_keys: Vec<String> = match root_reference {
-                        Input::String(ref s) => vec![s.to_string()],
+                        Input::String(s) => vec![s.to_string()],
                         Input::List(keys) => keys.to_owned(),
                     };
 
