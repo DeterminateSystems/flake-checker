@@ -1,7 +1,8 @@
 Flake checker results:
 
 {{#if clean}}
-The flake checker scanned your flake.lock and didn't identify any issues. All Nixpkgs inputs:
+The flake checker scanned your flake.lock and didn't identify any issues. All
+Nixpkgs inputs:
 
 > Use supported branches
 > Are less than 30 days old
@@ -65,7 +66,7 @@ you to software security risks that have been resolved in more recent releases.
 > The {{this.details.input}} input has {{this.details.owner}} as an owner rather
   than the NixOS org
 {{/each}}
-`
+
 >> What to do
 
 Use a Nixpkgs dependency from the NixOS org, such as github:NixOS/nixpkgs.
