@@ -414,4 +414,32 @@ mod test {
             assert_eq!(issues, expected_issues);
         }
     }
+
+    #[test]
+    fn test_missing_nixpkgs_keys() {
+        let cases: Vec<(&str, Vec<String>, String)> = vec![(
+            "flake.clean.0.lock",
+            vec![String::from("nixpkgs"), String::from("foo"), String::from("bar")],
+            String::from("invalid flake.lock: no nixpkgs dependency found for specified keys: foo, bar"),
+        ),
+        (
+            "flake.clean.1.lock",
+            vec![String::from("nixpkgs"), String::from("nixpkgs-other")],
+            String::from("invalid flake.lock: no nixpkgs dependency found for specified key: nixpkgs-other"),
+        )];
+        for (file, nixpkgs_keys, expected_err) in cases {
+            let path = format!("tests/{file}");
+            let flake_lock = FlakeLock::new(&path.into()).expect("couldn't create flake.lock");
+            let config = FlakeCheckConfig {
+                check_outdated: false,
+                nixpkgs_keys,
+                ..Default::default()
+            };
+
+            let result = check_flake_lock(&flake_lock, &config);
+
+            assert!(result.is_err());
+            assert_eq!(result.unwrap_err().to_string(), expected_err);
+        }
+    }
 }
