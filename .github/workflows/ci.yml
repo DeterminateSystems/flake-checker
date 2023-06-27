@@ -17,7 +17,7 @@ jobs:
           fail-mode: true
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@v4
-      - uses: DeterminateSystems/magic-nix-cache-action@v1
+      - uses: DeterminateSystems/magic-nix-cache-action@v2
       - name: Check Nix formatting
         run: nix develop -c check-nixpkgs-fmt
       - name: Check Rust formatting
@@ -32,7 +32,7 @@ jobs:
       - uses: actions/checkout@v3
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@v4
-      - uses: DeterminateSystems/magic-nix-cache-action@v1
+      - uses: DeterminateSystems/magic-nix-cache-action@v2
       - name: cargo test
         run: nix develop -c cargo test
 
@@ -43,7 +43,7 @@ jobs:
       - uses: actions/checkout@v3
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@v4
-      - uses: DeterminateSystems/magic-nix-cache-action@v1
+      - uses: DeterminateSystems/magic-nix-cache-action@v2
       - name: Check flake.lock
         run: |
           nix develop -c cargo run -- ./tests/flake.dirty.0.lock
@@ -55,7 +55,7 @@ jobs:
       - uses: actions/checkout@v3
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@v4
-      - uses: DeterminateSystems/magic-nix-cache-action@v1
+      - uses: DeterminateSystems/magic-nix-cache-action@v2
       - name: Check flake.lock
         run: |
           nix develop -c cargo run
@@ -68,7 +68,7 @@ jobs:
       - uses: actions/checkout@v3
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@v4
-      - uses: DeterminateSystems/magic-nix-cache-action@v1
+      - uses: DeterminateSystems/magic-nix-cache-action@v2
       - name: Check flake.lock
         run: |
           nix develop -c cargo run -- --fail-mode ./tests/flake.dirty.0.lock
