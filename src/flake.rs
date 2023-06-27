@@ -45,12 +45,15 @@ impl Default for FlakeCheckConfig {
     }
 }
 
-pub fn check_flake_lock(flake_lock: &FlakeLock, config: &FlakeCheckConfig) -> Vec<Issue> {
+pub fn check_flake_lock(
+    flake_lock: &FlakeLock,
+    config: &FlakeCheckConfig,
+) -> Result<Vec<Issue>, FlakeCheckerError> {
     let mut issues = vec![];
 
-    for (name, dep) in flake_lock.nixpkgs_deps(config.nixpkgs_keys.clone()) {
-        println!("{name}");
+    let deps = flake_lock.nixpkgs_deps(config.nixpkgs_keys.clone())?;
 
+    for (name, dep) in deps {
         if let Node::Repo(repo) = dep {
             // Check if not explicitly supported
             if config.check_supported {
@@ -102,7 +105,7 @@ pub fn check_flake_lock(flake_lock: &FlakeLock, config: &FlakeCheckConfig) -> Ve
             }
         }
     }
-    issues
+    Ok(issues)
 }
 
 #[derive(Clone)]
@@ -200,16 +203,37 @@ impl<'de> Deserialize<'de> for FlakeLock {
 }
 
 impl FlakeLock {
-    fn nixpkgs_deps(&self, keys: Vec<String>) -> HashMap<String, Node> {
-        self.nodes
+    fn nixpkgs_deps(&self, keys: Vec<String>) -> Result<HashMap<String, Node>, FlakeCheckerError> {
+        let mut deps: HashMap<String, Node> = HashMap::new();
+
+        for (key, node) in self.nodes.clone() {
+            if let Node::Repo(_) = node {
+                if keys.contains(&key) {
+                    deps.insert(key, node);
+                }
+            }
+        }
+
+        let missing: Vec<String> = keys
             .iter()
-            .filter(|(k, v)| matches!(v, Node::Repo(_)) && keys.contains(k))
-            .map(|(k, v)| (String::from(k), v.clone()))
-            .collect()
+            .filter(|k| !deps.contains_key(*k))
+            .map(String::from)
+            .collect();
+
+        if !missing.is_empty() {
+            let error_msg = format!(
+                "no Nixpkgs dependency found for specified {}: {}",
+                if missing.len() > 1 { "keys" } else { "key" },
+                missing.join(", ")
+            );
+            return Err(FlakeCheckerError::Invalid(error_msg));
+        }
+
+        Ok(deps)
     }
 }
 
-#[derive(Clone, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 #[serde(untagged)]
 enum Node {
     Root(RootNode),
@@ -236,26 +260,26 @@ impl Node {
     }
 }
 
-#[derive(Clone, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 #[serde(untagged)]
 enum Input {
     String(String),
     List(Vec<String>),
 }
 
-#[derive(Clone, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 struct RootNode {
     inputs: HashMap<String, String>,
 }
 
-#[derive(Clone, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 struct RepoNode {
     inputs: Option<HashMap<String, Input>>,
     locked: RepoLocked,
     original: RepoOriginal,
 }
 
-#[derive(Clone, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 struct RepoLocked {
     #[serde(alias = "lastModified")]
     last_modified: i64,
@@ -268,7 +292,7 @@ struct RepoLocked {
     node_type: String,
 }
 
-#[derive(Clone, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 struct RepoOriginal {
     owner: String,
     repo: String,

@@ -106,7 +106,7 @@ fn main() -> Result<ExitCode, FlakeCheckerError> {
         nixpkgs_keys,
     };
 
-    let issues = check_flake_lock(&flake_lock, &flake_check_config);
+    let issues = check_flake_lock(&flake_lock, &flake_check_config)?;
 
     if !no_telemetry {
         telemetry::TelemetryReport::make_and_send(&issues);
