@@ -62,6 +62,16 @@ struct Cli {
         default_value_t = false
     )]
     fail_mode: bool,
+
+    /// Nixpkgs input keys as a comma-separated list.
+    #[arg(
+        long,
+        short,
+        env = "NIX_FLAKE_CHECKER_NIXPKGS_KEYS",
+        default_value = "nixpkgs",
+        name = "KEY_LIST"
+    )]
+    nixpkgs_keys: String,
 }
 
 fn main() -> Result<ExitCode, FlakeCheckerError> {
@@ -73,6 +83,7 @@ fn main() -> Result<ExitCode, FlakeCheckerError> {
         ignore_missing_flake_lock,
         flake_lock_path,
         fail_mode,
+        nixpkgs_keys,
     } = Cli::parse();
 
     if !flake_lock_path.exists() {
@@ -87,10 +98,13 @@ fn main() -> Result<ExitCode, FlakeCheckerError> {
 
     let flake_lock = FlakeLock::new(&flake_lock_path)?;
 
+    let nixpkgs_keys: Vec<String> = nixpkgs_keys.split(',').map(String::from).collect();
+
     let flake_check_config = FlakeCheckConfig {
         check_supported,
         check_outdated,
         check_owner,
+        nixpkgs_keys,
     };
 
     let issues = check_flake_lock(&flake_lock, &flake_check_config);

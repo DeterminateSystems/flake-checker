@@ -31,6 +31,7 @@ pub struct FlakeCheckConfig {
     pub check_supported: bool,
     pub check_outdated: bool,
     pub check_owner: bool,
+    pub nixpkgs_keys: Vec<String>,
 }
 
 impl Default for FlakeCheckConfig {
@@ -39,6 +40,7 @@ impl Default for FlakeCheckConfig {
             check_supported: true,
             check_outdated: true,
             check_owner: true,
+            nixpkgs_keys: vec![String::from("nixpkgs")],
         }
     }
 }
@@ -46,7 +48,7 @@ impl Default for FlakeCheckConfig {
 pub fn check_flake_lock(flake_lock: &FlakeLock, config: &FlakeCheckConfig) -> Vec<Issue> {
     let mut issues = vec![];
 
-    for (name, dep) in flake_lock.nixpkgs_deps() {
+    for (name, dep) in flake_lock.nixpkgs_deps(config.nixpkgs_keys.clone()) {
         if let Node::Repo(repo) = dep {
             // Check if not explicitly supported
             if config.check_supported {
@@ -196,11 +198,10 @@ impl<'de> Deserialize<'de> for FlakeLock {
 }
 
 impl FlakeLock {
-    fn nixpkgs_deps(&self) -> HashMap<String, Node> {
-        // TODO: make this more robust for real-world use cases
+    fn nixpkgs_deps(&self, keys: Vec<String>) -> HashMap<String, Node> {
         self.nodes
             .iter()
-            .filter(|(k, v)| matches!(v, Node::Repo(_)) && k == &"nixpkgs")
+            .filter(|(k, v)| matches!(v, Node::Repo(_)) && keys.contains(k))
             .map(|(k, v)| (k.clone(), v.clone()))
             .collect()
     }
