@@ -49,6 +49,8 @@ pub fn check_flake_lock(flake_lock: &FlakeLock, config: &FlakeCheckConfig) -> Ve
     let mut issues = vec![];
 
     for (name, dep) in flake_lock.nixpkgs_deps(config.nixpkgs_keys.clone()) {
+        println!("{name}");
+
         if let Node::Repo(repo) = dep {
             // Check if not explicitly supported
             if config.check_supported {
@@ -202,7 +204,7 @@ impl FlakeLock {
         self.nodes
             .iter()
             .filter(|(k, v)| matches!(v, Node::Repo(_)) && keys.contains(k))
-            .map(|(k, v)| (k.clone(), v.clone()))
+            .map(|(k, v)| (String::from(k), v.clone()))
             .collect()
     }
 }

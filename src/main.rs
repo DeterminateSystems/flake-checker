@@ -69,9 +69,10 @@ struct Cli {
         short,
         env = "NIX_FLAKE_CHECKER_NIXPKGS_KEYS",
         default_value = "nixpkgs",
+        value_delimiter = ',',
         name = "KEY_LIST"
     )]
-    nixpkgs_keys: String,
+    nixpkgs_keys: Vec<String>,
 }
 
 fn main() -> Result<ExitCode, FlakeCheckerError> {
@@ -97,8 +98,6 @@ fn main() -> Result<ExitCode, FlakeCheckerError> {
     }
 
     let flake_lock = FlakeLock::new(&flake_lock_path)?;
-
-    let nixpkgs_keys: Vec<String> = nixpkgs_keys.split(',').map(String::from).collect();
 
     let flake_check_config = FlakeCheckConfig {
         check_supported,
