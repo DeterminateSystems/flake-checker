@@ -222,7 +222,7 @@ impl FlakeLock {
 
         if !missing.is_empty() {
             let error_msg = format!(
-                "no Nixpkgs dependency found for specified {}: {}",
+                "no nixpkgs dependency found for specified {}: {}",
                 if missing.len() > 1 { "keys" } else { "key" },
                 missing.join(", ")
             );
@@ -320,7 +320,8 @@ mod test {
                 check_outdated: false,
                 ..Default::default()
             };
-            let issues = check_flake_lock(&flake_lock, &config);
+            let issues = check_flake_lock(&flake_lock, &config)
+                .expect("couldn't run check_flake_lock function");
             assert!(issues.is_empty());
         }
     }
@@ -379,7 +380,37 @@ mod test {
                 check_outdated: false,
                 ..Default::default()
             };
-            let issues = check_flake_lock(&flake_lock, &config);
+            let issues = check_flake_lock(&flake_lock, &config)
+                .expect("couldn't run check_flake_lock function");
+            assert_eq!(issues, expected_issues);
+        }
+    }
+
+    #[test]
+    fn test_explicit_nixpkgs_keys() {
+        let cases: Vec<(&str, Vec<String>, Vec<Issue>)> = vec![(
+            "flake.explicit-keys.0.lock",
+            vec![String::from("nixpkgs"), String::from("nixpkgs-alt")],
+            vec![Issue {
+                dependency: String::from("nixpkgs-alt"),
+                kind: IssueKind::NonUpstream,
+                details: json!({
+                    "input": String::from("nixpkgs-alt"),
+                    "owner": String::from("seems-pretty-shady"),
+                }),
+            }],
+        )];
+
+        for (file, nixpkgs_keys, expected_issues) in cases {
+            let path = format!("tests/{file}");
+            let flake_lock = FlakeLock::new(&path.into()).expect("couldn't create flake.lock");
+            let config = FlakeCheckConfig {
+                check_outdated: false,
+                nixpkgs_keys,
+                ..Default::default()
+            };
+            let issues = check_flake_lock(&flake_lock, &config)
+                .expect("couldn't run check_flake_lock function");
             assert_eq!(issues, expected_issues);
         }
     }
