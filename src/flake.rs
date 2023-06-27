@@ -31,6 +31,7 @@ pub struct FlakeCheckConfig {
     pub check_supported: bool,
     pub check_outdated: bool,
     pub check_owner: bool,
+    pub nixpkgs_keys: Vec<String>,
 }
 
 impl Default for FlakeCheckConfig {
@@ -39,14 +40,20 @@ impl Default for FlakeCheckConfig {
             check_supported: true,
             check_outdated: true,
             check_owner: true,
+            nixpkgs_keys: vec![String::from("nixpkgs")],
         }
     }
 }
 
-pub fn check_flake_lock(flake_lock: &FlakeLock, config: &FlakeCheckConfig) -> Vec<Issue> {
+pub fn check_flake_lock(
+    flake_lock: &FlakeLock,
+    config: &FlakeCheckConfig,
+) -> Result<Vec<Issue>, FlakeCheckerError> {
     let mut issues = vec![];
 
-    for (name, dep) in flake_lock.nixpkgs_deps() {
+    let deps = flake_lock.nixpkgs_deps(config.nixpkgs_keys.clone())?;
+
+    for (name, dep) in deps {
         if let Node::Repo(repo) = dep {
             // Check if not explicitly supported
             if config.check_supported {
@@ -98,7 +105,7 @@ pub fn check_flake_lock(flake_lock: &FlakeLock, config: &FlakeCheckConfig) -> Ve
             }
         }
     }
-    issues
+    Ok(issues)
 }
 
 #[derive(Clone)]
@@ -196,17 +203,37 @@ impl<'de> Deserialize<'de> for FlakeLock {
 }
 
 impl FlakeLock {
-    fn nixpkgs_deps(&self) -> HashMap<String, Node> {
-        // TODO: make this more robust for real-world use cases
-        self.nodes
+    fn nixpkgs_deps(&self, keys: Vec<String>) -> Result<HashMap<String, Node>, FlakeCheckerError> {
+        let mut deps: HashMap<String, Node> = HashMap::new();
+
+        for (key, node) in self.nodes.clone() {
+            if let Node::Repo(_) = node {
+                if keys.contains(&key) {
+                    deps.insert(key, node);
+                }
+            }
+        }
+
+        let missing: Vec<String> = keys
             .iter()
-            .filter(|(k, v)| matches!(v, Node::Repo(_)) && k == &"nixpkgs")
-            .map(|(k, v)| (k.clone(), v.clone()))
-            .collect()
+            .filter(|k| !deps.contains_key(*k))
+            .map(String::from)
+            .collect();
+
+        if !missing.is_empty() {
+            let error_msg = format!(
+                "no nixpkgs dependency found for specified {}: {}",
+                if missing.len() > 1 { "keys" } else { "key" },
+                missing.join(", ")
+            );
+            return Err(FlakeCheckerError::Invalid(error_msg));
+        }
+
+        Ok(deps)
     }
 }
 
-#[derive(Clone, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 #[serde(untagged)]
 enum Node {
     Root(RootNode),
@@ -233,26 +260,26 @@ impl Node {
     }
 }
 
-#[derive(Clone, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 #[serde(untagged)]
 enum Input {
     String(String),
     List(Vec<String>),
 }
 
-#[derive(Clone, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 struct RootNode {
     inputs: HashMap<String, String>,
 }
 
-#[derive(Clone, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 struct RepoNode {
     inputs: Option<HashMap<String, Input>>,
     locked: RepoLocked,
     original: RepoOriginal,
 }
 
-#[derive(Clone, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 struct RepoLocked {
     #[serde(alias = "lastModified")]
     last_modified: i64,
@@ -265,7 +292,7 @@ struct RepoLocked {
     node_type: String,
 }
 
-#[derive(Clone, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 struct RepoOriginal {
     owner: String,
     repo: String,
@@ -293,7 +320,8 @@ mod test {
                 check_outdated: false,
                 ..Default::default()
             };
-            let issues = check_flake_lock(&flake_lock, &config);
+            let issues = check_flake_lock(&flake_lock, &config)
+                .expect("couldn't run check_flake_lock function");
             assert!(issues.is_empty());
         }
     }
@@ -352,8 +380,66 @@ mod test {
                 check_outdated: false,
                 ..Default::default()
             };
-            let issues = check_flake_lock(&flake_lock, &config);
+            let issues = check_flake_lock(&flake_lock, &config)
+                .expect("couldn't run check_flake_lock function");
             assert_eq!(issues, expected_issues);
+        }
+    }
+
+    #[test]
+    fn test_explicit_nixpkgs_keys() {
+        let cases: Vec<(&str, Vec<String>, Vec<Issue>)> = vec![(
+            "flake.explicit-keys.0.lock",
+            vec![String::from("nixpkgs"), String::from("nixpkgs-alt")],
+            vec![Issue {
+                dependency: String::from("nixpkgs-alt"),
+                kind: IssueKind::NonUpstream,
+                details: json!({
+                    "input": String::from("nixpkgs-alt"),
+                    "owner": String::from("seems-pretty-shady"),
+                }),
+            }],
+        )];
+
+        for (file, nixpkgs_keys, expected_issues) in cases {
+            let path = format!("tests/{file}");
+            let flake_lock = FlakeLock::new(&path.into()).expect("couldn't create flake.lock");
+            let config = FlakeCheckConfig {
+                check_outdated: false,
+                nixpkgs_keys,
+                ..Default::default()
+            };
+            let issues = check_flake_lock(&flake_lock, &config)
+                .expect("couldn't run check_flake_lock function");
+            assert_eq!(issues, expected_issues);
+        }
+    }
+
+    #[test]
+    fn test_missing_nixpkgs_keys() {
+        let cases: Vec<(&str, Vec<String>, String)> = vec![(
+            "flake.clean.0.lock",
+            vec![String::from("nixpkgs"), String::from("foo"), String::from("bar")],
+            String::from("invalid flake.lock: no nixpkgs dependency found for specified keys: foo, bar"),
+        ),
+        (
+            "flake.clean.1.lock",
+            vec![String::from("nixpkgs"), String::from("nixpkgs-other")],
+            String::from("invalid flake.lock: no nixpkgs dependency found for specified key: nixpkgs-other"),
+        )];
+        for (file, nixpkgs_keys, expected_err) in cases {
+            let path = format!("tests/{file}");
+            let flake_lock = FlakeLock::new(&path.into()).expect("couldn't create flake.lock");
+            let config = FlakeCheckConfig {
+                check_outdated: false,
+                nixpkgs_keys,
+                ..Default::default()
+            };
+
+            let result = check_flake_lock(&flake_lock, &config);
+
+            assert!(result.is_err());
+            assert_eq!(result.unwrap_err().to_string(), expected_err);
         }
     }
 }
