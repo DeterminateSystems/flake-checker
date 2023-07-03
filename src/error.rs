@@ -10,4 +10,6 @@ pub enum FlakeCheckerError {
     Render(#[from] handlebars::RenderError),
     #[error("handlebars template error: {0}")]
     Template(#[from] Box<handlebars::TemplateError>),
+    #[error("invalid flake.lock: {0}")]
+    Invalid(String),
 }
