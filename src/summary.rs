@@ -15,20 +15,12 @@ pub struct Summary {
 
 impl Summary {
     pub fn new(issues: &Vec<Issue>) -> Self {
-        let disallowed: Vec<&Issue> = issues
-            .iter()
-            .filter(|i| matches!(i.kind, IssueKind::Disallowed))
-            .collect();
+        let by_kind =
+            |kind: IssueKind| -> Vec<&Issue> { issues.iter().filter(|i| i.kind == kind).collect() };
 
-        let outdated: Vec<&Issue> = issues
-            .iter()
-            .filter(|i| matches!(i.kind, IssueKind::Outdated))
-            .collect();
-
-        let non_upstream: Vec<&Issue> = issues
-            .iter()
-            .filter(|i| matches!(i.kind, IssueKind::NonUpstream))
-            .collect();
+        let disallowed = by_kind(IssueKind::Disallowed);
+        let outdated = by_kind(IssueKind::Outdated);
+        let non_upstream = by_kind(IssueKind::NonUpstream);
 
         let data = json!({
             "issues": issues,
