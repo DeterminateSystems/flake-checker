@@ -1,8 +1,8 @@
 #![allow(dead_code)]
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 use std::fmt;
 use std::fs::read_to_string;
-use std::path::PathBuf;
+use std::path::Path;
 
 use crate::issue::{Issue, IssueKind};
 use crate::FlakeCheckerError;
@@ -108,7 +108,7 @@ pub fn check_flake_lock(
     Ok(issues)
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct FlakeLock {
     nodes: HashMap<String, Node>,
     root: HashMap<String, Node>,
@@ -176,16 +176,17 @@ impl<'de> Deserialize<'de> for FlakeLock {
                 let Node::Root(root_node) = root_node else {
                     return Err(de::Error::custom(format!("root node was not a Root node, but was a {} node", root_node.variant())));
                 };
-                for (root_name, root_reference) in root_node.inputs.iter() {
-                    let node_keys: Vec<String> = match root_reference {
-                        Input::String(s) => vec![s.to_string()],
-                        Input::List(keys) => keys.to_owned(),
+
+                for (root_name, root_input) in root_node.inputs.iter() {
+                    let inputs: VecDeque<String> = match root_input.clone() {
+                        Input::String(s) => [s].into(),
+                        Input::List(keys) => keys.into(),
                     };
 
-                    for key in node_keys {
-                        let root_node = nodes[&key].to_owned();
-                        root_nodes.insert(root_name.to_owned(), root_node);
-                    }
+                    let real_node = chase_input_node(&nodes, inputs).map_err(|e| {
+                        de::Error::custom(format!("failed to chase input {}: {:?}", root_name, e))
+                    })?;
+                    root_nodes.insert(root_name.clone(), real_node.clone());
                 }
 
                 Ok(FlakeLock {
@@ -200,8 +201,49 @@ impl<'de> Deserialize<'de> for FlakeLock {
     }
 }
 
+fn chase_input_node(
+    nodes: &HashMap<String, Node>,
+    mut inputs: VecDeque<String>,
+) -> Result<&Node, FlakeCheckerError> {
+    let Some(next_input) = inputs.pop_front() else {
+        unreachable!("there should always be at least one input");
+    };
+
+    let mut node = &nodes[&next_input];
+    for input in inputs {
+        let maybe_node_inputs = match node {
+            Node::Repo(node) => node.inputs.to_owned(),
+            Node::Fallthrough(node) => match node.get("inputs") {
+                Some(node_inputs) => {
+                    serde_json::from_value(node_inputs.clone()).map_err(FlakeCheckerError::Json)?
+                }
+                None => None,
+            },
+            Node::Root(_) => None,
+        };
+
+        let node_inputs = match maybe_node_inputs {
+            Some(node_inputs) => node_inputs,
+            None => {
+                return Err(FlakeCheckerError::Invalid(format!(
+                    "lock node should have had some inputs but had none:\n{:?}",
+                    node
+                )));
+            }
+        };
+
+        let next_inputs = &node_inputs[&input];
+        node = match next_inputs {
+            Input::String(s) => &nodes[s],
+            Input::List(inputs) => chase_input_node(nodes, inputs.to_owned().into())?,
+        };
+    }
+
+    Ok(node)
+}
+
 impl FlakeLock {
-    pub fn new(path: &PathBuf) -> Result<Self, FlakeCheckerError> {
+    pub fn new(path: &Path) -> Result<Self, FlakeCheckerError> {
         let flake_lock_file = read_to_string(path)?;
         let flake_lock: FlakeLock = serde_json::from_str(&flake_lock_file)?;
         Ok(flake_lock)
@@ -210,14 +252,13 @@ impl FlakeLock {
     fn nixpkgs_deps(&self, keys: Vec<String>) -> Result<HashMap<String, Node>, FlakeCheckerError> {
         let mut deps: HashMap<String, Node> = HashMap::new();
 
-        for (key, node) in self.nodes.clone() {
+        for (key, node) in self.root.clone() {
             if let Node::Repo(_) = node {
                 if keys.contains(&key) {
                     deps.insert(key, node);
                 }
             }
         }
-
         let missing: Vec<String> = keys
             .iter()
             .filter(|k| !deps.contains_key(*k))
@@ -239,9 +280,9 @@ impl FlakeLock {
 
 #[derive(Clone, Debug, Deserialize)]
 #[serde(untagged)]
-enum Node {
-    Root(RootNode),
+pub(crate) enum Node {
     Repo(Box<RepoNode>),
+    Root(RootNode),
     Fallthrough(serde_json::value::Value), // Covers all other node types
 }
 
@@ -266,48 +307,52 @@ impl Node {
 
 #[derive(Clone, Debug, Deserialize)]
 #[serde(untagged)]
-enum Input {
+pub(crate) enum Input {
     String(String),
     List(Vec<String>),
 }
 
 #[derive(Clone, Debug, Deserialize)]
-struct RootNode {
-    inputs: HashMap<String, Input>,
+#[serde(deny_unknown_fields)]
+pub(crate) struct RootNode {
+    pub(crate) inputs: HashMap<String, Input>,
 }
 
 #[derive(Clone, Debug, Deserialize)]
-struct RepoNode {
-    inputs: Option<HashMap<String, Input>>,
-    locked: RepoLocked,
-    original: RepoOriginal,
+#[serde(deny_unknown_fields)]
+pub(crate) struct RepoNode {
+    pub(crate) inputs: Option<HashMap<String, Input>>,
+    pub(crate) locked: RepoLocked,
+    pub(crate) original: RepoOriginal,
 }
 
 #[derive(Clone, Debug, Deserialize)]
-struct RepoLocked {
+pub(crate) struct RepoLocked {
     #[serde(alias = "lastModified")]
-    last_modified: i64,
+    pub(crate) last_modified: i64,
     #[serde(alias = "narHash")]
-    nar_hash: String,
-    owner: String,
-    repo: String,
-    rev: String,
+    pub(crate) nar_hash: String,
+    pub(crate) owner: String,
+    pub(crate) repo: String,
+    pub(crate) rev: String,
     #[serde(alias = "type")]
-    node_type: String,
+    pub(crate) node_type: String,
 }
 
 #[derive(Clone, Debug, Deserialize)]
-struct RepoOriginal {
-    owner: String,
-    repo: String,
+pub(crate) struct RepoOriginal {
+    pub(crate) owner: String,
+    pub(crate) repo: String,
     #[serde(alias = "type")]
-    node_type: String,
+    pub(crate) node_type: String,
     #[serde(alias = "ref")]
-    git_ref: Option<String>,
+    pub(crate) git_ref: Option<String>,
 }
 
 #[cfg(test)]
 mod test {
+    use std::path::PathBuf;
+
     use crate::{
         check_flake_lock,
         issue::{Issue, IssueKind},
@@ -318,8 +363,8 @@ mod test {
     #[test]
     fn test_clean_flake_locks() {
         for n in 0..=4 {
-            let path = format!("tests/flake.clean.{n}.lock");
-            let flake_lock = FlakeLock::new(&path.into()).expect("couldn't create flake.lock");
+            let path = PathBuf::from(format!("tests/flake.clean.{n}.lock"));
+            let flake_lock = FlakeLock::new(&path).expect("couldn't create flake.lock");
             let config = FlakeCheckConfig {
                 check_outdated: false,
                 ..Default::default()
@@ -378,14 +423,15 @@ mod test {
         ];
 
         for (file, expected_issues) in cases {
-            let path = format!("tests/{file}");
-            let flake_lock = FlakeLock::new(&path.into()).expect("couldn't create flake.lock");
+            let path = PathBuf::from(format!("tests/{file}"));
+            let flake_lock = FlakeLock::new(&path).expect("couldn't create flake.lock");
             let config = FlakeCheckConfig {
                 check_outdated: false,
                 ..Default::default()
             };
             let issues = check_flake_lock(&flake_lock, &config)
                 .expect("couldn't run check_flake_lock function");
+            dbg!(&path);
             assert_eq!(issues, expected_issues);
         }
     }
@@ -406,8 +452,8 @@ mod test {
         )];
 
         for (file, nixpkgs_keys, expected_issues) in cases {
-            let path = format!("tests/{file}");
-            let flake_lock = FlakeLock::new(&path.into()).expect("couldn't create flake.lock");
+            let path = PathBuf::from(format!("tests/{file}"));
+            let flake_lock = FlakeLock::new(&path).expect("couldn't create flake.lock");
             let config = FlakeCheckConfig {
                 check_outdated: false,
                 nixpkgs_keys,
@@ -432,8 +478,8 @@ mod test {
             String::from("invalid flake.lock: no nixpkgs dependency found for specified key: nixpkgs-other"),
         )];
         for (file, nixpkgs_keys, expected_err) in cases {
-            let path = format!("tests/{file}");
-            let flake_lock = FlakeLock::new(&path.into()).expect("couldn't create flake.lock");
+            let path = PathBuf::from(format!("tests/{file}"));
+            let flake_lock = FlakeLock::new(&path).expect("couldn't create flake.lock");
             let config = FlakeCheckConfig {
                 check_outdated: false,
                 nixpkgs_keys,
