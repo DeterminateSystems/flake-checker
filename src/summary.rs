@@ -15,7 +15,6 @@ pub struct Summary {
     data: serde_json::Value,
     flake_lock_path: PathBuf,
     flake_check_config: FlakeCheckConfig,
-    fail_mode: bool,
 }
 
 impl Summary {
@@ -23,7 +22,6 @@ impl Summary {
         issues: &Vec<Issue>,
         flake_lock_path: PathBuf,
         flake_check_config: FlakeCheckConfig,
-        fail_mode: bool,
     ) -> Self {
         let by_kind =
             |kind: IssueKind| -> Vec<&Issue> { issues.iter().filter(|i| i.kind == kind).collect() };
@@ -57,21 +55,16 @@ impl Summary {
             data,
             flake_lock_path,
             flake_check_config,
-            fail_mode,
         }
     }
 
-    pub fn console_log_errors(&self) {
+    pub fn console_log_errors(&self) -> Result<(), FlakeCheckerError> {
         let file = self.flake_lock_path.to_string_lossy();
 
-        let level = if self.fail_mode { "error" } else { "warning" };
-
         if self.issues.is_empty() {
-            // This is only logged if ACTIONS_STEP_DEBUG is set to true. See here:
-            // https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#setting-a-debug-message
-            println!(
-                "::debug::The Determinate Nix Flake Checker scanned {file} and found no issues"
-            );
+            let message =
+                format!("The Determinate Nix Flake Checker scanned {file} and found no issues");
+            std::io::stdout().write_all(message.as_bytes())?;
         } else {
             for issue in self.issues.iter() {
                 let message: Option<String> = if self.flake_check_config.check_supported
@@ -103,10 +96,11 @@ impl Summary {
                 };
 
                 if let Some(message) = message {
-                    println!("::{level} file={file}::{message}");
+                    std::io::stdout().write_all(message.as_bytes())?;
                 }
             }
         }
+        Ok(())
     }
 
     pub fn generate_markdown(&self) -> Result<(), FlakeCheckerError> {
