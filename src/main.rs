@@ -2,11 +2,11 @@ mod error;
 mod flake;
 mod issue;
 mod summary;
-pub mod telemetry;
+mod telemetry;
 
-pub use error::FlakeCheckerError;
-pub use flake::{check_flake_lock, FlakeCheckConfig, FlakeLock};
-pub use summary::Summary;
+use error::FlakeCheckerError;
+use flake::{check_flake_lock, FlakeCheckConfig, FlakeLock};
+use summary::Summary;
 
 use std::path::PathBuf;
 use std::process::ExitCode;
@@ -73,6 +73,15 @@ struct Cli {
         name = "KEY_LIST"
     )]
     nixpkgs_keys: Vec<String>,
+
+    /// Display Markdown summary (in GitHub Actions).
+    #[arg(
+        long,
+        short,
+        env = "NIX_FLAKE_CHECKER_MARKDOWN_SUMMARY",
+        default_value_t = true
+    )]
+    markdown_summary: bool,
 }
 
 fn main() -> Result<ExitCode, FlakeCheckerError> {
@@ -85,6 +94,7 @@ fn main() -> Result<ExitCode, FlakeCheckerError> {
         flake_lock_path,
         fail_mode,
         nixpkgs_keys,
+        markdown_summary,
     } = Cli::parse();
 
     if !flake_lock_path.exists() {
@@ -104,6 +114,7 @@ fn main() -> Result<ExitCode, FlakeCheckerError> {
         check_outdated,
         check_owner,
         nixpkgs_keys,
+        fail_mode,
     };
 
     let issues = check_flake_lock(&flake_lock, &flake_check_config)?;
@@ -112,10 +123,13 @@ fn main() -> Result<ExitCode, FlakeCheckerError> {
         telemetry::TelemetryReport::make_and_send(&issues);
     }
 
-    let summary = Summary::new(&issues);
+    let summary = Summary::new(&issues, flake_lock_path, flake_check_config);
 
     if std::env::var("GITHUB_ACTIONS").is_ok() {
-        summary.generate_markdown()?;
+        if markdown_summary {
+            summary.generate_markdown()?;
+        }
+        summary.console_log_errors()?;
     } else {
         summary.generate_text()?;
     }

@@ -16,7 +16,7 @@ that we recommend looking into:
 >>> Non-supported Git branches for Nixpkgs
 
 {{#each disallowed}}
-> The {{this.details.input}} input uses the {{this.details.ref}} branch
+> The {{this.input}} input uses the {{this.kind.reference}} branch
 {{/each}}
 
 >> What to do
@@ -40,7 +40,7 @@ branches can't promise.
 >>> Outdated Nixpkgs dependencies
 
 {{#each outdated}}
-> The {{this.details.input}} input is {{this.details.num_days_old}} days old
+> The {{this.input}} input is {{this.kind.num_days_old}} days old
 {{/each}}
 
 The maximum recommended age is {{max_days}} days.
@@ -63,7 +63,7 @@ you to software security risks that have been resolved in more recent releases.
 >>> Non-upstream Nixpkgs dependencies
 
 {{#each non_upstream}}
-> The {{this.details.input}} input has {{this.details.owner}} as an owner rather
+> The {{this.input}} input has {{this.kind.owner}} as an owner rather
   than the NixOS org
 {{/each}}
 
