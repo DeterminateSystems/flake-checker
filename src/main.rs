@@ -112,11 +112,11 @@ fn main() -> Result<ExitCode, FlakeCheckerError> {
         telemetry::TelemetryReport::make_and_send(&issues);
     }
 
-    let summary = Summary::new(&issues, flake_lock_path);
+    let summary = Summary::new(&issues, flake_lock_path, flake_check_config, fail_mode);
 
     if std::env::var("GITHUB_ACTIONS").is_ok() {
         summary.generate_markdown()?;
-        summary.log();
+        summary.console_log_errors();
     } else {
         summary.generate_text()?;
     }
