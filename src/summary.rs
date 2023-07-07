@@ -18,7 +18,7 @@ pub(crate) struct Summary {
 }
 
 impl Summary {
-    pub fn new(
+    pub(crate) fn new(
         issues: &Vec<Issue>,
         flake_lock_path: PathBuf,
         flake_check_config: FlakeCheckConfig,
@@ -76,7 +76,7 @@ impl Summary {
                         if self.flake_check_config.check_supported {
                             let reference = &disallowed.reference;
                             Some(format!(
-                            "the `{input}` input uses the non-supported git branch `{reference}` for nixpkgs"
+                            "the `{input}` input uses the non-supported Git branch `{reference}` for Nixpkgs"
                         ))
                         } else {
                             None
@@ -96,7 +96,7 @@ impl Summary {
                         if self.flake_check_config.check_owner {
                             let owner = &non_upstream.owner;
                             Some(format!(
-                                "the `{input}` input has `{owner}` as an owner rather than `NixOS`"
+                                "the `{input}` input has the non-upstream owner `{owner}` rather than `NixOS` (upstream)"
                             ))
                         } else {
                             None

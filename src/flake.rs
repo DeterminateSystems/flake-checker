@@ -100,7 +100,7 @@ pub(crate) fn check_flake_lock(
 }
 
 #[derive(Clone, Debug)]
-pub struct FlakeLock {
+pub(crate) struct FlakeLock {
     nodes: HashMap<String, Node>,
     root: HashMap<String, Node>,
     version: usize,
@@ -234,7 +234,7 @@ fn chase_input_node(
 }
 
 impl FlakeLock {
-    pub fn new(path: &Path) -> Result<Self, FlakeCheckerError> {
+    pub(crate) fn new(path: &Path) -> Result<Self, FlakeCheckerError> {
         let flake_lock_file = read_to_string(path)?;
         let flake_lock: FlakeLock = serde_json::from_str(&flake_lock_file)?;
         Ok(flake_lock)
