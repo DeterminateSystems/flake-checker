@@ -69,7 +69,9 @@ impl Summary {
         if self.issues.is_empty() {
             // This is only logged if ACTIONS_STEP_DEBUG is set to true. See here:
             // https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#setting-a-debug-message
-            println!("::debug::The Determinate Nix Flake Checker scanned {file} and found no issues");
+            println!(
+                "::debug::The Determinate Nix Flake Checker scanned {file} and found no issues"
+            );
         } else {
             println!("::group::Nix Flake Checker results");
             for issue in self.issues.iter() {
