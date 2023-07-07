@@ -76,8 +76,8 @@ impl Summary {
                         if self.flake_check_config.check_supported {
                             let reference = &disallowed.reference;
                             Some(format!(
-                            "the `{input}` input uses the non-supported Git branch `{reference}` for Nixpkgs"
-                        ))
+                                "the `{input}` input uses the non-supported Git branch `{reference}` for Nixpkgs"
+                             ))
                         } else {
                             None
                         }
