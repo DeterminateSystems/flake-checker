@@ -66,38 +66,46 @@ impl Summary {
 
         let level = if self.fail_mode { "error" } else { "warning" };
 
-        for issue in self.issues.iter() {
-            let message: Option<String> = if self.flake_check_config.check_supported
-                && matches!(issue.kind, IssueKind::Disallowed)
-            {
-                let input = issue.details.get("input").unwrap();
-                let reference = issue.details.get("ref").unwrap();
-                Some(format!(
-                    "the {input} input uses the non-supported git branch {reference} for nixpkgs"
-                ))
-            } else if self.flake_check_config.check_outdated
-                && matches!(issue.kind, IssueKind::Outdated)
-            {
-                let input = issue.details.get("input").unwrap();
-                let num_days_old = issue.details.get("num_days_old").unwrap();
-                Some(format!(
-                    "the {input} input is {num_days_old} days old (the max allowed is {MAX_DAYS})"
-                ))
-            } else if self.flake_check_config.check_owner
-                && matches!(issue.kind, IssueKind::NonUpstream)
-            {
-                let input: &serde_json::Value = issue.details.get("input").unwrap();
-                let owner = issue.details.get("owner").unwrap();
-                Some(format!(
-                    "the {input} input has {owner} as an owner rather than the NixOS org"
-                ))
-            } else {
-                None
-            };
+        if self.issues.is_empty() {
+            // This is only logged if ACTIONS_STEP_DEBUG is set to true. See here:
+            // https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#setting-a-debug-message
+            println!("::debug::The Determinate Nix Flake Checker scanned {file} and found no issues");
+        } else {
+            println!("::group::Nix Flake Checker results");
+            for issue in self.issues.iter() {
+                let message: Option<String> = if self.flake_check_config.check_supported
+                    && matches!(issue.kind, IssueKind::Disallowed)
+                {
+                    let input = issue.details.get("input").unwrap();
+                    let reference = issue.details.get("ref").unwrap();
+                    Some(format!(
+                        "the {input} input uses the non-supported git branch {reference} for nixpkgs"
+                    ))
+                } else if self.flake_check_config.check_outdated
+                    && matches!(issue.kind, IssueKind::Outdated)
+                {
+                    let input = issue.details.get("input").unwrap();
+                    let num_days_old = issue.details.get("num_days_old").unwrap();
+                    Some(format!(
+                        "the {input} input is {num_days_old} days old (the max allowed is {MAX_DAYS})"
+                    ))
+                } else if self.flake_check_config.check_owner
+                    && matches!(issue.kind, IssueKind::NonUpstream)
+                {
+                    let input: &serde_json::Value = issue.details.get("input").unwrap();
+                    let owner = issue.details.get("owner").unwrap();
+                    Some(format!(
+                        "the {input} input has {owner} as an owner rather than the NixOS org"
+                    ))
+                } else {
+                    None
+                };
 
-            if let Some(message) = message {
-                println!("::{level} file={file}::{message}");
+                if let Some(message) = message {
+                    println!("::{level} file={file}::{message}");
+                }
             }
+            println!("::endgroup::");
         }
     }
 
