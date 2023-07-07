@@ -114,6 +114,7 @@ fn main() -> Result<ExitCode, FlakeCheckerError> {
         check_outdated,
         check_owner,
         nixpkgs_keys,
+        fail_mode,
     };
 
     let issues = check_flake_lock(&flake_lock, &flake_check_config)?;

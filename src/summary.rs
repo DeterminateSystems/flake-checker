@@ -64,6 +64,12 @@ impl Summary {
         if self.issues.is_empty() {
             println!("The Determinate Nix Flake Checker scanned {file} and found no issues");
         } else {
+            let level = if self.flake_check_config.fail_mode {
+                "error"
+            } else {
+                "warning"
+            };
+
             for issue in self.issues.iter() {
                 let message: Option<String> = if self.flake_check_config.check_supported
                     && matches!(issue.kind, IssueKind::Disallowed)
@@ -94,7 +100,7 @@ impl Summary {
                 };
 
                 if let Some(message) = message {
-                    println!("{}", message);
+                    println!("{}: {}", level.to_uppercase(), message);
                 }
             }
         }

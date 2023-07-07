@@ -31,6 +31,7 @@ pub struct FlakeCheckConfig {
     pub check_supported: bool,
     pub check_outdated: bool,
     pub check_owner: bool,
+    pub fail_mode: bool,
     pub nixpkgs_keys: Vec<String>,
 }
 
@@ -40,6 +41,7 @@ impl Default for FlakeCheckConfig {
             check_supported: true,
             check_outdated: true,
             check_owner: true,
+            fail_mode: false,
             nixpkgs_keys: vec![String::from("nixpkgs")],
         }
     }
