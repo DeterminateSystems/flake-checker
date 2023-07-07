@@ -4,6 +4,7 @@ use crate::issue::{Issue, IssueKind};
 
 use std::fs::OpenOptions;
 use std::io::Write;
+use std::path::PathBuf;
 
 use handlebars::Handlebars;
 use serde_json::json;
@@ -11,10 +12,11 @@ use serde_json::json;
 pub struct Summary {
     pub issues: Vec<Issue>,
     data: serde_json::Value,
+    flake_lock_path: PathBuf,
 }
 
 impl Summary {
-    pub fn new(issues: &Vec<Issue>) -> Self {
+    pub fn new(issues: &Vec<Issue>, flake_lock_path: PathBuf) -> Self {
         let by_kind =
             |kind: IssueKind| -> Vec<&Issue> { issues.iter().filter(|i| i.kind == kind).collect() };
 
@@ -45,7 +47,14 @@ impl Summary {
         Self {
             issues: issues.to_vec(),
             data,
+            flake_lock_path,
         }
+    }
+
+    pub fn log(&self) {
+        let file = self.flake_lock_path.to_string_lossy();
+        let message = "Something went wrong";
+        println!("::warning file={file}::{message}");
     }
 
     pub fn generate_markdown(&self) -> Result<(), FlakeCheckerError> {
