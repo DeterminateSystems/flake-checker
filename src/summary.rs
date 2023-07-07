@@ -73,7 +73,6 @@ impl Summary {
                 "::debug::The Determinate Nix Flake Checker scanned {file} and found no issues"
             );
         } else {
-            println!("::group::Nix Flake Checker results");
             for issue in self.issues.iter() {
                 let message: Option<String> = if self.flake_check_config.check_supported
                     && matches!(issue.kind, IssueKind::Disallowed)
@@ -107,7 +106,6 @@ impl Summary {
                     println!("::{level} file={file}::{message}");
                 }
             }
-            println!("::endgroup::");
         }
     }
 
