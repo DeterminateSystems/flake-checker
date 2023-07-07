@@ -126,7 +126,7 @@ fn main() -> Result<ExitCode, FlakeCheckerError> {
     let summary = Summary::new(&issues, flake_lock_path, flake_check_config);
 
     if std::env::var("GITHUB_ACTIONS").is_ok() {
-        if !markdown_summary {
+        if markdown_summary {
             summary.generate_markdown()?;
         }
         summary.console_log_errors()?;
