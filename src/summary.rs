@@ -62,9 +62,7 @@ impl Summary {
         let file = self.flake_lock_path.to_string_lossy();
 
         if self.issues.is_empty() {
-            let message =
-                format!("The Determinate Nix Flake Checker scanned {file} and found no issues");
-            std::io::stdout().write_all(message.as_bytes())?;
+            println!("The Determinate Nix Flake Checker scanned {file} and found no issues");
         } else {
             for issue in self.issues.iter() {
                 let message: Option<String> = if self.flake_check_config.check_supported
@@ -96,7 +94,7 @@ impl Summary {
                 };
 
                 if let Some(message) = message {
-                    std::io::stdout().write_all(message.as_bytes())?;
+                    println!("{}", message);
                 }
             }
         }
@@ -129,7 +127,7 @@ impl Summary {
 
         let summary_txt = handlebars.render("summary.txt", &self.data)?;
 
-        std::io::stdout().write_all(summary_txt.as_bytes())?;
+        println!("{}", summary_txt);
 
         Ok(())
     }
