@@ -73,6 +73,15 @@ struct Cli {
         name = "KEY_LIST"
     )]
     nixpkgs_keys: Vec<String>,
+
+    /// Display Markdown summary (in GitHub Actions).
+    #[arg(
+        long,
+        short,
+        env = "NIX_FLAKE_CHECKER_MARKDOWN_SUMMARY",
+        default_value_t = true
+    )]
+    markdown_summary: bool,
 }
 
 fn main() -> Result<ExitCode, FlakeCheckerError> {
@@ -85,6 +94,7 @@ fn main() -> Result<ExitCode, FlakeCheckerError> {
         flake_lock_path,
         fail_mode,
         nixpkgs_keys,
+        markdown_summary,
     } = Cli::parse();
 
     if !flake_lock_path.exists() {
@@ -115,7 +125,9 @@ fn main() -> Result<ExitCode, FlakeCheckerError> {
     let summary = Summary::new(&issues, flake_lock_path, flake_check_config, fail_mode);
 
     if std::env::var("GITHUB_ACTIONS").is_ok() {
-        summary.generate_markdown()?;
+        if !markdown_summary {
+            summary.generate_markdown()?;
+        }
         summary.console_log_errors();
     } else {
         summary.generate_text()?;
