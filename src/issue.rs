@@ -7,6 +7,7 @@ pub(crate) struct Issue {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(untagged)]
 pub(crate) enum IssueKind {
     Disallowed(Disallowed),
     Outdated(Outdated),

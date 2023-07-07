@@ -14,7 +14,7 @@ The Determinate Flake Checker Action scanned your `flake.lock` and didn't identi
 ## Non-supported Git branches for Nixpkgs
 
 {{#each disallowed}}
-* The `{{this.input}}` input uses the `{{this.reference}}` branch
+* The `{{this.input}}` input uses the `{{this.kind.reference}}` branch
 {{/each}}
 
 <details>
@@ -46,7 +46,7 @@ Release branches are also certain to have good <a href="https://zero-to-nix.com/
 ## Outdated Nixpkgs dependencies
 
 {{#each outdated}}
-* The `{{this.input}}` input is **{{this.num_days_old}}** days old
+* The `{{this.input}}` input is **{{this.kind.num_days_old}}** days old
 {{/each}}
 
 The maximum recommended age is **{{max_days}}** days.
@@ -83,7 +83,7 @@ Using outdated revisions of Nixpkgs can inadvertently expose you to software sec
 ## Non-upstream Nixpkgs dependencies
 
 {{#each non_upstream}}
-* The `{{this.input}}` input has `{{this.owner}}` as an owner rather than the `NixOS` org
+* The `{{this.input}}` input has `{{this.kind.owner}}` as an owner rather than the `NixOS` org
 {{/each}}
 
 <details>
