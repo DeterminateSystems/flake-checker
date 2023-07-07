@@ -4,13 +4,12 @@ use std::fmt;
 use std::fs::read_to_string;
 use std::path::Path;
 
-use crate::issue::{Issue, IssueKind};
+use crate::issue::{Disallowed, Issue, IssueKind, NonUpstream, Outdated};
 use crate::FlakeCheckerError;
 
 use chrono::{Duration, Utc};
 use serde::de::{self, Deserializer, MapAccess, Visitor};
 use serde::Deserialize;
-use serde_json::json;
 
 // Update this when necessary by running the get-allowed-refs.sh script to fetch
 // the current values from monitoring.nixos.org
@@ -27,7 +26,7 @@ pub const ALLOWED_REFS: &[&str] = &[
 ];
 pub const MAX_DAYS: i64 = 30;
 
-pub struct FlakeCheckConfig {
+pub(crate) struct FlakeCheckConfig {
     pub check_supported: bool,
     pub check_outdated: bool,
     pub check_owner: bool,
@@ -47,7 +46,7 @@ impl Default for FlakeCheckConfig {
     }
 }
 
-pub fn check_flake_lock(
+pub(crate) fn check_flake_lock(
     flake_lock: &FlakeLock,
     config: &FlakeCheckConfig,
 ) -> Result<Vec<Issue>, FlakeCheckerError> {
@@ -62,11 +61,9 @@ pub fn check_flake_lock(
                 if let Some(ref git_ref) = repo.original.git_ref {
                     if !ALLOWED_REFS.contains(&git_ref.as_str()) {
                         issues.push(Issue {
-                            dependency: name.clone(),
-                            kind: IssueKind::Disallowed,
-                            details: json!({
-                                "input": name,
-                                "ref": git_ref
+                            input: name.clone(),
+                            kind: IssueKind::Disallowed(Disallowed {
+                                reference: git_ref.to_string(),
                             }),
                         });
                     }
@@ -81,12 +78,8 @@ pub fn check_flake_lock(
 
                 if num_days_old > MAX_DAYS {
                     issues.push(Issue {
-                        dependency: name.clone(),
-                        kind: IssueKind::Outdated,
-                        details: json!({
-                            "input": name,
-                            "num_days_old": num_days_old,
-                        }),
+                        input: name.clone(),
+                        kind: IssueKind::Outdated(Outdated { num_days_old }),
                     });
                 }
             }
@@ -96,12 +89,8 @@ pub fn check_flake_lock(
                 let owner = repo.original.owner;
                 if owner.to_lowercase() != "nixos" {
                     issues.push(Issue {
-                        dependency: name.clone(),
-                        kind: IssueKind::NonUpstream,
-                        details: json!({
-                            "input": name,
-                            "owner": owner,
-                        }),
+                        input: name.clone(),
+                        kind: IssueKind::NonUpstream(NonUpstream { owner }),
                     });
                 }
             }
@@ -357,10 +346,9 @@ mod test {
 
     use crate::{
         check_flake_lock,
-        issue::{Issue, IssueKind},
+        issue::{Disallowed, Issue, IssueKind, NonUpstream},
         FlakeCheckConfig, FlakeLock,
     };
-    use serde_json::json;
 
     #[test]
     fn test_clean_flake_locks() {
@@ -384,19 +372,15 @@ mod test {
                 "flake.dirty.0.lock",
                 vec![
                     Issue {
-                        dependency: String::from("nixpkgs"),
-                        kind: IssueKind::Disallowed,
-                        details: json!({
-                            "input": String::from("nixpkgs"),
-                            "ref": String::from("this-should-fail"),
+                        input: String::from("nixpkgs"),
+                        kind: IssueKind::Disallowed(Disallowed {
+                            reference: String::from("this-should-fail"),
                         }),
                     },
                     Issue {
-                        dependency: String::from("nixpkgs"),
-                        kind: IssueKind::NonUpstream,
-                        details: json!({
-                            "input": String::from("nixpkgs"),
-                            "owner": String::from("bitcoin-miner-org"),
+                        input: String::from("nixpkgs"),
+                        kind: IssueKind::NonUpstream(NonUpstream {
+                            owner: String::from("bitcoin-miner-org"),
                         }),
                     },
                 ],
@@ -405,19 +389,15 @@ mod test {
                 "flake.dirty.1.lock",
                 vec![
                     Issue {
-                        dependency: String::from("nixpkgs"),
-                        kind: IssueKind::Disallowed,
-                        details: json!({
-                            "input": String::from("nixpkgs"),
-                            "ref": String::from("probably-nefarious"),
+                        input: String::from("nixpkgs"),
+                        kind: IssueKind::Disallowed(Disallowed {
+                            reference: String::from("probably-nefarious"),
                         }),
                     },
                     Issue {
-                        dependency: String::from("nixpkgs"),
-                        kind: IssueKind::NonUpstream,
-                        details: json!({
-                            "input": String::from("nixpkgs"),
-                            "owner": String::from("pretty-shady"),
+                        input: String::from("nixpkgs"),
+                        kind: IssueKind::NonUpstream(NonUpstream {
+                            owner: String::from("pretty-shady"),
                         }),
                     },
                 ],
@@ -444,11 +424,9 @@ mod test {
             "flake.explicit-keys.0.lock",
             vec![String::from("nixpkgs"), String::from("nixpkgs-alt")],
             vec![Issue {
-                dependency: String::from("nixpkgs-alt"),
-                kind: IssueKind::NonUpstream,
-                details: json!({
-                    "input": String::from("nixpkgs-alt"),
-                    "owner": String::from("seems-pretty-shady"),
+                input: String::from("nixpkgs-alt"),
+                kind: IssueKind::NonUpstream(NonUpstream {
+                    owner: String::from("seems-pretty-shady"),
                 }),
             }],
         )];

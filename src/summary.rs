@@ -10,7 +10,7 @@ use std::path::PathBuf;
 use handlebars::Handlebars;
 use serde_json::json;
 
-pub struct Summary {
+pub(crate) struct Summary {
     pub issues: Vec<Issue>,
     data: serde_json::Value,
     flake_lock_path: PathBuf,
@@ -23,12 +23,10 @@ impl Summary {
         flake_lock_path: PathBuf,
         flake_check_config: FlakeCheckConfig,
     ) -> Self {
-        let by_kind =
-            |kind: IssueKind| -> Vec<&Issue> { issues.iter().filter(|i| i.kind == kind).collect() };
-
-        let disallowed = by_kind(IssueKind::Disallowed);
-        let outdated = by_kind(IssueKind::Outdated);
-        let non_upstream = by_kind(IssueKind::NonUpstream);
+        let disallowed: Vec<&Issue> = issues.iter().filter(|i| i.kind.is_disallowed()).collect();
+        let outdated: Vec<&Issue> = issues.iter().filter(|i| i.kind.is_outdated()).collect();
+        let non_upstream: Vec<&Issue> =
+            issues.iter().filter(|i| i.kind.is_non_upstream()).collect();
 
         let data = json!({
             "issues": issues,
@@ -71,32 +69,39 @@ impl Summary {
             };
 
             for issue in self.issues.iter() {
-                let message: Option<String> = if self.flake_check_config.check_supported
-                    && matches!(issue.kind, IssueKind::Disallowed)
-                {
-                    let input = issue.details.get("input").unwrap();
-                    let reference = issue.details.get("ref").unwrap();
-                    Some(format!(
-                        "the {input} input uses the non-supported git branch {reference} for nixpkgs"
-                    ))
-                } else if self.flake_check_config.check_outdated
-                    && matches!(issue.kind, IssueKind::Outdated)
-                {
-                    let input = issue.details.get("input").unwrap();
-                    let num_days_old = issue.details.get("num_days_old").unwrap();
-                    Some(format!(
-                        "the {input} input is {num_days_old} days old (the max allowed is {MAX_DAYS})"
-                    ))
-                } else if self.flake_check_config.check_owner
-                    && matches!(issue.kind, IssueKind::NonUpstream)
-                {
-                    let input: &serde_json::Value = issue.details.get("input").unwrap();
-                    let owner = issue.details.get("owner").unwrap();
-                    Some(format!(
-                        "the {input} input has {owner} as an owner rather than the NixOS org"
-                    ))
-                } else {
-                    None
+                let input = &issue.input;
+
+                let message: Option<String> = match &issue.kind {
+                    IssueKind::Disallowed(disallowed) => {
+                        if self.flake_check_config.check_supported {
+                            let reference = &disallowed.reference;
+                            Some(format!(
+                            "the `{input}` input uses the non-supported git branch `{reference}` for nixpkgs"
+                        ))
+                        } else {
+                            None
+                        }
+                    }
+                    IssueKind::Outdated(outdated) => {
+                        if self.flake_check_config.check_outdated {
+                            let num_days_old = outdated.num_days_old;
+                            Some(format!(
+                                "the `{input}` input is {num_days_old} days old (the max allowed is {MAX_DAYS})"
+                            ))
+                        } else {
+                            None
+                        }
+                    }
+                    IssueKind::NonUpstream(non_upstream) => {
+                        if self.flake_check_config.check_owner {
+                            let owner = &non_upstream.owner;
+                            Some(format!(
+                                "the `{input}` input has `{owner}` as an owner rather than `NixOS`"
+                            ))
+                        } else {
+                            None
+                        }
+                    }
                 };
 
                 if let Some(message) = message {

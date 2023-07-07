@@ -2,11 +2,11 @@ mod error;
 mod flake;
 mod issue;
 mod summary;
-pub mod telemetry;
+mod telemetry;
 
-pub use error::FlakeCheckerError;
-pub use flake::{check_flake_lock, FlakeCheckConfig, FlakeLock};
-pub use summary::Summary;
+use error::FlakeCheckerError;
+use flake::{check_flake_lock, FlakeCheckConfig, FlakeLock};
+use summary::Summary;
 
 use std::path::PathBuf;
 use std::process::ExitCode;

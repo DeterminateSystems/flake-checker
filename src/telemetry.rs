@@ -1,15 +1,14 @@
-use crate::issue::{Issue, IssueKind};
+use crate::issue::Issue;
 
 use std::env;
 
-use is_ci;
 use sha2::{Digest, Sha256};
 
 const TELEMETRY_ENDPOINT: &str = "https://install.determinate.systems/flake-checker/telemetry";
 
 /// A telemetry report to identify trends in outdated locks against nixpkgs
 #[derive(Debug, serde::Deserialize, serde::Serialize, Clone)]
-pub struct TelemetryReport {
+pub(crate) struct TelemetryReport {
     pub distinct_id: String,
 
     pub version: String,
@@ -21,7 +20,7 @@ pub struct TelemetryReport {
 }
 
 impl TelemetryReport {
-    pub fn new(issues: &[Issue]) -> Result<TelemetryReport, env::VarError> {
+    pub(crate) fn new(issues: &[Issue]) -> Result<TelemetryReport, env::VarError> {
         Ok(TelemetryReport {
             distinct_id: calculate_opaque_id()?,
 
@@ -30,15 +29,15 @@ impl TelemetryReport {
 
             disallowed: issues
                 .iter()
-                .filter(|issue| issue.kind == IssueKind::Disallowed)
+                .filter(|issue| issue.kind.is_disallowed())
                 .count(),
             outdated: issues
                 .iter()
-                .filter(|issue| issue.kind == IssueKind::Outdated)
+                .filter(|issue| issue.kind.is_outdated())
                 .count(),
             non_upstream: issues
                 .iter()
-                .filter(|issue| issue.kind == IssueKind::NonUpstream)
+                .filter(|issue| issue.kind.is_non_upstream())
                 .count(),
         })
     }
