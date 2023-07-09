@@ -1,8 +1,8 @@
 #![allow(dead_code)]
 
 use std::collections::{HashMap, VecDeque};
-use std::fs::read_to_string;
 use std::fmt;
+use std::fs::read_to_string;
 use std::path::Path;
 
 use serde::de::{self, MapAccess, Visitor};
@@ -19,7 +19,7 @@ pub enum FlakeLockParseError {
     NotFound(#[from] std::io::Error),
     /// The specified `flake.lock` file couldn't be parsed as JSON.
     #[error("couldn't parse the flake.lock file as json: {0}")]
-    Json(#[from] serde_json::Error)
+    Json(#[from] serde_json::Error),
 }
 
 /// A Rust representation of a Nix [`flake.lock`
@@ -137,9 +137,8 @@ fn chase_input_node(
         let maybe_node_inputs = match node {
             Node::Repo(node) => node.inputs.to_owned(),
             Node::Fallthrough(node) => match node.get("inputs") {
-                Some(node_inputs) => {
-                    serde_json::from_value(node_inputs.clone()).map_err(FlakeLockParseError::Json)?
-                }
+                Some(node_inputs) => serde_json::from_value(node_inputs.clone())
+                    .map_err(FlakeLockParseError::Json)?,
                 None => None,
             },
             Node::Root(_) => None,
@@ -253,4 +252,3 @@ pub struct RepoOriginal {
     #[serde(alias = "ref")]
     pub git_ref: Option<String>,
 }
-

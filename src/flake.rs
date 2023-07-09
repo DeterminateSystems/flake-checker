@@ -43,7 +43,10 @@ impl Default for FlakeCheckConfig {
     }
 }
 
-fn nixpkgs_deps(flake_lock: &FlakeLock, keys: Vec<String>) -> Result<HashMap<String, Node>, FlakeCheckerError> {
+fn nixpkgs_deps(
+    flake_lock: &FlakeLock,
+    keys: Vec<String>,
+) -> Result<HashMap<String, Node>, FlakeCheckerError> {
     let mut deps: HashMap<String, Node> = HashMap::new();
 
     for (key, node) in flake_lock.root.clone() {
