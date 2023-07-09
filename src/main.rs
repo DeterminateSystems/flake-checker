@@ -1,3 +1,5 @@
+extern crate parse_flake_lock;
+
 mod error;
 mod flake;
 mod issue;
@@ -5,13 +7,14 @@ mod summary;
 mod telemetry;
 
 use error::FlakeCheckerError;
-use flake::{check_flake_lock, FlakeCheckConfig, FlakeLock};
+use flake::{check_flake_lock, FlakeCheckConfig};
 use summary::Summary;
 
 use std::path::PathBuf;
 use std::process::ExitCode;
 
 use clap::Parser;
+use parse_flake_lock::FlakeLock;
 
 /// A flake.lock checker for Nix projects.
 #[derive(Parser)]
@@ -19,7 +22,7 @@ use clap::Parser;
 struct Cli {
     /// Don't send aggregate sums of each issue type.
     ///
-    /// See: https://github.com/determinateSystems/flake-checker.
+    /// See <https://github.com/determinateSystems/flake-checker>.
     #[arg(long, env = "NIX_FLAKE_CHECKER_NO_TELEMETRY", default_value_t = false)]
     no_telemetry: bool,
 
@@ -108,6 +111,11 @@ fn main() -> Result<ExitCode, FlakeCheckerError> {
     }
 
     let flake_lock = FlakeLock::new(&flake_lock_path)?;
+
+    println!("flake.lock info:");
+    println!("version: {version}", version=flake_lock.version);
+    println!("root node: {root:?}", root=flake_lock.root);
+    println!("all nodes: {nodes:?}", nodes=flake_lock.nodes);
 
     let flake_check_config = FlakeCheckConfig {
         check_supported,

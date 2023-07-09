@@ -20,9 +20,9 @@ pub enum FlakeLockParseError {
 
 #[derive(Clone, Debug)]
 pub struct FlakeLock {
-    nodes: HashMap<String, Node>,
-    root: HashMap<String, Node>,
-    version: usize,
+    pub nodes: HashMap<String, Node>,
+    pub root: HashMap<String, Node>,
+    pub version: usize,
 }
 
 impl<'de> Deserialize<'de> for FlakeLock {
