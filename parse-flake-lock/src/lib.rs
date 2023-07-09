@@ -8,23 +8,36 @@ use std::path::Path;
 use serde::de::{self, MapAccess, Visitor};
 use serde::{Deserialize, Deserializer};
 
+/// A custom error type for the `parse-flake-lock` crate.
 #[derive(Debug, thiserror::Error)]
 pub enum FlakeLockParseError {
+    /// The `flake.lock` can be parsed as JSON but is nonetheless invalid.
     #[error("invalid flake.lock file: {0}")]
     Invalid(String),
-    #[error("couldn't access flake.lock: {0}")]
-    Io(#[from] std::io::Error),
-    #[error("couldn't parse flake.lock as json: {0}")]
+    /// The `flake.lock` file couldn't be found.
+    #[error("couldn't find the flake.lock file: {0}")]
+    NotFound(#[from] std::io::Error),
+    /// The specified `flake.lock` file couldn't be parsed as JSON.
+    #[error("couldn't parse the flake.lock file as json: {0}")]
     Json(#[from] serde_json::Error)
 }
 
+/// A Rust representation of a Nix [`flake.lock`
+/// file](https://zero-to-nix.com/concepts/flakes#lockfile).
 #[derive(Clone, Debug)]
 pub struct FlakeLock {
+    /// The `nodes` field of the `flake.lock`, representing all input [Node]s for the flake.
     pub nodes: HashMap<String, Node>,
+    /// The `root` of the `flake.lock` with all input references resolved into the corresponding
+    /// [Node]s represented by the `nodes` field.
     pub root: HashMap<String, Node>,
+    /// The version of the `flake.lock` (incremented whenever the `flake.nix` dependencies are
+    /// updated).
     pub version: usize,
 }
 
+/// A custom [Deserializer] for `flake.lock` files, which are standard JSON but require some special
+/// logic to create a meaningful Rust representation.
 impl<'de> Deserialize<'de> for FlakeLock {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -153,6 +166,7 @@ fn chase_input_node(
 }
 
 impl FlakeLock {
+    /// Instantiate a new [FlakeLock] from the provided [Path].
     pub fn new(path: &Path) -> Result<Self, FlakeLockParseError> {
         let flake_lock_file = read_to_string(path)?;
         let flake_lock: FlakeLock = serde_json::from_str(&flake_lock_file)?;
@@ -160,11 +174,21 @@ impl FlakeLock {
     }
 }
 
+/// A flake input [node]. This enum represents two concrete node types, [RepoNode] and [RootNode],
+/// and uses the `Fallthrough` variant to capture node types that don't have explicitly defined
+/// structs in this library, representing them as raw [Value][serde_json::value::Value]s.
+///
+/// [node]: https://nixos.org/manual/nix/stable/command-ref/new-cli/nix3-flake.html#lock-files
 #[derive(Clone, Debug, Deserialize)]
 #[serde(untagged)]
 pub enum Node {
+    /// A [RepoNode] flake input for a [Git](https://git-scm.com) repository (or another version
+    /// control system).
     Repo(Box<RepoNode>),
+    /// A [RootNode] specifying an [Input] map.
     Root(RootNode),
+    /// A "catch-all" variant for node types that don't (yet) have explicit struct definitions in
+    /// this crate.
     Fallthrough(serde_json::value::Value), // Covers all other node types
 }
 
@@ -178,6 +202,7 @@ impl Node {
     }
 }
 
+/// An enum type representing node input references.
 #[derive(Clone, Debug, Deserialize)]
 #[serde(untagged)]
 pub enum Input {
@@ -185,17 +210,24 @@ pub enum Input {
     List(Vec<String>),
 }
 
+/// A flake [Node] representing a raw mapping of strings to [Input]s.
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct RootNode {
+    /// A mapping of the flake's input [Node]s.
     pub inputs: HashMap<String, Input>,
 }
 
+/// A [Node] representing a [Git](https://git-scm.com) repository (or another version control
+/// system).
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct RepoNode {
+    /// The node's inputs.
     pub inputs: Option<HashMap<String, Input>>,
+    /// The "locked" attributes of the input (set by Nix).
     pub locked: RepoLocked,
+    /// The "original" (user-supplied) attributes of the input.
     pub original: RepoOriginal,
 }
 
