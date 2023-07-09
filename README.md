@@ -78,10 +78,12 @@ parse-flake-lock = { git = "https://github.com/DeterminateSystems/flake-checker"
 Here's an example usage:
 
 ```rust
-use parse_flake_lock::{FlakeLock, ParseFlakeLockError};
+use std::path::Path;
 
-fn main() -> Result<(), ParseFlakeLockError> {
-    let flake_lock = FlakeLock::new(&flake_lock_path)?;
+use parse_flake_lock::{FlakeLock, FlakeLockParseError};
+
+fn main() -> Result<(), FlakeLockParseError> {
+    let flake_lock = FlakeLock::new(Path::new("flake.lock"))?;
     println!("flake.lock info:");
     println!("version: {version}", version=flake_lock.version);
     println!("root node: {root:?}", root=flake_lock.root);
