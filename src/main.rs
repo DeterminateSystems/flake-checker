@@ -112,11 +112,6 @@ fn main() -> Result<ExitCode, FlakeCheckerError> {
 
     let flake_lock = FlakeLock::new(&flake_lock_path)?;
 
-    println!("flake.lock info:");
-    println!("version: {version}", version=flake_lock.version);
-    println!("root node: {root:?}", root=flake_lock.root);
-    println!("all nodes: {nodes:?}", nodes=flake_lock.nodes);
-
     let flake_check_config = FlakeCheckConfig {
         check_supported,
         check_outdated,
