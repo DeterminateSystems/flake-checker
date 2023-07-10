@@ -1,5 +1,3 @@
-extern crate parse_flake_lock;
-
 mod error;
 mod flake;
 mod issue;
