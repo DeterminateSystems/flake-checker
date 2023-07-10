@@ -2,6 +2,8 @@
 pub enum FlakeCheckerError {
     #[error("env var error: {0}")]
     EnvVar(#[from] std::env::VarError),
+    #[error("couldn't parse flake.lock: {0}")]
+    FlakeLock(#[from] parse_flake_lock::FlakeLockParseError),
     #[error("couldn't access flake.lock: {0}")]
     Io(#[from] std::io::Error),
     #[error("couldn't parse flake.lock: {0}")]

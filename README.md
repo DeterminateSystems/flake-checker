@@ -64,6 +64,38 @@ To disable diagnostic reporting, set the diagnostics URL to an empty string by p
 
 You can read the full privacy policy for [Determinate Systems][detsys], the creators of this tool and the [Determinate Nix Installer][installer], [here][privacy].
 
+## Rust library
+
+The Nix Flake Checker is written in [Rust].
+This repo exposes a [`parse-flake-lock`](./parse-flake-lock) crate that you can use to parse [`flake.lock` files][lockfile] in your own Rust projects.
+To add that dependency:
+
+```toml
+[dependencies]
+parse-flake-lock = { git = "https://github.com/DeterminateSystems/flake-checker", branch = "main" }
+```
+
+Here's an example usage:
+
+```rust
+use std::path::Path;
+
+use parse_flake_lock::{FlakeLock, FlakeLockParseError};
+
+fn main() -> Result<(), FlakeLockParseError> {
+    let flake_lock = FlakeLock::new(Path::new("flake.lock"))?;
+    println!("flake.lock info:");
+    println!("version: {version}", version=flake_lock.version);
+    println!("root node: {root:?}", root=flake_lock.root);
+    println!("all nodes: {nodes:?}", nodes=flake_lock.nodes);
+
+    Ok(())
+}
+```
+
+The `parse-flake-lock` crate doesn't yet exhaustively parse all input node types, instead using a "fallthrough" mechanism that parses input types that don't yet have explicit struct definitions to a [`serde_json::value::Value`][val].
+If you'd like to help make the parser more exhaustive, [pull requests][prs] are quite welcome.
+
 [action]: https://github.com/DeterminateSystems/flake-checker-action
 [detsys]: https://determinate.systems
 [flakes]: https://zero-to-nix.com/concepts/flakes
@@ -74,4 +106,7 @@ You can read the full privacy policy for [Determinate Systems][detsys], the crea
 [nixos-org]: https://github.com/NixOS
 [nixpkgs]: https://github.com/NixOS/nixpkgs
 [privacy]: https://determinate.systems/privacy
+[prs]: /pulls
+[rust]: https://rust-lang.org
 [telemetry]: https://github.com/DeterminateSystems/nix-flake-checker/blob/main/src/telemetry.rs#L29-L43
+[val]: https://docs.rs/serde_json/latest/serde_json/value/enum.Value.html

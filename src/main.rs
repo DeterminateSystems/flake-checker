@@ -5,13 +5,14 @@ mod summary;
 mod telemetry;
 
 use error::FlakeCheckerError;
-use flake::{check_flake_lock, FlakeCheckConfig, FlakeLock};
+use flake::{check_flake_lock, FlakeCheckConfig};
 use summary::Summary;
 
 use std::path::PathBuf;
 use std::process::ExitCode;
 
 use clap::Parser;
+use parse_flake_lock::FlakeLock;
 
 /// A flake.lock checker for Nix projects.
 #[derive(Parser)]
@@ -19,7 +20,7 @@ use clap::Parser;
 struct Cli {
     /// Don't send aggregate sums of each issue type.
     ///
-    /// See: https://github.com/determinateSystems/flake-checker.
+    /// See <https://github.com/determinateSystems/flake-checker>.
     #[arg(long, env = "NIX_FLAKE_CHECKER_NO_TELEMETRY", default_value_t = false)]
     no_telemetry: bool,
 

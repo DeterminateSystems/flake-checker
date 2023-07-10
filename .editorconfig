@@ -11,3 +11,6 @@ insert_final_newline = true
 
 [*.rs]
 indent_size = 4
+
+[*.hbs]
+insert_final_newline = false
