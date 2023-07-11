@@ -135,13 +135,14 @@ fn chase_input_node(
     let mut node = &nodes[&next_input];
     for input in inputs {
         let maybe_node_inputs = match node {
+            Node::Root(_) => None,
             Node::Repo(node) => node.inputs.to_owned(),
+            Node::Indirect(_) => None,
             Node::Fallthrough(node) => match node.get("inputs") {
                 Some(node_inputs) => serde_json::from_value(node_inputs.clone())
                     .map_err(FlakeLockParseError::Json)?,
                 None => None,
             },
-            Node::Root(_) => None,
         };
 
         let node_inputs = match maybe_node_inputs {
@@ -181,11 +182,12 @@ impl FlakeLock {
 #[derive(Clone, Debug, Deserialize)]
 #[serde(untagged)]
 pub enum Node {
+    /// A [RootNode] specifying an [Input] map.
+    Root(RootNode),
     /// A [RepoNode] flake input for a [Git](https://git-scm.com) repository (or another version
     /// control system).
     Repo(Box<RepoNode>),
-    /// A [RootNode] specifying an [Input] map.
-    Root(RootNode),
+    Indirect(IndirectNode),
     /// A "catch-all" variant for node types that don't (yet) have explicit struct definitions in
     /// this crate.
     Fallthrough(serde_json::value::Value), // Covers all other node types
@@ -196,6 +198,7 @@ impl Node {
         match self {
             Node::Root(_) => "Root",
             Node::Repo(_) => "Repo",
+            Node::Indirect(_) => "Indirect",
             Node::Fallthrough(_) => "Fallthrough", // Covers all other node types
         }
     }
@@ -222,16 +225,18 @@ pub struct RootNode {
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct RepoNode {
+    /// Whether the input is itself a flake.
+    pub flake: Option<bool>,
     /// The node's inputs.
     pub inputs: Option<HashMap<String, Input>>,
     /// The "locked" attributes of the input (set by Nix).
-    pub locked: RepoLocked,
+    pub locked: Locked,
     /// The "original" (user-supplied) attributes of the input.
     pub original: RepoOriginal,
 }
 
 #[derive(Clone, Debug, Deserialize)]
-pub struct RepoLocked {
+pub struct Locked {
     #[serde(alias = "lastModified")]
     pub last_modified: i64,
     #[serde(alias = "narHash")]
@@ -251,4 +256,18 @@ pub struct RepoOriginal {
     pub node_type: String,
     #[serde(alias = "ref")]
     pub git_ref: Option<String>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct IndirectNode {
+    pub locked: Locked,
+    pub original: IndirectOriginal,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+pub struct IndirectOriginal {
+    id: String,
+    #[serde(alias = "type")]
+    pub node_type: String,
 }
