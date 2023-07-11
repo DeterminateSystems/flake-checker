@@ -51,7 +51,7 @@ fn nixpkgs_deps(
 
     for (ref key, node) in flake_lock.root.clone() {
         if let Node::Repo(_) = &node {
-            if keys.contains(&key) {
+            if keys.contains(key) {
                 deps.insert(key.to_string(), node.clone());
             }
         }

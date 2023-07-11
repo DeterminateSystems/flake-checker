@@ -1,5 +1,15 @@
 #![allow(dead_code)]
 
+//! A library for parsing Nix [`flake.lock`][lock] files
+//! into a structured Rust representation. [Determinate Systems][detsys] currently uses this library
+//! for its [Nix Flake Checker][checker] and [Nix Flake Checker Action][action] but it's designed to
+//! be generally useful.
+//!
+//! [action]: https://github.com/DeterminateSystems/flake-checker-action
+//! [checker]: https://github.com/DeterminateSystems/flake-checker
+//! [detsys]: https://determinate.systems
+//! [lock]: https://zero-to-nix.com/concepts/flakes#lockfile
+
 use std::collections::{HashMap, VecDeque};
 use std::fmt;
 use std::fs::read_to_string;
@@ -137,9 +147,8 @@ fn chase_input_node(
         let maybe_node_inputs = match node {
             Node::Root(_) => None,
             Node::Repo(node) => node.inputs.to_owned(),
-            // TODO: investigate
-            Node::Indirect(_) => None,
-            Node::Path(_) => None,
+            Node::Indirect(node) => node.inputs.to_owned(),
+            Node::Path(node) => node.inputs.to_owned(),
             Node::Fallthrough(node) => match node.get("inputs") {
                 Some(node_inputs) => serde_json::from_value(node_inputs.clone())
                     .map_err(FlakeLockParseError::Json)?,
@@ -189,15 +198,17 @@ pub enum Node {
     /// A [RepoNode] flake input for a [Git](https://git-scm.com) repository (or another version
     /// control system).
     Repo(Box<RepoNode>),
-    /// TODO
+    /// An [IndirectNode] flake input stemming from an indirect flake reference like `inputs.nixpkgs.url =
+    /// "nixpkgs";`.
     Indirect(IndirectNode),
-    /// TODO
+    /// A [PathNode] flake input stemming from a filesystem path.
     Path(PathNode),
     /// A "catch-all" variant for node types that don't (yet) have explicit struct definitions in
     /// this crate.
     Fallthrough(serde_json::value::Value), // Covers all other node types
 }
 
+// A string representation of the node variant (for logging).
 impl Node {
     fn variant(&self) -> &'static str {
         match self {
@@ -214,7 +225,9 @@ impl Node {
 #[derive(Clone, Debug, Deserialize)]
 #[serde(untagged)]
 pub enum Input {
+    /// An input expressed as a string.
     String(String),
+    /// An input expressed as a list of strings.
     List(Vec<String>),
 }
 
@@ -236,21 +249,27 @@ pub struct RepoNode {
     /// The node's inputs.
     pub inputs: Option<HashMap<String, Input>>,
     /// The "locked" attributes of the input (set by Nix).
-    pub locked: Locked,
+    pub locked: RepoLocked,
     /// The "original" (user-supplied) attributes of the input.
     pub original: RepoOriginal,
 }
 
-/// Information about the flake input that's "locked" because it's supplied by Nix.
+/// Information about the repository input that's "locked" because it's supplied by Nix.
 #[derive(Clone, Debug, Deserialize)]
-pub struct Locked {
+pub struct RepoLocked {
+    /// The timestamp for when the input was last modified.
     #[serde(alias = "lastModified")]
     pub last_modified: i64,
+    /// The NAR hash of the input.
     #[serde(alias = "narHash")]
     pub nar_hash: String,
+    /// The repository owner.
     pub owner: String,
+    /// The repository.
     pub repo: String,
+    /// The Git revision.
     pub rev: String,
+    /// The type of the node (either `"repo"` or `"indirect"`).
     #[serde(alias = "type")]
     pub node_type: String,
 }
@@ -258,58 +277,79 @@ pub struct Locked {
 /// The `original` field of a [Repo][Node::Repo] node.
 #[derive(Clone, Debug, Deserialize)]
 pub struct RepoOriginal {
+    /// The repository owner.
     pub owner: String,
+    /// The repository.
     pub repo: String,
-    #[serde(alias = "type")]
-    pub node_type: String,
+    /// The Git reference of the input.
     #[serde(alias = "ref")]
     pub git_ref: Option<String>,
+    /// The type of the node (always `"repo"`).
+    #[serde(alias = "type")]
+    pub node_type: String,
 }
 
-/// An indirect flake input (using the
-/// [flake
+/// An indirect flake input (using the [flake
 /// registry](https://nixos.org/manual/nix/stable/command-ref/conf-file.html#conf-flake-registry)).
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct IndirectNode {
-    pub locked: Locked,
+    /// The "locked" attributes of the input (set by Nix).
+    pub locked: RepoLocked,
+    /// The node's inputs.
+    pub inputs: Option<HashMap<String, Input>>,
+    /// The "original" (user-supplied) attributes of the input.
     pub original: IndirectOriginal,
 }
 
 /// The `original` field of an [Indirect][Node::Indirect] node.
 #[derive(Clone, Debug, Deserialize)]
 pub struct IndirectOriginal {
+    /// The ID of the input (recognized by the [flake
+    /// registry]((https://nixos.org/manual/nix/stable/command-ref/conf-file.html#conf-flake-registry))).
     pub id: String,
+    /// The type of the node (always `"indirect"`).
     #[serde(alias = "type")]
     pub node_type: String,
 }
 
-/// TODO
+/// A flake input as a filesystem path, e.g. `inputs.local.url = "path:./subdir";`.
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct PathNode {
+    /// The "locked" attributes of the input (set by Nix).
     pub locked: PathLocked,
+    /// The node's inputs.
+    pub inputs: Option<HashMap<String, Input>>,
+    /// The "original" (user-supplied) attributes of the input.
     pub original: PathOriginal,
 }
 
-/// TODO
+/// Information about the path input that's "locked" because it's supplied by Nix.
 #[derive(Clone, Debug, Deserialize)]
 pub struct PathLocked {
+    /// The timestamp for when the input was last modified.
     #[serde(alias = "lastModified")]
     pub last_modified: i64,
+    /// The NAR hash of the input.
     #[serde(alias = "narHash")]
     pub nar_hash: String,
+    /// The relative filesystem path for the input.
     pub path: PathBuf,
+    /// The type of the node (always `"path"`).
     #[serde(alias = "type")]
     pub node_type: String,
 }
 
-/// TODO
+/// The user-supplied path input info.
 #[derive(Clone, Debug, Deserialize)]
 pub struct PathOriginal {
+    /// The relative filesystem path for the input.
     pub path: PathBuf,
+    /// The Git reference of the input.
     #[serde(alias = "ref")]
     pub git_ref: Option<String>,
+    /// The type of the node (always `"path"`).
     #[serde(alias = "type")]
     pub node_type: String,
 }
