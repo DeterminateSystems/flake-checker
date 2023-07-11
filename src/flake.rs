@@ -154,8 +154,9 @@ mod test {
                 check_outdated: false,
                 ..Default::default()
             };
-            let issues = check_flake_lock(&flake_lock, &config)
-                .expect(&format!("couldn't run check_flake_lock function in {path:?}"));
+            let issues = check_flake_lock(&flake_lock, &config).expect(&format!(
+                "couldn't run check_flake_lock function in {path:?}"
+            ));
             assert!(issues.is_empty());
         }
     }
