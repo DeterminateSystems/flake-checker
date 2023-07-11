@@ -3,7 +3,7 @@
 use std::collections::{HashMap, VecDeque};
 use std::fmt;
 use std::fs::read_to_string;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use serde::de::{self, MapAccess, Visitor};
 use serde::{Deserialize, Deserializer};
@@ -137,7 +137,9 @@ fn chase_input_node(
         let maybe_node_inputs = match node {
             Node::Root(_) => None,
             Node::Repo(node) => node.inputs.to_owned(),
+            // TODO: investigate
             Node::Indirect(_) => None,
+            Node::Path(_) => None,
             Node::Fallthrough(node) => match node.get("inputs") {
                 Some(node_inputs) => serde_json::from_value(node_inputs.clone())
                     .map_err(FlakeLockParseError::Json)?,
@@ -187,7 +189,10 @@ pub enum Node {
     /// A [RepoNode] flake input for a [Git](https://git-scm.com) repository (or another version
     /// control system).
     Repo(Box<RepoNode>),
+    /// TODO
     Indirect(IndirectNode),
+    /// TODO
+    Path(PathNode),
     /// A "catch-all" variant for node types that don't (yet) have explicit struct definitions in
     /// this crate.
     Fallthrough(serde_json::value::Value), // Covers all other node types
@@ -199,6 +204,7 @@ impl Node {
             Node::Root(_) => "Root",
             Node::Repo(_) => "Repo",
             Node::Indirect(_) => "Indirect",
+            Node::Path(_) => "Path",
             Node::Fallthrough(_) => "Fallthrough", // Covers all other node types
         }
     }
@@ -235,6 +241,7 @@ pub struct RepoNode {
     pub original: RepoOriginal,
 }
 
+/// Information about the flake input that's "locked" because it's supplied by Nix.
 #[derive(Clone, Debug, Deserialize)]
 pub struct Locked {
     #[serde(alias = "lastModified")]
@@ -248,6 +255,7 @@ pub struct Locked {
     pub node_type: String,
 }
 
+/// The `original` field of a [Repo][Node::Repo] node.
 #[derive(Clone, Debug, Deserialize)]
 pub struct RepoOriginal {
     pub owner: String,
@@ -258,6 +266,9 @@ pub struct RepoOriginal {
     pub git_ref: Option<String>,
 }
 
+/// An indirect flake input (using the
+/// [flake
+/// registry](https://nixos.org/manual/nix/stable/command-ref/conf-file.html#conf-flake-registry)).
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct IndirectNode {
@@ -265,9 +276,40 @@ pub struct IndirectNode {
     pub original: IndirectOriginal,
 }
 
+/// The `original` field of an [Indirect][Node::Indirect] node.
 #[derive(Clone, Debug, Deserialize)]
 pub struct IndirectOriginal {
-    id: String,
+    pub id: String,
+    #[serde(alias = "type")]
+    pub node_type: String,
+}
+
+/// TODO
+#[derive(Clone, Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PathNode {
+    pub locked: PathLocked,
+    pub original: PathOriginal,
+}
+
+/// TODO
+#[derive(Clone, Debug, Deserialize)]
+pub struct PathLocked {
+    #[serde(alias = "lastModified")]
+    pub last_modified: i64,
+    #[serde(alias = "narHash")]
+    pub nar_hash: String,
+    pub path: PathBuf,
+    #[serde(alias = "type")]
+    pub node_type: String,
+}
+
+/// TODO
+#[derive(Clone, Debug, Deserialize)]
+pub struct PathOriginal {
+    pub path: PathBuf,
+    #[serde(alias = "ref")]
+    pub git_ref: Option<String>,
     #[serde(alias = "type")]
     pub node_type: String,
 }
