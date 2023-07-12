@@ -49,12 +49,20 @@ fn nixpkgs_deps(
 ) -> Result<HashMap<String, Node>, FlakeCheckerError> {
     let mut deps: HashMap<String, Node> = HashMap::new();
 
-    for (key, node) in flake_lock.root.clone() {
-        if let Node::Repo(_) = node {
-            if keys.contains(&key) {
-                deps.insert(key, node);
+    for (ref key, node) in flake_lock.root.clone() {
+        if let Node::Repo(_) = &node {
+            if keys.contains(key) {
+                deps.insert(key.to_string(), node.clone());
             }
         }
+
+        if let Node::Indirect(indirect_node) = &node {
+            if &indirect_node.original.id == key {
+                deps.insert(key.to_string(), node);
+            }
+        }
+
+        // NOTE: it's unclear that a path node for Nixpkgs should be accepted
     }
     let missing: Vec<String> = keys
         .iter()
@@ -139,15 +147,16 @@ mod test {
 
     #[test]
     fn test_clean_flake_locks() {
-        for n in 0..=4 {
+        for n in 0..=6 {
             let path = PathBuf::from(format!("tests/flake.clean.{n}.lock"));
             let flake_lock = FlakeLock::new(&path).expect("couldn't create flake.lock");
             let config = FlakeCheckConfig {
                 check_outdated: false,
                 ..Default::default()
             };
-            let issues = check_flake_lock(&flake_lock, &config)
-                .expect("couldn't run check_flake_lock function");
+            let issues = check_flake_lock(&flake_lock, &config).expect(&format!(
+                "couldn't run check_flake_lock function in {path:?}"
+            ));
             assert!(issues.is_empty());
         }
     }
