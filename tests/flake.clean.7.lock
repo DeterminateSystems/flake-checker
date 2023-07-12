@@ -1,0 +1,38 @@
+{
+  "nodes": {
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1689078114,
+        "narHash": "sha256-osG8BrX5RpKJ7wH+vI6auOU+ctvNOblT4XXCgknK47c=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "b6cc7ff8fee93789bc871a267ab876c3fca042cb",
+        "type": "github"
+      },
+      "original": {
+        "id": "nixpkgs",
+        "ref": "nixpkgs-unstable",
+        "type": "indirect"
+      }
+    },
+    "root": {
+      "inputs": {
+        "nixpkgs": "nixpkgs",
+        "sub": "sub"
+      }
+    },
+    "sub": {
+      "locked": {
+        "narHash": "sha256-+qUhj8mkS6BsSFAOMQek346MHTEDkmoaojSBbLefq7w=",
+        "type": "tarball",
+        "url": "https://some-server.com/flake.tar.gz"
+      },
+      "original": {
+        "type": "tarball",
+        "url": "https://some-server.com/flake.tar.gz"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}

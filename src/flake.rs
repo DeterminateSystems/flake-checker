@@ -147,7 +147,7 @@ mod test {
 
     #[test]
     fn test_clean_flake_locks() {
-        for n in 0..=6 {
+        for n in 0..=7 {
             let path = PathBuf::from(format!("tests/flake.clean.{n}.lock"));
             let flake_lock = FlakeLock::new(&path).expect("couldn't create flake.lock");
             let config = FlakeCheckConfig {
