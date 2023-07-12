@@ -149,6 +149,7 @@ fn chase_input_node(
             Node::Repo(node) => node.inputs.to_owned(),
             Node::Indirect(node) => node.inputs.to_owned(),
             Node::Path(node) => node.inputs.to_owned(),
+            Node::Tarball(node) => node.inputs.to_owned(),
             Node::Fallthrough(node) => match node.get("inputs") {
                 Some(node_inputs) => serde_json::from_value(node_inputs.clone())
                     .map_err(FlakeLockParseError::Json)?,
@@ -203,6 +204,8 @@ pub enum Node {
     Indirect(IndirectNode),
     /// A [PathNode] flake input stemming from a filesystem path.
     Path(PathNode),
+    /// TODO
+    Tarball(TarballNode),
     /// A "catch-all" variant for node types that don't (yet) have explicit struct definitions in
     /// this crate.
     Fallthrough(serde_json::value::Value), // Covers all other node types
@@ -216,6 +219,7 @@ impl Node {
             Node::Repo(_) => "Repo",
             Node::Indirect(_) => "Indirect",
             Node::Path(_) => "Path",
+            Node::Tarball(_) => "Tarball",
             Node::Fallthrough(_) => "Fallthrough", // Covers all other node types
         }
     }
@@ -350,6 +354,40 @@ pub struct PathOriginal {
     #[serde(alias = "ref")]
     pub git_ref: Option<String>,
     /// The type of the node (always `"path"`).
+    #[serde(alias = "type")]
+    pub node_type: String,
+}
+
+/// TODO
+#[derive(Clone, Debug, Deserialize)]
+pub struct TarballNode {
+    /// TODO
+    pub locked: TarballLocked,
+    /// TODO
+    pub inputs: Option<HashMap<String, Input>>,
+    /// TODO
+    pub original: TarballOriginal,
+}
+
+/// TODO
+#[derive(Clone, Debug, Deserialize)]
+pub struct TarballLocked {
+    /// The NAR hash of the input.
+    #[serde(alias = "narHash")]
+    pub nar_hash: String,
+    /// The type of the node (always `"tarball"`).
+    #[serde(alias = "type")]
+    pub node_type: String,
+    /// The URL used to fetch the tarball.
+    pub url: String,
+}
+
+/// TODO
+#[derive(Clone, Debug, Deserialize)]
+pub struct TarballOriginal {
+    /// The URL for the tarball input.
+    pub url: String,
+    /// The type of the node (always `"tarball"`).
     #[serde(alias = "type")]
     pub node_type: String,
 }

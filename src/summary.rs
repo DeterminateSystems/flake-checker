@@ -138,7 +138,7 @@ impl Summary {
 
         let summary_txt = handlebars.render("summary.txt", &self.data)?;
 
-        println!("{}", summary_txt);
+        print!("{}", summary_txt);
 
         Ok(())
     }
