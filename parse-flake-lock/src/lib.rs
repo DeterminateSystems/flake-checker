@@ -254,7 +254,7 @@ pub struct RepoNode {
     pub inputs: Option<HashMap<String, Input>>,
     /// The "locked" attributes of the input (set by Nix).
     pub locked: RepoLocked,
-    /// The "original" (user-supplied) attributes of the input.
+    /// The "original" (user-supplied) attributes of the repository input.
     pub original: RepoOriginal,
 }
 
@@ -302,7 +302,7 @@ pub struct IndirectNode {
     pub locked: RepoLocked,
     /// The node's inputs.
     pub inputs: Option<HashMap<String, Input>>,
-    /// The "original" (user-supplied) attributes of the input.
+    /// The "original" (user-supplied) attributes of the indirect flake registry input.
     pub original: IndirectOriginal,
 }
 
@@ -325,7 +325,7 @@ pub struct PathNode {
     pub locked: PathLocked,
     /// The node's inputs.
     pub inputs: Option<HashMap<String, Input>>,
-    /// The "original" (user-supplied) attributes of the input.
+    /// The "original" (user-supplied) attributes of the path input.
     pub original: PathOriginal,
 }
 
@@ -358,18 +358,18 @@ pub struct PathOriginal {
     pub node_type: String,
 }
 
-/// TODO
+/// A flake input as a tarball URL.
 #[derive(Clone, Debug, Deserialize)]
 pub struct TarballNode {
-    /// TODO
+    /// The "locked" attributes of the input (set by Nix).
     pub locked: TarballLocked,
-    /// TODO
+    /// The node's inputs.
     pub inputs: Option<HashMap<String, Input>>,
-    /// TODO
+    /// The "original" (user-supplied) attributes of the tarball input.
     pub original: TarballOriginal,
 }
 
-/// TODO
+/// Information about the tarball input that's "locked" because it's supplied by Nix.
 #[derive(Clone, Debug, Deserialize)]
 pub struct TarballLocked {
     /// The NAR hash of the input.
@@ -382,7 +382,7 @@ pub struct TarballLocked {
     pub url: String,
 }
 
-/// TODO
+/// The user-supplied tarball input info.
 #[derive(Clone, Debug, Deserialize)]
 pub struct TarballOriginal {
     /// The URL for the tarball input.
