@@ -11,13 +11,13 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
       - name: Check flake.lock
-        uses: DeterminateSystems/flake-checker-action@v4
+        uses: DeterminateSystems/flake-checker-action@main
         with:
           fail-mode: true
-      - name: Install Nix
-        uses: DeterminateSystems/nix-installer-action@v4
-      - uses: DeterminateSystems/magic-nix-cache-action@v2
       - name: Check Nix formatting
         run: nix develop -c check-nixpkgs-fmt
       - name: Check Rust formatting
@@ -31,8 +31,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install Nix
-        uses: DeterminateSystems/nix-installer-action@v4
-      - uses: DeterminateSystems/magic-nix-cache-action@v2
+        uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
       - name: cargo test
         run: nix develop -c cargo test
 
@@ -42,8 +42,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install Nix
-        uses: DeterminateSystems/nix-installer-action@v4
-      - uses: DeterminateSystems/magic-nix-cache-action@v2
+        uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
       - name: Check flake.lock
         run: |
           nix develop -c cargo run -- ./tests/flake.dirty.0.lock
@@ -54,8 +54,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install Nix
-        uses: DeterminateSystems/nix-installer-action@v4
-      - uses: DeterminateSystems/magic-nix-cache-action@v2
+        uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
       - name: Check flake.lock
         run: |
           nix develop -c cargo run
@@ -67,8 +67,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install Nix
-        uses: DeterminateSystems/nix-installer-action@v4
-      - uses: DeterminateSystems/magic-nix-cache-action@v2
+        uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
       - name: Check flake.lock
         run: |
           nix develop -c cargo run -- --fail-mode ./tests/flake.dirty.0.lock
