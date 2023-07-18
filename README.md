@@ -25,7 +25,7 @@ Nix Flake Checker looks at your `flake.lock`'s root-level [Nixpkgs] inputs and c
   - `nixpkgs-23.05-darwin`
   - `nixpkgs-unstable`
 - Any Nixpkgs dependencies are less than 30 days old
-- Any Nixpkgs dependencies are have the [`NixOS`][nixos-org] org as the GitHub owner (and thus that the dependency isn't a fork or non-upstream variant)
+- Any Nixpkgs dependencies have the [`NixOS`][nixos-org] org as the GitHub owner (and thus that the dependency isn't a fork or non-upstream variant)
 
 If you're running it locally, Nix Flake Checker reports any issues via text output in your terminal.
 But you can also use Nix Flake Checker [in CI](#the-flake-checker-action).
