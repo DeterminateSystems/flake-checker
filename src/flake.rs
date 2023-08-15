@@ -50,25 +50,26 @@ fn nixpkgs_deps(
     let mut deps: HashMap<String, Node> = HashMap::new();
 
     for (ref key, node) in flake_lock.root.clone() {
-        if let Node::Repo(_) = &node {
-            if keys.contains(key) {
-                deps.insert(key.to_string(), node.clone());
+        match &node {
+            Node::Repo(_) => {
+                if keys.contains(key) {
+                    deps.insert(key.to_string(), node);
+                }
+            }
+            Node::Tarball(_) => {
+                if keys.contains(key) {
+                    deps.insert(key.to_string(), node);
+                }
+            }
+            Node::Indirect(indirect_node) => {
+                if &indirect_node.original.id == key {
+                    deps.insert(key.to_string(), node);
+                }
+            }
+            _ => {
+                // NOTE: it's unclear that a path node for Nixpkgs should be accepted
             }
         }
-
-        if let Node::Tarball(_) = &node {
-            if keys.contains(key) {
-                deps.insert(key.to_string(), node.clone());
-            }
-        }
-
-        if let Node::Indirect(indirect_node) = &node {
-            if &indirect_node.original.id == key {
-                deps.insert(key.to_string(), node.clone());
-            }
-        }
-
-        // NOTE: it's unclear that a path node for Nixpkgs should be accepted
     }
     let missing: Vec<String> = keys
         .iter()
