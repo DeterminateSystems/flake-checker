@@ -56,9 +56,15 @@ fn nixpkgs_deps(
             }
         }
 
+        if let Node::Tarball(_) = &node {
+            if keys.contains(key) {
+                deps.insert(key.to_string(), node.clone());
+            }
+        }
+
         if let Node::Indirect(indirect_node) = &node {
             if &indirect_node.original.id == key {
-                deps.insert(key.to_string(), node);
+                deps.insert(key.to_string(), node.clone());
             }
         }
 
