@@ -2,7 +2,8 @@ use crate::{error::FlakeCheckerError, flake::ALLOWED_REFS};
 
 use serde::Deserialize;
 
-const ALLOWED_REFS_URL: &str = "https://monitoring.nixos.org/prometheus/api/v1/query?query=channel_revision";
+const ALLOWED_REFS_URL: &str =
+    "https://monitoring.nixos.org/prometheus/api/v1/query?query=channel_revision";
 
 #[derive(Deserialize)]
 struct Response {
@@ -26,10 +27,7 @@ struct Metric {
 }
 
 pub(crate) fn check() -> Result<bool, FlakeCheckerError> {
-    let payload = reqwest::blocking::get(
-        ALLOWED_REFS_URL,
-    )?
-    .json::<Response>()?;
+    let payload = reqwest::blocking::get(ALLOWED_REFS_URL)?.json::<Response>()?;
 
     let officially_supported: Vec<String> = payload
         .data
