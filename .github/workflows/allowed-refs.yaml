@@ -1,3 +1,5 @@
+name: Check that allowed refs are up to date
+
 on:
   schedule:
     - cron: "0 0 * * *"
