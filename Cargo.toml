@@ -15,8 +15,12 @@ clap = { version = "4.3.0", default-features = false, features = [ "derive", "en
 handlebars = { version = "4.3.7", default-features = false }
 is_ci = "1.1.1"
 parse-flake-lock = { path = "./parse-flake-lock" }
-reqwest = { version = "0.11.18", default-features = false, features = [ "blocking", "rustls-tls-native-roots" ]}
+reqwest = { version = "0.11.18", default-features = false, features = ["blocking", "json", "rustls-tls-native-roots"] }
 serde = { version = "1.0.163", features = [ "derive" ] }
 serde_json = { version = "1.0.96", default-features = false }
 sha2 = { version = "0.10.6", default-features = false }
 thiserror = "1.0.40"
+
+[features]
+default = []
+check-allowed-refs = []

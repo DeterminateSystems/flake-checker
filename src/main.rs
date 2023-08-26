@@ -1,3 +1,5 @@
+#[cfg(feature = "check-allowed-refs")]
+mod allowed_refs;
 mod error;
 mod flake;
 mod issue;
@@ -83,6 +85,11 @@ struct Cli {
         default_value_t = true
     )]
     markdown_summary: bool,
+
+    #[cfg(feature = "check-allowed-refs")]
+    // Check to make sure that Flake Checker is aware of the current supported branches.
+    #[arg(long, hide = true)]
+    check_allowed_refs: bool,
 }
 
 fn main() -> Result<ExitCode, FlakeCheckerError> {
@@ -96,7 +103,28 @@ fn main() -> Result<ExitCode, FlakeCheckerError> {
         fail_mode,
         nixpkgs_keys,
         markdown_summary,
+        #[cfg(feature = "check-allowed-refs")]
+        check_allowed_refs,
     } = Cli::parse();
+
+    #[cfg(feature = "check-allowed-refs")]
+    if check_allowed_refs {
+        match allowed_refs::check() {
+            Ok(equals) => {
+                if equals {
+                    println!("The allowed refs sets are equal");
+                    return Ok(ExitCode::SUCCESS);
+                } else {
+                    println!("The allowed refs sets are NOT equal. Make sure to update.");
+                    return Ok(ExitCode::FAILURE);
+                }
+            }
+            Err(e) => {
+                println!("Error checking allowed refs: {}", e);
+                return Ok(ExitCode::FAILURE);
+            }
+        }
+    }
 
     if !flake_lock_path.exists() {
         if ignore_missing_flake_lock {
