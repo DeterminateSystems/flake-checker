@@ -15,8 +15,6 @@ nix run github:DeterminateSystems/flake-checker /path/to/flake.lock
 Nix Flake Checker looks at your `flake.lock`'s root-level [Nixpkgs] inputs and checks that:
 
 - Any explicit Nixpkgs Git refs are in this list:
-  - `nixos-22.11`
-  - `nixos-22.11-small`
   - `nixos-23.05`
   - `nixos-23.05-small`
   - `nixos-unstable`
