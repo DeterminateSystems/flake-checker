@@ -2,6 +2,8 @@ use crate::{error::FlakeCheckerError, flake::ALLOWED_REFS};
 
 use serde::Deserialize;
 
+const ALLOWED_REFS_URL: &str = "https://monitoring.nixos.org/prometheus/api/v1/query?query=channel_revision";
+
 #[derive(Deserialize)]
 struct Response {
     data: Data,
@@ -25,11 +27,11 @@ struct Metric {
 
 pub(crate) fn check() -> Result<bool, FlakeCheckerError> {
     let payload = reqwest::blocking::get(
-        "https://monitoring.nixos.org/prometheus/api/v1/query?query=channel_revision",
+        ALLOWED_REFS_URL,
     )?
     .json::<Response>()?;
 
-    let channels: Vec<String> = payload
+    let officially_supported: Vec<String> = payload
         .data
         .result
         .iter()
@@ -37,5 +39,5 @@ pub(crate) fn check() -> Result<bool, FlakeCheckerError> {
         .map(|res| res.metric.channel.clone())
         .collect();
 
-    Ok(channels == ALLOWED_REFS)
+    Ok(officially_supported == ALLOWED_REFS)
 }

@@ -112,10 +112,10 @@ fn main() -> Result<ExitCode, FlakeCheckerError> {
         match allowed_refs::check() {
             Ok(equals) => {
                 if equals {
-                    println!("The allowed refs sets are equal");
+                    println!("The allowed reference sets are up to date.");
                     return Ok(ExitCode::SUCCESS);
                 } else {
-                    println!("The allowed refs sets are NOT equal. Make sure to update.");
+                    println!("The allowed reference sets are NOT up to date. Make sure to update.");
                     return Ok(ExitCode::FAILURE);
                 }
             }
