@@ -19,7 +19,6 @@ Nix Flake Checker looks at your `flake.lock`'s root-level [Nixpkgs] inputs and c
   - `nixos-23.05-small`
   - `nixos-unstable`
   - `nixos-unstable-small`
-  - `nixpkgs-22.11-darwin`
   - `nixpkgs-23.05-darwin`
   - `nixpkgs-unstable`
 - Any Nixpkgs dependencies are less than 30 days old
