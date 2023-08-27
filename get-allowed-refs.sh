@@ -1,5 +1,3 @@
 #!/bin/bash
 
-curl --fail --silent \
-  'https://monitoring.nixos.org/prometheus/api/v1/query?query=channel_revision' \
-  | jq -r '{ "allowed_branches":  [(.data.result[] | select(.metric.current == "1") | .metric.channel)] | sort }'
+nix develop --command cargo run --features allowed-refs -- --get-allowed-refs
