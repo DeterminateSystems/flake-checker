@@ -58,6 +58,11 @@
               runtimeInputs = [ cranePkgs.rustNightly ];
               text = "cargo fmt --check";
             };
+            get-allowed-refs = pkgs.writeShellApplication {
+              name = "get-allowed-refs";
+              runtimeInputs = [ cranePkgs.rustNightly ];
+              text = "cargo run --features allowed-refs -- --get-allowed-refs";
+            };
           in
           pkgs.mkShell {
             packages = (with pkgs; [
@@ -78,6 +83,9 @@
               # CI checks
               check-nixpkgs-fmt
               check-rustfmt
+
+              # Scripts
+              get-allowed-refs
             ]) ++ pkgs.lib.optionals pkgs.stdenv.isDarwin (with pkgs.darwin.apple_sdk.frameworks; [ Security ]);
           };
       });
