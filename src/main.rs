@@ -117,9 +117,7 @@ fn main() -> Result<ExitCode, FlakeCheckerError> {
     if get_allowed_refs {
         match allowed_refs::get() {
             Ok(refs) => {
-                for reference in refs {
-                    println!("{reference}");
-                }
+                println!("{}", refs.join("\n"));
                 return Ok(ExitCode::SUCCESS);
             }
             Err(e) => {
