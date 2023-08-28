@@ -8,8 +8,10 @@ use crate::FlakeCheckerError;
 use chrono::{Duration, Utc};
 use parse_flake_lock::{FlakeLock, Node};
 
-// Update this when necessary by running the get-allowed-refs.sh script to fetch
-// the current values from monitoring.nixos.org
+// Update this when necessary by running `get-allowed-refs` to fetch
+// the current values from monitoring.nixos.org. There's also an automated
+// check in .github/workflows/allowed-refs.yaml that checks once a day to
+// ensure that this remains in sync.
 pub const ALLOWED_REFS: &[&str] = &[
     "nixos-23.05",
     "nixos-23.05-small",

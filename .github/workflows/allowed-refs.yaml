@@ -16,4 +16,4 @@ jobs:
 
       - name: Check allowed refs
         run: |
-          nix develop --command cargo run --features check-allowed-refs -- --check-allowed-refs
+          nix develop --command cargo run --features allowed-refs -- --check-allowed-refs

@@ -27,9 +27,12 @@ struct Metric {
 }
 
 pub(crate) fn check() -> Result<bool, FlakeCheckerError> {
-    let payload = reqwest::blocking::get(ALLOWED_REFS_URL)?.json::<Response>()?;
+    Ok(get()? == ALLOWED_REFS)
+}
 
-    let officially_supported: Vec<String> = payload
+pub(crate) fn get() -> Result<Vec<String>, FlakeCheckerError> {
+    let officially_supported: Vec<String> = reqwest::blocking::get(ALLOWED_REFS_URL)?
+        .json::<Response>()?
         .data
         .result
         .iter()
@@ -37,5 +40,5 @@ pub(crate) fn check() -> Result<bool, FlakeCheckerError> {
         .map(|res| res.metric.channel.clone())
         .collect();
 
-    Ok(officially_supported == ALLOWED_REFS)
+    Ok(officially_supported)
 }

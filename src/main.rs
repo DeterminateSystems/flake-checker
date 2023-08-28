@@ -1,4 +1,4 @@
-#[cfg(feature = "check-allowed-refs")]
+#[cfg(feature = "allowed-refs")]
 mod allowed_refs;
 mod error;
 mod flake;
@@ -86,10 +86,15 @@ struct Cli {
     )]
     markdown_summary: bool,
 
-    #[cfg(feature = "check-allowed-refs")]
+    #[cfg(feature = "allowed-refs")]
     // Check to make sure that Flake Checker is aware of the current supported branches.
     #[arg(long, hide = true)]
     check_allowed_refs: bool,
+
+    #[cfg(feature = "allowed-refs")]
+    // Check to make sure that Flake Checker is aware of the current supported branches.
+    #[arg(long, hide = true)]
+    get_allowed_refs: bool,
 }
 
 fn main() -> Result<ExitCode, FlakeCheckerError> {
@@ -103,11 +108,26 @@ fn main() -> Result<ExitCode, FlakeCheckerError> {
         fail_mode,
         nixpkgs_keys,
         markdown_summary,
-        #[cfg(feature = "check-allowed-refs")]
+        #[cfg(feature = "allowed-refs")]
         check_allowed_refs,
+        #[cfg(feature = "allowed-refs")]
+        get_allowed_refs,
     } = Cli::parse();
+    #[cfg(feature = "allowed-refs")]
+    if get_allowed_refs {
+        match allowed_refs::get() {
+            Ok(refs) => {
+                println!("{}", refs.join("\n"));
+                return Ok(ExitCode::SUCCESS);
+            }
+            Err(e) => {
+                println!("Error fetching allowed refs: {}", e);
+                return Ok(ExitCode::FAILURE);
+            }
+        }
+    }
 
-    #[cfg(feature = "check-allowed-refs")]
+    #[cfg(feature = "allowed-refs")]
     if check_allowed_refs {
         match allowed_refs::check() {
             Ok(equals) => {
