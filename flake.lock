@@ -14,17 +14,15 @@
         "rust-overlay": "rust-overlay"
       },
       "locked": {
-        "lastModified": 1684468982,
-        "narHash": "sha256-EoC1N5sFdmjuAP3UOkyQujSOT6EdcXTnRw8hPjJkEgc=",
-        "owner": "ipetkov",
-        "repo": "crane",
-        "rev": "99de890b6ef4b4aab031582125b6056b792a4a30",
-        "type": "github"
+        "narHash": "sha256-n5P5HOXuu23UB1h9PuayldnRRVQuXJLpoO+xqtMO3ws=",
+        "rev": "ef5d11e3c2e5b3924eb0309dba2e1fea2d9062ae",
+        "revCount": 394,
+        "type": "tarball",
+        "url": "https://api.flakehub.com/f/pinned/ipetkov/crane/0.13.1/018a1fca-bbbc-76eb-aae3-dc181b91ec26/source.tar.gz"
       },
       "original": {
-        "owner": "ipetkov",
-        "repo": "crane",
-        "type": "github"
+        "type": "tarball",
+        "url": "https://flakehub.com/f/ipetkov/crane/%2A.tar.gz"
       }
     },
     "flake-compat": {
@@ -48,32 +46,28 @@
         "systems": "systems"
       },
       "locked": {
-        "lastModified": 1681202837,
-        "narHash": "sha256-H+Rh19JDwRtpVPAWp64F+rlEtxUWBAQW28eAi3SRSzg=",
-        "owner": "numtide",
-        "repo": "flake-utils",
-        "rev": "cfacdce06f30d2b68473a46042957675eebb3401",
-        "type": "github"
+        "narHash": "sha256-zsNZZGTGnMOf9YpHKJqMSsa0dXbfmxeoJ7xHlrt+xmY=",
+        "rev": "ff7b65b44d01cf9ba6a71320833626af21126384",
+        "revCount": 87,
+        "type": "tarball",
+        "url": "https://api.flakehub.com/f/pinned/numtide/flake-utils/0.1.87%2Brev-ff7b65b44d01cf9ba6a71320833626af21126384/018a8a74-649b-792e-a959-2f97793b1129/source.tar.gz"
       },
       "original": {
-        "id": "flake-utils",
-        "type": "indirect"
+        "type": "tarball",
+        "url": "https://flakehub.com/f/numtide/flake-utils/0.1.%2A.tar.gz"
       }
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1692986144,
-        "narHash": "sha256-M4VFpy7Av9j+33HF5nIGm0k2+DXXW4qSSKdidIKg5jY=",
-        "owner": "NixOS",
-        "repo": "nixpkgs",
-        "rev": "74e5bdc5478ebbe7ba5849f0d765f92757bb9dbf",
-        "type": "github"
+        "narHash": "sha256-iHZSGrb9gVpZRR4B2ishUN/1LRKWtSHZNO37C8z1SmA=",
+        "rev": "5d017a8822e0907fb96f7700a319f9fe2434de02",
+        "revCount": 490944,
+        "type": "tarball",
+        "url": "https://api.flakehub.com/f/pinned/NixOS/nixpkgs/0.2305.490944%2Brev-5d017a8822e0907fb96f7700a319f9fe2434de02/018aa434-611a-7f20-a375-98bb21aa8c9d/source.tar.gz"
       },
       "original": {
-        "owner": "NixOS",
-        "ref": "nixos-23.05",
-        "repo": "nixpkgs",
-        "type": "github"
+        "type": "tarball",
+        "url": "https://flakehub.com/f/NixOS/nixpkgs/0.2305.%2A.tar.gz"
       }
     },
     "root": {

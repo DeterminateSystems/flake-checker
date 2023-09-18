@@ -1,6 +1,8 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-23.05";
+    nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/0.2305.*.tar.gz";
+
+    flake-utils.url = "https://flakehub.com/f/numtide/flake-utils/0.1.*.tar.gz";
 
     rust-overlay = {
       url = "github:oxalica/rust-overlay";
@@ -9,7 +11,7 @@
     };
 
     crane = {
-      url = "github:ipetkov/crane";
+      url = "https://flakehub.com/f/ipetkov/crane/*.tar.gz";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-compat.follows = "flake-compat";
       inputs.flake-utils.follows = "flake-utils";
