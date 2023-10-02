@@ -10,7 +10,7 @@
     };
 
     crane = {
-      url = "https://flakehub.com/f/ipetkov/crane/0.14.1.tar.gz";
+      url = "https://flakehub.com/f/ipetkov/crane/0.14.*.tar.gz";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-compat.follows = "flake-compat";
       inputs.flake-utils.follows = "flake-utils";
