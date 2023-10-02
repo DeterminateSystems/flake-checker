@@ -22,7 +22,7 @@
       },
       "original": {
         "type": "tarball",
-        "url": "https://flakehub.com/f/ipetkov/crane/%2A.tar.gz"
+        "url": "https://flakehub.com/f/ipetkov/crane/0.14.1.tar.gz"
       }
     },
     "flake-compat": {
