@@ -1,5 +1,7 @@
 # Nix Flake Checker
 
+[![FlakeHub](https://img.shields.io/endpoint?url=https://flakehub.com/f/DeterminateSystems/flake-checker/badge)](https://flakehub.com/flake/DeterminateSystems/flake-checker)
+
 **Nix Flake Checker** is a tool from [Determinate Systems][detsys] that performs "health" checks on the [`flake.lock`][lockfile] files in your [flake][flakes]-powered Nix projects.
 Its goal is to help your Nix projects stay on recent and supported versions of [Nixpkgs].
 
