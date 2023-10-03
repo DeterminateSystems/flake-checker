@@ -34,6 +34,7 @@
 
         cranePkgs = pkgs.callPackage ./crane.nix {
           inherit crane supportedSystems;
+          darwinFrameworks = with pkgs.darwin.apple_sdk.frameworks; [ Security SystemConfiguration ];
         };
       });
     in
