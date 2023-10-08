@@ -14,6 +14,7 @@
         "rust-overlay": "rust-overlay"
       },
       "locked": {
+        "lastModified": 1695511445,
         "narHash": "sha256-mnE14re43v3/Jc50Jv0BKPMtEk7FEtDSligP6B5HwlI=",
         "rev": "3de322e06fc88ada5e3589dc8a375b73e749f512",
         "revCount": 411,
@@ -22,7 +23,7 @@
       },
       "original": {
         "type": "tarball",
-        "url": "https://flakehub.com/f/ipetkov/crane/0.14.1.tar.gz"
+        "url": "https://flakehub.com/f/ipetkov/crane/0.14.%2A.tar.gz"
       }
     },
     "flake-compat": {
@@ -60,11 +61,12 @@
     },
     "nixpkgs": {
       "locked": {
-        "narHash": "sha256-g7nIUV4uq1TOVeVIDEZLb005suTWCUjSY0zYOlSBsyE=",
-        "rev": "32dcb45f66c0487e92db8303a798ebc548cadedc",
-        "revCount": 491340,
+        "lastModified": 1696374741,
+        "narHash": "sha256-gt8B3G0ryizT9HSB4cCO8QoxdbsHnrQH+/BdKxOwqF0=",
+        "rev": "8a4c17493e5c39769f79117937c79e1c88de6729",
+        "revCount": 491440,
         "type": "tarball",
-        "url": "https://api.flakehub.com/f/pinned/NixOS/nixpkgs/0.2305.491340%2Brev-32dcb45f66c0487e92db8303a798ebc548cadedc/018aebfc-faf0-743e-aeb4-28acf5a64d95/source.tar.gz"
+        "url": "https://api.flakehub.com/f/pinned/NixOS/nixpkgs/0.2305.491440%2Brev-8a4c17493e5c39769f79117937c79e1c88de6729/018afe53-7cdb-768a-90b7-63ca2457cd72/source.tar.gz"
       },
       "original": {
         "type": "tarball",
