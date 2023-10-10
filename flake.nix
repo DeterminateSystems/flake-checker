@@ -16,10 +16,7 @@
       inputs.flake-utils.follows = "flake-utils";
     };
 
-    flake-compat = {
-      url = "github:edolstra/flake-compat";
-      flake = false;
-    };
+    flake-compat.url = "https://flakehub.com/f/edolstra/flake-compat/1.0.1.tar.gz";
   };
 
   outputs = { self, nixpkgs, flake-utils, rust-overlay, crane, ... }:
