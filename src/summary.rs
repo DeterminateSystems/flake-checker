@@ -10,6 +10,16 @@ use std::path::PathBuf;
 use handlebars::Handlebars;
 use serde_json::json;
 
+static MARKDOWN_TEMPLATE: &str = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/src/templates/summary_md.hbs"
+));
+
+static TEXT_TEMPLATE: &str = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/src/templates/summary_txt.hbs"
+));
+
 pub(crate) struct Summary {
     pub issues: Vec<Issue>,
     data: serde_json::Value,
@@ -116,7 +126,7 @@ impl Summary {
         let mut handlebars = Handlebars::new();
 
         handlebars
-            .register_template_string("summary.md", include_str!("templates/summary_md.hbs"))
+            .register_template_string("summary.md", MARKDOWN_TEMPLATE)
             .map_err(Box::new)?;
         let summary_md = handlebars.render("summary.md", &self.data)?;
 
@@ -133,7 +143,7 @@ impl Summary {
     pub fn generate_text(&self) -> Result<(), FlakeCheckerError> {
         let mut handlebars = Handlebars::new();
         handlebars
-            .register_template_string("summary.txt", include_str!("templates/summary_txt.hbs"))
+            .register_template_string("summary.txt", TEXT_TEMPLATE)
             .map_err(Box::new)?;
 
         let summary_txt = handlebars.render("summary.txt", &self.data)?;
