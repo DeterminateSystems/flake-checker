@@ -10,8 +10,14 @@ use std::path::PathBuf;
 use handlebars::Handlebars;
 use serde_json::json;
 
-static MARKDOWN_TEMPLATE: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/src/templates/summary_md.hbs"));
-static TEXT_TEMPLATE: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/src/templates/summary_txt.hbs"));
+static MARKDOWN_TEMPLATE: &str = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/src/templates/summary_md.hbs"
+));
+static TEXT_TEMPLATE: &str = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/src/templates/summary_txt.hbs"
+));
 
 pub(crate) struct Summary {
     pub issues: Vec<Issue>,
