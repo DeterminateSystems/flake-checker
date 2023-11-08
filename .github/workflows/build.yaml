@@ -12,7 +12,7 @@ jobs:
 
       - uses: DeterminateSystems/nix-installer-action@main
 
-      - uses: DeterminateSystems/magic-nix-cache-action@main
+      # - uses: DeterminateSystems/magic-nix-cache-action@main
 
       - name: Build package
         run: "nix build .# -L"
@@ -32,7 +32,7 @@ jobs:
 
       - uses: DeterminateSystems/nix-installer-action@main
 
-      # - uses: DeterminateSystems/magic-nix-cache-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
 
       - name: Build package
         run: "nix build .# -L"
