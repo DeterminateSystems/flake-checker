@@ -71,8 +71,7 @@
               cranePkgs.rustNightly
               cargo-bloat
               cargo-edit
-              cargo-udeps
-              cargo-edit
+              cargo-machete
               cargo-watch
               rust-analyzer
 
@@ -85,7 +84,12 @@
 
               # Scripts
               get-allowed-refs
-            ]) ++ pkgs.lib.optionals pkgs.stdenv.isDarwin (with pkgs.darwin.apple_sdk.frameworks; [ Security ]);
+            ]) ++ pkgs.lib.optionals pkgs.stdenv.isDarwin (with pkgs.darwin.apple_sdk.frameworks; [ Security SystemConfiguration ]);
+
+            env = {
+              # Required by rust-analyzer
+              RUST_SRC_PATH = "${cranePkgs.rustNightly}/lib/rustlib/src/rust/library";
+            };
           };
       });
     };
