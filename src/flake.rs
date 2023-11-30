@@ -15,9 +15,12 @@ use parse_flake_lock::{FlakeLock, Node};
 pub const ALLOWED_REFS: &[&str] = &[
     "nixos-23.05",
     "nixos-23.05-small",
+    "nixos-23.11",
+    "nixos-23.11-small",
     "nixos-unstable",
     "nixos-unstable-small",
     "nixpkgs-23.05-darwin",
+    "nixpkgs-23.11-darwin",
     "nixpkgs-unstable",
 ];
 pub const MAX_DAYS: i64 = 30;
