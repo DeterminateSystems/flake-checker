@@ -85,12 +85,12 @@
               # Scripts
               get-allowed-refs
             ]) ++ pkgs.lib.optionals pkgs.stdenv.isDarwin (with pkgs.darwin.apple_sdk.frameworks; [ Security SystemConfiguration ]);
-          };
 
-        env = {
-          # Required by rust-analyzer
-          RUST_SRC_PATH = "${pkgs.rustToolchain}/lib/rustlib/src/rust/library";
-        };
+            env = {
+              # Required by rust-analyzer
+              RUST_SRC_PATH = "${cranePkgs.rustNightly}/lib/rustlib/src/rust/library";
+            };
+          };
       });
     };
 }
