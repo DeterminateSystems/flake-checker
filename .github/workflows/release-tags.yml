@@ -23,7 +23,7 @@ jobs:
 
       - name: Create the artifacts directory
         run: rm -rf ./artifacts && mkdir ./artifacts
-      
+
       - uses: actions/download-artifact@v3
         with:
           name: flake-checker-ARM64-macOS
@@ -44,6 +44,13 @@ jobs:
           path: cache-binary-X64-Linux
       - name: Persist the cache binary
         run: cp ./cache-binary-X64-Linux/flake-checker ./artifacts/flake-checker-X64-Linux
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: flake-checker-ARM64-Linux
+          path: cache-binary-ARM64-Linux
+      - name: Persist the cache binary
+        run: cp ./cache-binary-ARM64-Linux/flake-checker ./artifacts/flake-checker-ARM64-Linux
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
