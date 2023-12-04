@@ -52,7 +52,7 @@ jobs:
 
       - uses: DeterminateSystems/nix-installer-action@main
 
-      - uses: DeterminateSystems/magic-nix-cache-action@main
+      # - uses: DeterminateSystems/magic-nix-cache-action@main
 
       - name: Build package
         run: "nix build .# -L"
@@ -62,5 +62,25 @@ jobs:
         with:
           # Artifact name
           name: flake-checker-X64-Linux
+          path: result/bin/flake-checker
+          retention-days: 1
+
+  build-artifacts-ARM64-Linux:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: DeterminateSystems/nix-installer-action@main
+
+      # - uses: DeterminateSystems/magic-nix-cache-action@main
+
+      - name: Build package
+        run: "nix build .# -L"
+
+      - name: Upload a Build Artifact
+        uses: actions/upload-artifact@v3.1.2
+        with:
+          # Artifact name
+          name: flake-checker-ARM64-Linux
           path: result/bin/flake-checker
           retention-days: 1
