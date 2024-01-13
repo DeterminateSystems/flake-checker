@@ -162,7 +162,10 @@ mod test {
             };
             let issues = check_flake_lock(&flake_lock, &config)
                 .unwrap_or_else(|_| panic!("couldn't run check_flake_lock function in {path:?}"));
-            assert!(issues.is_empty());
+            assert!(
+                issues.is_empty(),
+                "expected clean flake.lock in tests/flake.clean.{n}.lock but encountered an issue"
+            );
         }
     }
 
