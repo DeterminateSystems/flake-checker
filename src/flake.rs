@@ -13,13 +13,10 @@ use parse_flake_lock::{FlakeLock, Node};
 // check in .github/workflows/allowed-refs.yaml that checks once a day to
 // ensure that this remains in sync.
 pub const ALLOWED_REFS: &[&str] = &[
-    "nixos-23.05",
-    "nixos-23.05-small",
     "nixos-23.11",
     "nixos-23.11-small",
     "nixos-unstable",
     "nixos-unstable-small",
-    "nixpkgs-23.05-darwin",
     "nixpkgs-23.11-darwin",
     "nixpkgs-unstable",
 ];
