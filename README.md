@@ -104,7 +104,7 @@ If you'd like to help make the parser more exhaustive, [pull requests][prs] are 
 [md]: https://github.blog/2022-05-09-supercharging-github-actions-with-job-summaries
 [nixos-org]: https://github.com/NixOS
 [nixpkgs]: https://github.com/NixOS/nixpkgs
-[privacy]: https://determinate.systems/privacy
+[privacy]: https://determinate.systems/policies/privacy
 [prs]: /pulls
 [rust]: https://rust-lang.org
 [telemetry]: https://github.com/DeterminateSystems/nix-flake-checker/blob/main/src/telemetry.rs#L29-L43
