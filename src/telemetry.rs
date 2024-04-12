@@ -22,7 +22,7 @@ pub(crate) struct TelemetryReport {
 impl TelemetryReport {
     pub(crate) fn new(issues: &[Issue]) -> Result<TelemetryReport, env::VarError> {
         Ok(TelemetryReport {
-            distinct_id: calculate_opaque_id()?,
+            distinct_id: env::var("DETSYS_CORRELATION").or_else(|_| calculate_opaque_id())?,
 
             version: env!("CARGO_PKG_VERSION").to_string(),
             is_ci: is_ci::cached(),
