@@ -10,6 +10,9 @@ on:
 jobs:
   build-artifacts:
     runs-on: ${{ matrix.systems.runner }}
+    permissions:
+      id-token: "write"
+      contents: "read"
     strategy:
       matrix:
         systems:
