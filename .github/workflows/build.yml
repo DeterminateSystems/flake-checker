@@ -1,0 +1,53 @@
+name: Build flake-checker artifacts
+
+on:
+  workflow_call:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  build-artifacts:
+    runs-on: ${{ matrix.systems.runner }}
+    permissions:
+      id-token: "write"
+      contents: "read"
+    strategy:
+      matrix:
+        systems:
+          - nix-system: aarch64-darwin
+            runner: macos-latest-xlarge
+            artifact: flake-checker-ARM64-macOS
+          - nix-system: x86_64-darwin
+            runner: macos-12
+            artifact: flake-checker-X64-macOS
+          - nix-system: aarch64-linux
+            runner: namespace-profile-default-arm64
+            artifact: flake-checker-X64-Linux
+          - nix-system: x86_64-linux
+            runner: ubuntu-22.04
+            artifact: flake-checker-ARM64-linux
+    steps:
+      - name: git checkout
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+
+      - name: Set up Nix cache
+        uses: DeterminateSystems/magic-nix-cache-action@main
+        with:
+          use-flakehub: true
+
+      - name: Build package for ${{ matrix.systems.nix-system }}
+        run: |
+          nix build -L ".#packages.${{ matrix.systems.nix-system }}.default"
+
+      - name: Upload a Build Artifact
+        uses: actions/upload-artifact@v3.1.2
+        with:
+          # Artifact name
+          name: ${{ matrix.systems.artifact }}
+          path: result/bin/flake-checker
+          retention-days: 1
