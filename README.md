@@ -17,11 +17,11 @@ nix run github:DeterminateSystems/flake-checker /path/to/flake.lock
 Nix Flake Checker looks at your `flake.lock`'s root-level [Nixpkgs] inputs and checks that:
 
 - Any explicit Nixpkgs Git refs are in this list:
-  - `nixos-23.05`
-  - `nixos-23.05-small`
+  - `nixos-23.11`
+  - `nixos-23.11-small`
   - `nixos-unstable`
   - `nixos-unstable-small`
-  - `nixpkgs-23.05-darwin`
+  - `nixpkgs-23.11-darwin`
   - `nixpkgs-unstable`
 - Any Nixpkgs dependencies are less than 30 days old
 - Any Nixpkgs dependencies have the [`NixOS`][nixos-org] org as the GitHub owner (and thus that the dependency isn't a fork or non-upstream variant)
