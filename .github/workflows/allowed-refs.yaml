@@ -17,3 +17,20 @@ jobs:
       - name: Check allowed refs
         run: |
           nix develop --command cargo run --features allowed-refs -- --check-allowed-refs
+
+      - name: Update allowed-refs.json
+        if: failure()
+        run: |
+          allowed_refs_json=$(nix develop --command cargo run --features allowed-refs -- --get-allowed-refs | jq .)
+          echo "${allowed_refs_json}" > allowed-refs.json
+
+      - name: Create pull request
+        if: failure()
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: Update allowed-refs.json to new valid Git refs list
+          title: Update allowed-refs.json
+          body: |
+            Nixpkgs has changed its list of maintained references. This PR updates `allowed-refs.json` to reflect that change.
+          branch: updated-allowed-refs
+          base: main

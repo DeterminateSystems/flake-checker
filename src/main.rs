@@ -120,7 +120,8 @@ fn main() -> Result<ExitCode, FlakeCheckerError> {
     if get_allowed_refs {
         match allowed_refs::get() {
             Ok(refs) => {
-                println!("{}", refs.join("\n"));
+                let json_refs = serde_json::to_string(&refs)?;
+                println!("{json_refs}");
                 return Ok(ExitCode::SUCCESS);
             }
             Err(e) => {
