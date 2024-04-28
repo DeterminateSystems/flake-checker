@@ -132,7 +132,7 @@ fn main() -> Result<ExitCode, FlakeCheckerError> {
 
     #[cfg(feature = "allowed-refs")]
     if check_allowed_refs {
-        match allowed_refs::check() {
+        match allowed_refs::check(allowed_refs) {
             Ok(equals) => {
                 if equals {
                     println!("The allowed reference sets are up to date.");
