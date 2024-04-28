@@ -1,5 +1,5 @@
 use crate::error::FlakeCheckerError;
-use crate::flake::{ALLOWED_REFS, MAX_DAYS};
+use crate::flake::MAX_DAYS;
 use crate::issue::{Issue, IssueKind};
 use crate::FlakeCheckConfig;
 
@@ -32,6 +32,7 @@ impl Summary {
         issues: &Vec<Issue>,
         flake_lock_path: PathBuf,
         flake_check_config: FlakeCheckConfig,
+        allowed_refs: Vec<String>,
     ) -> Self {
         let disallowed: Vec<&Issue> = issues.iter().filter(|i| i.kind.is_disallowed()).collect();
         let outdated: Vec<&Issue> = issues.iter().filter(|i| i.kind.is_outdated()).collect();
@@ -55,7 +56,7 @@ impl Summary {
             "non_upstream": non_upstream,
             // Constants
             "max_days": MAX_DAYS,
-            "supported_ref_names": ALLOWED_REFS,
+            "supported_ref_names": allowed_refs,
         });
 
         Self {

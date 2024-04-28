@@ -98,6 +98,9 @@ struct Cli {
 }
 
 fn main() -> Result<ExitCode, FlakeCheckerError> {
+    let allowed_refs: Vec<String> = serde_json::from_str(include_str!("../allowed-refs.json"))
+        .expect("couldn't deserialize allowed-refs.json file");
+
     let Cli {
         no_telemetry,
         check_outdated,
@@ -166,13 +169,13 @@ fn main() -> Result<ExitCode, FlakeCheckerError> {
         fail_mode,
     };
 
-    let issues = check_flake_lock(&flake_lock, &flake_check_config)?;
+    let issues = check_flake_lock(&flake_lock, &flake_check_config, allowed_refs.clone())?;
 
     if !no_telemetry {
         telemetry::TelemetryReport::make_and_send(&issues);
     }
 
-    let summary = Summary::new(&issues, flake_lock_path, flake_check_config);
+    let summary = Summary::new(&issues, flake_lock_path, flake_check_config, allowed_refs);
 
     if std::env::var("GITHUB_ACTIONS").is_ok() {
         if markdown_summary {

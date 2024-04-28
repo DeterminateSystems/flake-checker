@@ -8,18 +8,6 @@ use crate::FlakeCheckerError;
 use chrono::{Duration, Utc};
 use parse_flake_lock::{FlakeLock, Node};
 
-// Update this when necessary by running `get-allowed-refs` to fetch
-// the current values from monitoring.nixos.org. There's also an automated
-// check in .github/workflows/allowed-refs.yaml that checks once a day to
-// ensure that this remains in sync.
-pub const ALLOWED_REFS: &[&str] = &[
-    "nixos-23.11",
-    "nixos-23.11-small",
-    "nixos-unstable",
-    "nixos-unstable-small",
-    "nixpkgs-23.11-darwin",
-    "nixpkgs-unstable",
-];
 pub const MAX_DAYS: i64 = 30;
 
 pub(crate) struct FlakeCheckConfig {
@@ -91,6 +79,7 @@ fn nixpkgs_deps(
 pub(crate) fn check_flake_lock(
     flake_lock: &FlakeLock,
     config: &FlakeCheckConfig,
+    allowed_refs: Vec<String>,
 ) -> Result<Vec<Issue>, FlakeCheckerError> {
     let mut issues = vec![];
 
@@ -101,7 +90,7 @@ pub(crate) fn check_flake_lock(
             // Check if not explicitly supported
             if config.check_supported {
                 if let Some(ref git_ref) = repo.original.git_ref {
-                    if !ALLOWED_REFS.contains(&git_ref.as_str()) {
+                    if !allowed_refs.contains(&git_ref) {
                         issues.push(Issue {
                             input: name.clone(),
                             kind: IssueKind::Disallowed(Disallowed {
