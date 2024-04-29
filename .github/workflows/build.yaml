@@ -27,7 +27,7 @@ jobs:
             artifact: flake-checker-X64-Linux
           - nix-system: x86_64-linux
             runner: ubuntu-22.04
-            artifact: flake-checker-ARM64-linux
+            artifact: flake-checker-ARM64-Linux
     steps:
       - name: git checkout
         uses: actions/checkout@v4
