@@ -8,18 +8,6 @@ use crate::FlakeCheckerError;
 use chrono::{Duration, Utc};
 use parse_flake_lock::{FlakeLock, Node};
 
-// Update this when necessary by running `get-allowed-refs` to fetch
-// the current values from monitoring.nixos.org. There's also an automated
-// check in .github/workflows/allowed-refs.yaml that checks once a day to
-// ensure that this remains in sync.
-pub const ALLOWED_REFS: &[&str] = &[
-    "nixos-23.11",
-    "nixos-23.11-small",
-    "nixos-unstable",
-    "nixos-unstable-small",
-    "nixpkgs-23.11-darwin",
-    "nixpkgs-unstable",
-];
 pub const MAX_DAYS: i64 = 30;
 
 pub(crate) struct FlakeCheckConfig {
@@ -91,6 +79,7 @@ fn nixpkgs_deps(
 pub(crate) fn check_flake_lock(
     flake_lock: &FlakeLock,
     config: &FlakeCheckConfig,
+    allowed_refs: Vec<String>,
 ) -> Result<Vec<Issue>, FlakeCheckerError> {
     let mut issues = vec![];
 
@@ -101,7 +90,7 @@ pub(crate) fn check_flake_lock(
             // Check if not explicitly supported
             if config.check_supported {
                 if let Some(ref git_ref) = repo.original.git_ref {
-                    if !ALLOWED_REFS.contains(&git_ref.as_str()) {
+                    if !allowed_refs.contains(git_ref) {
                         issues.push(Issue {
                             input: name.clone(),
                             kind: IssueKind::Disallowed(Disallowed {
@@ -153,6 +142,8 @@ mod test {
 
     #[test]
     fn test_clean_flake_locks() {
+        let allowed_refs: Vec<String> = serde_json::from_str(include_str!("../allowed-refs.json"))
+            .expect("couldn't deserialize allowed-refs.json file");
         for n in 0..=7 {
             let path = PathBuf::from(format!("tests/flake.clean.{n}.lock"));
             let flake_lock = FlakeLock::new(&path).expect("couldn't create flake.lock");
@@ -160,7 +151,7 @@ mod test {
                 check_outdated: false,
                 ..Default::default()
             };
-            let issues = check_flake_lock(&flake_lock, &config)
+            let issues = check_flake_lock(&flake_lock, &config, allowed_refs.clone())
                 .unwrap_or_else(|_| panic!("couldn't run check_flake_lock function in {path:?}"));
             assert!(
                 issues.is_empty(),
@@ -171,6 +162,8 @@ mod test {
 
     #[test]
     fn test_dirty_flake_locks() {
+        let allowed_refs: Vec<String> = serde_json::from_str(include_str!("../allowed-refs.json"))
+            .expect("couldn't deserialize allowed-refs.json file");
         let cases: Vec<(&str, Vec<Issue>)> = vec![
             (
                 "flake.dirty.0.lock",
@@ -215,7 +208,7 @@ mod test {
                 check_outdated: false,
                 ..Default::default()
             };
-            let issues = check_flake_lock(&flake_lock, &config)
+            let issues = check_flake_lock(&flake_lock, &config, allowed_refs.clone())
                 .expect("couldn't run check_flake_lock function");
             dbg!(&path);
             assert_eq!(issues, expected_issues);
@@ -224,6 +217,8 @@ mod test {
 
     #[test]
     fn test_explicit_nixpkgs_keys() {
+        let allowed_refs: Vec<String> = serde_json::from_str(include_str!("../allowed-refs.json"))
+            .expect("couldn't deserialize allowed-refs.json file");
         let cases: Vec<(&str, Vec<String>, Vec<Issue>)> = vec![(
             "flake.explicit-keys.0.lock",
             vec![String::from("nixpkgs"), String::from("nixpkgs-alt")],
@@ -243,7 +238,7 @@ mod test {
                 nixpkgs_keys,
                 ..Default::default()
             };
-            let issues = check_flake_lock(&flake_lock, &config)
+            let issues = check_flake_lock(&flake_lock, &config, allowed_refs.clone())
                 .expect("couldn't run check_flake_lock function");
             assert_eq!(issues, expected_issues);
         }
@@ -251,6 +246,8 @@ mod test {
 
     #[test]
     fn test_missing_nixpkgs_keys() {
+        let allowed_refs: Vec<String> = serde_json::from_str(include_str!("../allowed-refs.json"))
+            .expect("couldn't deserialize allowed-refs.json file");
         let cases: Vec<(&str, Vec<String>, String)> = vec![(
             "flake.clean.0.lock",
             vec![String::from("nixpkgs"), String::from("foo"), String::from("bar")],
@@ -270,7 +267,7 @@ mod test {
                 ..Default::default()
             };
 
-            let result = check_flake_lock(&flake_lock, &config);
+            let result = check_flake_lock(&flake_lock, &config, allowed_refs.clone());
 
             assert!(result.is_err());
             assert_eq!(result.unwrap_err().to_string(), expected_err);

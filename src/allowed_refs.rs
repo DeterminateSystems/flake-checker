@@ -1,4 +1,4 @@
-use crate::{error::FlakeCheckerError, flake::ALLOWED_REFS};
+use crate::error::FlakeCheckerError;
 
 use serde::Deserialize;
 
@@ -26,8 +26,8 @@ struct Metric {
     current: String,
 }
 
-pub(crate) fn check() -> Result<bool, FlakeCheckerError> {
-    Ok(get()? == ALLOWED_REFS)
+pub(crate) fn check(allowed_refs: Vec<String>) -> Result<bool, FlakeCheckerError> {
+    Ok(get()? == allowed_refs)
 }
 
 pub(crate) fn get() -> Result<Vec<String>, FlakeCheckerError> {
