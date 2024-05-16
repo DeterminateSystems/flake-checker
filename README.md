@@ -36,7 +36,7 @@ You can automate Nix Flake Checker by adding Determinate Systems' [Nix Flake Che
 ```yaml
 checks:
   steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Check Nix flake Nixpkgs inputs
       uses: DeterminateSystems/flake-checker-action@main
 ```
