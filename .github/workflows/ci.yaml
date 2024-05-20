@@ -88,7 +88,7 @@ jobs:
       id-token: write
     env:
       ARTIFACT_KEY: flake-checker-${{ matrix.systems.system }}
-      ARTIFACT_PATH: cache-flake-checker-${{ matrix.systems.system }}
+      ARCHIVE_NAME: flake-checker
     strategy:
       matrix:
         systems:
@@ -107,12 +107,13 @@ jobs:
         uses: actions/download-artifact@v4.1.7
         with:
           name: ${{ env.ARTIFACT_KEY }}
+          path: ${{ env.ARTIFACT_KEY }}
 
       - name: chmod flake-checker executable on ${{ matrix.systems.system }}
         run: |
-          chmod +x ./result/bin/flake-checker
+          chmod +x "${{ env.ARTIFACT_KEY }}/${{ env.ARCHIVE_NAME }}"
 
       - name: Test flake-checker-action@source-binary on ${{ matrix.systems.runner }}
         uses: DeterminateSystems/flake-checker-action@source-binary
         with:
-          source-binary: result/bin/flake-checker
+          source-binary: ${{ env.ARTIFACT_KEY }}/${{ env.ARCHIVE_NAME }}
