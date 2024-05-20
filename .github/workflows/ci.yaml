@@ -108,6 +108,10 @@ jobs:
         with:
           name: ${{ env.ARTIFACT_KEY }}
 
+      - name: chmod flake-checker executable on ${{ matrix.systems.system }}
+        run: |
+          chmod +x ./result/bin/flake-checker
+
       - name: Test flake-checker-action@source-binary on ${{ matrix.systems.runner }}
         uses: DeterminateSystems/flake-checker-action@source-binary
         with:
