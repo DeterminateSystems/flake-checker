@@ -109,9 +109,9 @@ jobs:
           name: ${{ env.ARTIFACT_KEY }}
           path: ${{ env.ARTIFACT_PATH }}
 
-      - name: chmod flake-checker executable for ${{ matrix.systems.system }}
+      - name: Debug
         run: |
-          chmod +x "${{ env.ARTIFACT_PATH }}/flake-checker"
+          ls "${{ env.ARTIFACT_PATH }}/flake-checker"
 
       - name: Test flake-checker-action@source-binary on ${{ matrix.systems.runner }}
         uses: DeterminateSystems/flake-checker-action@source-binary
