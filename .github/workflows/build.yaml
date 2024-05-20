@@ -24,10 +24,10 @@ jobs:
             system: X64-macOS
           - nix-system: aarch64-linux
             runner: namespace-profile-default-arm64
-            system: X64-Linux
+            system: ARM64-Linux
           - nix-system: x86_64-linux
             runner: ubuntu-22.04
-            system: ARM64-Linux
+            system: X64-Linux
     steps:
       - name: git checkout
         uses: actions/checkout@v4
