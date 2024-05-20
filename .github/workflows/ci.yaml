@@ -113,7 +113,7 @@ jobs:
         run: |
           chmod +x "${{ env.ARTIFACT_KEY }}/${{ env.ARCHIVE_NAME }}"
 
-          type "${{ env.ARTIFACT_KEY }}/${{ env.ARCHIVE_NAME }}"
+          file "${{ env.ARTIFACT_KEY }}/${{ env.ARCHIVE_NAME }}"
 
       - name: Test flake-checker-action@source-binary on ${{ matrix.systems.runner }}
         uses: DeterminateSystems/flake-checker-action@source-binary
