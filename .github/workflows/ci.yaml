@@ -107,17 +107,8 @@ jobs:
         uses: actions/download-artifact@v4.1.7
         with:
           name: ${{ env.ARTIFACT_KEY }}
-          path: ${{ env.ARTIFACT_PATH }}
-
-      - name: Debug
-        run: |
-          echo "ls just the path:"
-          ls -la "${{ env.ARTIFACT_PATH }}"
-
-          echo "ls the subpath:"
-          ls -la "${{ env.ARTIFACT_PATH }}/flake-checker"
 
       - name: Test flake-checker-action@source-binary on ${{ matrix.systems.runner }}
         uses: DeterminateSystems/flake-checker-action@source-binary
         with:
-          source-binary: ${{ env.ARTIFACT_PATH }}/flake-checker
+          source-binary: result/bin/flake-checker
