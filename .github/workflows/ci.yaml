@@ -111,7 +111,11 @@ jobs:
 
       - name: Debug
         run: |
-          ls "${{ env.ARTIFACT_PATH }}/flake-checker"
+          echo "ls just the path:"
+          ls -la "${{ env.ARTIFACT_PATH }}"
+
+          echo "ls the subpath:"
+          ls -la "${{ env.ARTIFACT_PATH }}/flake-checker"
 
       - name: Test flake-checker-action@source-binary on ${{ matrix.systems.runner }}
         uses: DeterminateSystems/flake-checker-action@source-binary
