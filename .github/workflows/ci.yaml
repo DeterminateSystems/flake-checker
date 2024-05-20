@@ -106,7 +106,7 @@ jobs:
           name: flake-checker-${{ matrix.systems.system }}
           path: flake-checker
 
-      - name: Test flake-checker-action@main on ${{ matrix.systems.runner }}
-        uses: DeterminateSystems/flake-checker-action@main
+      - name: Test flake-checker-action@source-binary on ${{ matrix.systems.runner }}
+        uses: DeterminateSystems/flake-checker-action@source-binary
         with:
           source-binary: flake-checker
