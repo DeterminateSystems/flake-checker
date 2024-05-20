@@ -111,6 +111,8 @@ jobs:
 
       - name: Unpack binary
         run: |
+          ls -la ${{ env.ARTIFACT_PATH }}/
+
           ARTIFACT="${{ env.ARTIFACT_PATH }}/flake-checker"
           cp "${ARTIFACT}" .
 
