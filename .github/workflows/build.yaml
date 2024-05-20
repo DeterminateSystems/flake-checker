@@ -44,11 +44,12 @@ jobs:
       - name: Build package for ${{ matrix.systems.nix-system }}
         run: |
           nix build -L ".#packages.${{ matrix.systems.nix-system }}.default"
+          cp ./result/bin/flake-checker flake-checker
 
       - name: Upload a Build Artifact
         uses: actions/upload-artifact@v3.1.2
         with:
           # Artifact name
           name: flake-checker-${{ matrix.systems.system }}
-          path: result/bin/flake-checker
+          path: flake-checker
           retention-days: 1
