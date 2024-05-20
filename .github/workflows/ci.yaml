@@ -104,9 +104,8 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: flake-checker-${{ matrix.systems.system }}
-          path: flake-checker
 
       - name: Test flake-checker-action@source-binary on ${{ matrix.systems.runner }}
         uses: DeterminateSystems/flake-checker-action@source-binary
         with:
-          source-binary: flake-checker-${{ matrix.systems.system }}/flake-checker
+          source-binary: ${{ env.GITHUB_WORKSPACE }}/flake-checker
