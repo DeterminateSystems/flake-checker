@@ -109,4 +109,4 @@ jobs:
       - name: Test flake-checker-action@source-binary on ${{ matrix.systems.runner }}
         uses: DeterminateSystems/flake-checker-action@source-binary
         with:
-          source-binary: ./flake-checker
+          source-binary: flake-checker-${{ matrix.systems.system }}/flake-checker
