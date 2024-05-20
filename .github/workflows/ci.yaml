@@ -25,6 +25,12 @@ jobs:
       - name: Clippy
         run: nix develop -c cargo clippy
 
+  build-artifacts:
+    name: Build artifacts
+    needs: checks
+    uses: ./.github/workflows/build.yaml
+    secrets: inherit
+
   rust-tests:
     name: Test Rust
     runs-on: ubuntu-22.04
@@ -72,3 +78,35 @@ jobs:
       - name: Check flake.lock
         run: |
           nix develop -c cargo run -- --fail-mode ./tests/flake.dirty.0.lock
+
+  action-integration-test:
+    name: Integration test for flake-checker-action
+    needs: build-artifacts
+    runs-on: ${{ matrix.systems.runner }}
+    permissions:
+      contents: read
+      id-token: write
+    strategy:
+      matrix:
+        systems:
+          - system: X64-Linux
+            runner: ubuntu-22.04
+          - system: ARM64-Linux
+            runner: namespace-profile-default-arm64
+          - system: X64-macOS
+            runner: macos-12
+          - system: ARM64-macOS
+            runner: macos-latest-xlarge
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download flake-checker for ${{ matrix.systems.system }}
+        uses: actions/download-artifact@v3
+        with:
+          name: flake-checker-${{ matrix.systems.system }}
+          path: flake-checker
+
+      - name: Test flake-checker-action@main on ${{ matrix.systems.runner }}
+        uses: DeterminateSystems/flake-checker-action@main
+        with:
+          source-binary: flake-checker
