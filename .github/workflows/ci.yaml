@@ -111,4 +111,4 @@ jobs:
       - name: Test flake-checker-action@source-binary on ${{ matrix.systems.runner }}
         uses: DeterminateSystems/flake-checker-action@source-binary
         with:
-          source-binary: "${{ env.ARTIFACT_KEY }}/${{ env.ARCHIVE_NAME }}"
+          source-binary: "artifact/flake-checker"
