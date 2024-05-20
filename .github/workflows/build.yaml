@@ -37,7 +37,7 @@ jobs:
         with:
           use-flakehub: true
 
-      - name: Build and cache dev shell for ${{ matrix.systems.nix-system }}
+      - name: Build and cache dev shell for ${{ matrix.systems.nix-system }} on ${{ matrix.systems.runner }}
         run: |
           nix build -L ".#devShells.${{ matrix.systems.nix-system }}.default"
 
