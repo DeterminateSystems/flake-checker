@@ -10,6 +10,9 @@ jobs:
     permissions:
       id-token: "write"
       contents: "read"
+    env:
+      ARTIFACT_KEY: flake-checker-${{ matrix.systems.system }}
+      ARTIFACT_PATH: cached-flake-checker
     strategy:
       matrix:
         systems:
@@ -44,12 +47,12 @@ jobs:
       - name: Build package for ${{ matrix.systems.nix-system }}
         run: |
           nix build -L ".#packages.${{ matrix.systems.nix-system }}.default"
-          cp ./result/bin/flake-checker flake-checker
+          cp ./result/bin/flake-checker "${{ env.ARTIFACT_PATH }}"
 
       - name: Upload a Build Artifact
         uses: actions/upload-artifact@v3.1.2
         with:
           # Artifact name
-          name: flake-checker-${{ matrix.systems.system }}
-          path: flake-checker
+          name: ${{ env.ARTIFACT_KEY }}
+          path: ${{ env.ARTIFACT_PATH }}
           retention-days: 1

@@ -25,12 +25,6 @@ jobs:
       - name: Clippy
         run: nix develop -c cargo clippy
 
-  build-artifacts:
-    name: Build artifacts
-    needs: checks
-    uses: ./.github/workflows/build.yaml
-    secrets: inherit
-
   rust-tests:
     name: Test Rust
     runs-on: ubuntu-22.04
@@ -79,6 +73,12 @@ jobs:
         run: |
           nix develop -c cargo run -- --fail-mode ./tests/flake.dirty.0.lock
 
+  build-artifacts:
+    name: Build artifacts
+    needs: checks
+    uses: ./.github/workflows/build.yaml
+    secrets: inherit
+
   action-integration-test:
     name: Integration test for flake-checker-action
     needs: build-artifacts
@@ -87,8 +87,8 @@ jobs:
       contents: read
       id-token: write
     env:
-      ARTIFACT_NAME: flake-checker-${{ matrix.systems.system }}
-      ARTIFACT_PATH: cached-flake-checker-${{ matrix.systems.system }}
+      ARTIFACT_KEY: flake-checker-${{ matrix.systems.system }}
+      ARTIFACT_PATH: cached-flake-checker
     strategy:
       matrix:
         systems:
@@ -106,17 +106,10 @@ jobs:
       - name: Download flake-checker for ${{ matrix.systems.system }}
         uses: actions/download-artifact@v3
         with:
-          name: ${{ env.ARTIFACT_NAME }}
+          name: ${{ env.ARTIFACT_KEY }}
           path: ${{ env.ARTIFACT_PATH }}
-
-      - name: Unpack the cache binary
-        id: unpack
-        run: |
-          TMPDIR="$(mktemp -d)"
-          cp "${{ env.ARTIFACT_PATH }}/flake-checker" "${TMPDIR}"
-          echo "flake-checker-path=${TMPDIR}/flake-checker" >> "$GITHUB_OUTPUT"
 
       - name: Test flake-checker-action@source-binary on ${{ matrix.systems.runner }}
         uses: DeterminateSystems/flake-checker-action@source-binary
         with:
-          source-binary: "${{ steps.unpack.outputs.flake-checker-path }}"
+          source-binary: ${{ env.ARTIFACT_KEY }}/${{ env.ARTIFACT_PATH }}
