@@ -12,7 +12,7 @@ jobs:
       contents: "read"
     env:
       ARTIFACT_KEY: flake-checker-${{ matrix.systems.system }}
-      ARTIFACT_PATH: cached-flake-checker
+      ARCHIVE_NAME: flake-checker
     strategy:
       matrix:
         systems:
@@ -47,12 +47,12 @@ jobs:
       - name: Build package for ${{ matrix.systems.nix-system }}
         run: |
           nix build -L ".#packages.${{ matrix.systems.nix-system }}.default"
-          cp ./result/bin/flake-checker "${{ env.ARTIFACT_PATH }}"
+          cp ./result/bin/flake-checker "${{ env.ARCHIVE_NAME }}"
 
       - name: Upload a Build Artifact
         uses: actions/upload-artifact@v3.1.2
         with:
           # Artifact name
           name: ${{ env.ARTIFACT_KEY }}
-          path: ${{ env.ARTIFACT_PATH }}
+          path: ${{ env.ARCHIVE_NAME }}
           retention-days: 1
