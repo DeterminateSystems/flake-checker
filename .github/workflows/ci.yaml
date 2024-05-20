@@ -109,14 +109,7 @@ jobs:
           name: ${{ env.ARTIFACT_KEY }}
           path: ${{ env.ARTIFACT_PATH }}
 
-      - name: Unpack binary
-        run: |
-          ls -la ${{ env.ARTIFACT_PATH }}/
-
-          ARTIFACT="${{ env.ARTIFACT_PATH }}/flake-checker"
-          cp "${ARTIFACT}" .
-
       - name: Test flake-checker-action@source-binary on ${{ matrix.systems.runner }}
         uses: DeterminateSystems/flake-checker-action@source-binary
         with:
-          source-binary: flake-checker
+          source-binary: ${{ env.ARTIFACT_PATH }}/flake-checker
