@@ -24,28 +24,28 @@ jobs:
       - name: Create the artifacts directory
         run: rm -rf ./artifacts && mkdir ./artifacts
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4.1.7
         with:
           name: flake-checker-ARM64-macOS
           path: cache-binary-ARM64-macOS
       - name: Persist the cache binary
         run: cp ./cache-binary-ARM64-macOS/flake-checker ./artifacts/flake-checker-ARM64-macOS
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4.1.7
         with:
           name: flake-checker-X64-macOS
           path: cache-binary-X64-macOS
       - name: Persist the cache binary
         run: cp ./cache-binary-X64-macOS/flake-checker ./artifacts/flake-checker-X64-macOS
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4.1.7
         with:
           name: flake-checker-X64-Linux
           path: cache-binary-X64-Linux
       - name: Persist the cache binary
         run: cp ./cache-binary-X64-Linux/flake-checker ./artifacts/flake-checker-X64-Linux
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4.1.7
         with:
           name: flake-checker-ARM64-Linux
           path: cache-binary-ARM64-Linux

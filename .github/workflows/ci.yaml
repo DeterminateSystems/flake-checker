@@ -72,3 +72,49 @@ jobs:
       - name: Check flake.lock
         run: |
           nix develop -c cargo run -- --fail-mode ./tests/flake.dirty.0.lock
+
+  build-artifacts:
+    name: Build artifacts
+    needs: checks
+    uses: ./.github/workflows/build.yaml
+    secrets: inherit
+
+  action-integration-test:
+    name: Integration test for flake-checker-action
+    needs: build-artifacts
+    runs-on: ${{ matrix.systems.runner }}
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      ARTIFACT_KEY: flake-checker-${{ matrix.systems.system }}
+    strategy:
+      matrix:
+        systems:
+          - system: X64-Linux
+            runner: ubuntu-22.04
+          - system: ARM64-Linux
+            runner: namespace-profile-default-arm64
+          - system: X64-macOS
+            runner: macos-12
+          - system: ARM64-macOS
+            runner: macos-latest-xlarge
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download flake-checker for ${{ matrix.systems.system }}
+        uses: actions/download-artifact@v4.1.7
+        with:
+          name: ${{ env.ARTIFACT_KEY }}
+          path: ${{ env.ARTIFACT_KEY }}
+
+      - name: chmod flake-checker executable on ${{ matrix.systems.system }}
+        run: |
+          chmod +x "${{ env.ARTIFACT_KEY }}/flake-checker"
+
+          file "${{ env.ARTIFACT_KEY }}/flake-checker"
+
+      - name: Test flake-checker-action@main on ${{ matrix.systems.runner }}
+        uses: DeterminateSystems/flake-checker-action@main
+        with:
+          source-binary: ${{ env.ARTIFACT_KEY }}/flake-checker
