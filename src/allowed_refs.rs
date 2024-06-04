@@ -2,8 +2,7 @@ use crate::error::FlakeCheckerError;
 
 use serde::Deserialize;
 
-const ALLOWED_REFS_URL: &str =
-    "https://monitoring.nixos.org/prometheus/api/v1/query?query=channel_revision";
+const ALLOWED_REFS_URL: &str = "https://prometheus.nixos.org/api/v1/query?query=channel_revision";
 
 #[derive(Deserialize)]
 struct Response {
