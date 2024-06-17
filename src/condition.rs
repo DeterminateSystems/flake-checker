@@ -42,7 +42,8 @@ pub(super) fn evaluate_condition(
                             kind: IssueKind::Violation,
                         });
                     }
-                    _ => continue,
+                    Value::Bool(b) if b => continue,
+                    result => return Err(FlakeCheckerError::InvalidCelCondition(format!("CEL conditions must return a Boolean but your supplied condition returned a {}", result.type_of()))),
                 },
                 Err(e) => return Err(FlakeCheckerError::CelExecution(e)),
             }
