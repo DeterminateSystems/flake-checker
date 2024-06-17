@@ -27,7 +27,7 @@ pub(super) fn evaluate_condition(
                     .collect::<Vec<Value>>(),
             );
 
-            ctx.add_variable_from_value("supported_refs", allowed_refs);
+            ctx.add_variable_from_value("supportedRefs", allowed_refs);
 
             for (k, v) in nixpkgs_cel_values(repo) {
                 ctx.add_variable_from_value(k, v);
@@ -55,13 +55,13 @@ pub(super) fn evaluate_condition(
 fn nixpkgs_cel_values(repo: Box<RepoNode>) -> Vec<(&'static str, Value)> {
     vec![
         (
-            "git_ref",
+            "gitRef",
             repo.original
                 .git_ref
                 .map_or_else(|| Value::Null, Value::from),
         ),
         (
-            "days_old",
+            "numDaysOld",
             Value::from(num_days_old(repo.locked.last_modified)),
         ),
         ("owner", Value::from(repo.original.owner)),

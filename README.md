@@ -60,7 +60,7 @@ You can apply a CEL condition to your flake using the `--condition` flag.
 Here's an example:
 
 ```shell
-flake-checker --condition "num_days_old < 365"
+flake-checker --condition "numDaysOld < 365"
 ```
 
 This would check that each Nixpkgs input in your `flake.lock` is less than 365 days old.
@@ -68,16 +68,26 @@ These variables are available in each condition:
 
 Variable | Description
 :--------|:-----------
-`git_ref` | The Git reference of the input.
-`num_days_old` | The number of days old the input is.
+`gitRef` | The Git reference of the input.
+`numDaysOld` | The number of days old the input is.
 `owner` | The input's owner (if a GitHub input).
-`supported_refs` | A list of [supported Git refs](#supported-branches) (all are branch names).
+`supportedRefs` | A list of [supported Git refs](#supported-branches) (all are branch names).
 
-Here are some example conditions:
+We recommend a condition *at least* this stringent:
 
-Condition | Description
-:---------|:-----------
-`supported_refs.contains(git_ref)` | The Git ref is in the supported refs.
+```ruby
+allowedRefs.contains(gitRef) && numDaysOld < 30 && owner == 'NixOS'
+```
+
+Here are some other example conditions:
+
+```ruby
+# Updated in the last two weeks
+allowedRefs.contains(gitRef) && numDaysOld < 14 && owner == 'NixOS'
+
+# Check for most recent stable Nixpkgs
+gitRef.contains("24.05")
+```
 
 ## The Nix Flake Checker Action
 
