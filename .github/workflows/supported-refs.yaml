@@ -1,0 +1,36 @@
+name: Check that supported refs are up to date
+
+on:
+  schedule:
+    - cron: "0 0 * * *" # Daily
+
+jobs:
+  check-supported-refs:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: DeterminateSystems/nix-installer-action@main
+
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+
+      - name: Check supported refs
+        run: |
+          nix develop --command cargo run --features supported-refs -- --check-supported-refs
+
+      - name: Update supported-refs.json
+        if: failure()
+        run: |
+          supported_refs_json=$(nix develop --command cargo run --features supported-refs -- --get-supported-refs | jq .)
+          echo "${supported_refs_json}" > supported-refs.json
+
+      - name: Create pull request
+        if: failure()
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: Update supported-refs.json to new valid Git refs list
+          title: Update supported-refs.json
+          body: |
+            Nixpkgs has changed its list of maintained references. This PR updates `supported-refs.json` to reflect that change.
+          branch: updated-supported-refs
+          base: main

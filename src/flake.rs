@@ -152,7 +152,7 @@ mod test {
         // (n, condition, expected)
         let cases: Vec<(usize, &str, bool)> = vec![(
             0,
-            "has(git_ref) && has(days_old) && has(owner) && has(allowed_refs) && allowed_refs.contains(git_ref) && owner == 'NixOS'",
+            "has(git_ref) && has(days_old) && has(owner) && has(supported_refs) && supported_refs.contains(git_ref) && owner == 'NixOS'",
             true,
         )];
 

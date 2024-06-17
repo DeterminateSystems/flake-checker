@@ -27,7 +27,7 @@ pub(super) fn evaluate_condition(
                     .collect::<Vec<Value>>(),
             );
 
-            ctx.add_variable_from_value("allowed_refs", allowed_refs);
+            ctx.add_variable_from_value("supported_refs", allowed_refs);
 
             for (k, v) in nixpkgs_cel_values(repo) {
                 ctx.add_variable_from_value(k, v);
