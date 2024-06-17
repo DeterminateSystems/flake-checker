@@ -107,7 +107,10 @@ impl<'de> Deserialize<'de> for FlakeLock {
                 let mut root_nodes = HashMap::new();
                 let root_node = &nodes[&root];
                 let Node::Root(root_node) = root_node else {
-                    return Err(de::Error::custom(format!("root node was not a Root node, but was a {} node", root_node.variant())));
+                    return Err(de::Error::custom(format!(
+                        "root node was not a Root node, but was a {} node",
+                        root_node.variant()
+                    )));
                 };
 
                 for (root_name, root_input) in root_node.inputs.iter() {
@@ -204,7 +207,7 @@ pub enum Node {
     Indirect(IndirectNode),
     /// A [PathNode] flake input stemming from a filesystem path.
     Path(PathNode),
-    /// TODO
+    /// Nodes that point to tarball paths.
     Tarball(TarballNode),
     /// A "catch-all" variant for node types that don't (yet) have explicit struct definitions in
     /// this crate.

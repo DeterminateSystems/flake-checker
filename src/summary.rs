@@ -10,14 +10,24 @@ use std::path::PathBuf;
 use handlebars::Handlebars;
 use serde_json::json;
 
-static MARKDOWN_TEMPLATE: &str = include_str!(concat!(
+static CEL_MARKDOWN_TEMPLATE: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
-    "/src/templates/summary_md.hbs"
+    "/src/templates/summary.cel.md.hbs"
 ));
 
-static TEXT_TEMPLATE: &str = include_str!(concat!(
+static CEL_TEXT_TEMPLATE: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
-    "/src/templates/summary_txt.hbs"
+    "/src/templates/summary.cel.txt.hbs"
+));
+
+static STANDARD_MARKDOWN_TEMPLATE: &str = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/src/templates/summary.standard.md.hbs"
+));
+
+static STANDARD_TEXT_TEMPLATE: &str = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/src/templates/summary.standard.txt.hbs"
 ));
 
 pub(crate) struct Summary {
@@ -25,6 +35,7 @@ pub(crate) struct Summary {
     data: serde_json::Value,
     flake_lock_path: PathBuf,
     flake_check_config: FlakeCheckConfig,
+    condition: Option<String>,
 }
 
 impl Summary {
@@ -33,37 +44,62 @@ impl Summary {
         flake_lock_path: PathBuf,
         flake_check_config: FlakeCheckConfig,
         allowed_refs: Vec<String>,
+        condition: Option<String>,
     ) -> Self {
-        let disallowed: Vec<&Issue> = issues.iter().filter(|i| i.kind.is_disallowed()).collect();
-        let outdated: Vec<&Issue> = issues.iter().filter(|i| i.kind.is_outdated()).collect();
-        let non_upstream: Vec<&Issue> =
-            issues.iter().filter(|i| i.kind.is_non_upstream()).collect();
+        let num_issues = issues.len();
+        let clean = issues.is_empty();
+        let issue_word = if issues.len() == 1 { "issue" } else { "issues" };
 
-        let data = json!({
-            "issues": issues,
-            "num_issues": issues.len(),
-            "clean": issues.is_empty(),
-            "dirty": !issues.is_empty(),
-            "issue_word": if issues.len() == 1 { "issue" } else { "issues" },
-            // Disallowed refs
-            "has_disallowed": !disallowed.is_empty(),
-            "disallowed": disallowed,
-            // Outdated refs
-            "has_outdated": !outdated.is_empty(),
-            "outdated": outdated,
-            // Non-upstream refs
-            "has_non_upstream": !non_upstream.is_empty(),
-            "non_upstream": non_upstream,
-            // Constants
-            "max_days": MAX_DAYS,
-            "supported_ref_names": allowed_refs,
-        });
+        let data = if let Some(condition) = &condition {
+            let inputs_with_violations: Vec<String> = issues
+                .iter()
+                .filter(|i| i.kind.is_violation())
+                .map(|i| i.input.to_owned())
+                .collect();
+
+            json!({
+                "issues": issues,
+                "num_issues": num_issues,
+                "clean": clean,
+                "dirty": !clean,
+                "issue_word": issue_word,
+                "condition": condition,
+                "inputs_with_violations": inputs_with_violations,
+            })
+        } else {
+            let disallowed: Vec<&Issue> =
+                issues.iter().filter(|i| i.kind.is_disallowed()).collect();
+            let outdated: Vec<&Issue> = issues.iter().filter(|i| i.kind.is_outdated()).collect();
+            let non_upstream: Vec<&Issue> =
+                issues.iter().filter(|i| i.kind.is_non_upstream()).collect();
+
+            json!({
+                "issues": issues,
+                "num_issues": num_issues,
+                "clean": clean,
+                "dirty": !clean,
+                "issue_word": issue_word,
+                // Disallowed refs
+                "has_disallowed": !disallowed.is_empty(),
+                "disallowed": disallowed,
+                // Outdated refs
+                "has_outdated": !outdated.is_empty(),
+                "outdated": outdated,
+                // Non-upstream refs
+                "has_non_upstream": !non_upstream.is_empty(),
+                "non_upstream": non_upstream,
+                // Constants
+                "max_days": MAX_DAYS,
+                "supported_ref_names": allowed_refs,
+            })
+        };
 
         Self {
             issues: issues.to_vec(),
             data,
             flake_lock_path,
             flake_check_config,
+            condition,
         }
     }
 
@@ -72,6 +108,18 @@ impl Summary {
 
         if self.issues.is_empty() {
             println!("The Determinate Nix Flake Checker scanned {file} and found no issues");
+            return Ok(());
+        }
+
+        if let Some(condition) = &self.condition {
+            println!(
+                "You supplied this CEL condition for your flake:\n\n{}",
+                condition
+            );
+            println!("The following inputs violate that condition:\n");
+            for issue in self.issues.iter() {
+                println!("* {}", issue.input);
+            }
         } else {
             let level = if self.flake_check_config.fail_mode {
                 "error"
@@ -113,6 +161,7 @@ impl Summary {
                             None
                         }
                     }
+                    IssueKind::Violation => Some(String::from("policy violation")),
                 };
 
                 if let Some(message) = message {
@@ -124,10 +173,16 @@ impl Summary {
     }
 
     pub fn generate_markdown(&self) -> Result<(), FlakeCheckerError> {
+        let template = if self.condition.is_some() {
+            CEL_MARKDOWN_TEMPLATE
+        } else {
+            STANDARD_MARKDOWN_TEMPLATE
+        };
+
         let mut handlebars = Handlebars::new();
 
         handlebars
-            .register_template_string("summary.md", MARKDOWN_TEMPLATE)
+            .register_template_string("summary.md", template)
             .map_err(Box::new)?;
         let summary_md = handlebars.render("summary.md", &self.data)?;
 
@@ -142,9 +197,15 @@ impl Summary {
     }
 
     pub fn generate_text(&self) -> Result<(), FlakeCheckerError> {
+        let template = if self.condition.is_some() {
+            CEL_TEXT_TEMPLATE
+        } else {
+            STANDARD_TEXT_TEMPLATE
+        };
+
         let mut handlebars = Handlebars::new();
         handlebars
-            .register_template_string("summary.txt", TEXT_TEMPLATE)
+            .register_template_string("summary.txt", template)
             .map_err(Box::new)?;
 
         let summary_txt = handlebars.render("summary.txt", &self.data)?;

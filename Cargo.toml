@@ -10,6 +10,8 @@ members = [
 ]
 
 [dependencies]
+cel-interpreter = { version = "0.7.1", default-features = false }
+cel-parser = { version = "0.6.0", default-features = false }
 chrono = { version = "0.4.25", default-features = false, features = [ "clock" ] }
 clap = { version = "4.3.0", default-features = false, features = [ "derive", "env", "std", "wrap_help" ] }
 handlebars = { version = "4.3.7", default-features = false }

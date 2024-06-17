@@ -1,5 +1,9 @@
 #[derive(Debug, thiserror::Error)]
 pub enum FlakeCheckerError {
+    #[error("CEL execution error: {0}")]
+    CelExecution(#[from] cel_interpreter::ExecutionError),
+    #[error("CEL parsing error: {0}")]
+    CelParse(#[from] cel_interpreter::ParseError),
     #[error("env var error: {0}")]
     EnvVar(#[from] std::env::VarError),
     #[error("couldn't parse flake.lock: {0}")]

@@ -1,0 +1,23 @@
+# ![](https://avatars.githubusercontent.com/u/80991770?s=30) Flake checkup
+
+{{#if clean}}
+The Determinate Flake Checker Action scanned your `flake.lock` and didn't identify any issues.
+All Nixpkgs inputs conform to the flake policy expressed in your supplied [Common Expression Language](https://cel.dev) condition.
+{{/if}}
+
+{{#if dirty}}
+⚠️ The Determinate Nix Installer Action scanned your `flake.lock` and discovered {{num_issues}} {{issue_word}} that we recommend looking into.
+You supplied this CEL condition:
+
+```ruby
+{{condition}}
+```
+
+The following inputs violate that condition:
+
+{{#each inputs_with_violations}}
+* `{{this}}`
+{{/each}}
+{{/if}}
+
+<p>Feedback? Let us know at <a href="https://github.com/DeterminateSystems/flake-checker">DeterminateSystems/flake-checker</a>.</p>

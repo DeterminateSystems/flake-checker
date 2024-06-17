@@ -12,6 +12,7 @@ pub(crate) enum IssueKind {
     Disallowed(Disallowed),
     Outdated(Outdated),
     NonUpstream(NonUpstream),
+    Violation,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize)]
@@ -40,5 +41,9 @@ impl IssueKind {
 
     pub(crate) fn is_non_upstream(&self) -> bool {
         matches!(self, Self::NonUpstream(_))
+    }
+
+    pub(crate) fn is_violation(&self) -> bool {
+        matches!(self, Self::Violation)
     }
 }
