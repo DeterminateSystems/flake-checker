@@ -11,6 +11,7 @@ pub(super) fn evaluate_condition(
     flake_lock: &FlakeLock,
     nixpkgs_keys: &[String],
     condition: &str,
+    allowed_refs: Vec<String>,
 ) -> Result<Vec<Issue>, FlakeCheckerError> {
     let mut issues: Vec<Issue> = vec![];
     let mut ctx = Context::default();
@@ -19,6 +20,15 @@ pub(super) fn evaluate_condition(
 
     for (name, dep) in deps {
         if let Node::Repo(repo) = dep {
+            let allowed_refs: Value = Value::from(
+                allowed_refs
+                    .iter()
+                    .map(|r| Value::from(r.to_string()))
+                    .collect::<Vec<Value>>(),
+            );
+
+            ctx.add_variable_from_value("allowed_refs", allowed_refs);
+
             for (k, v) in nixpkgs_cel_values(repo) {
                 ctx.add_variable_from_value(k, v);
             }

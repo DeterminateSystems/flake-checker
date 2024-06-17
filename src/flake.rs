@@ -147,19 +147,29 @@ mod test {
 
     #[test]
     fn test_cel_conditions() {
+        let allowed_refs: Vec<String> =
+            serde_json::from_str(include_str!("../allowed-refs.json")).unwrap();
         // (n, condition, expected)
-        let cases: Vec<(usize, &str, bool)> =
-            vec![(0, "has(git_ref) && has(days_old) && has(owner)", true)];
+        let cases: Vec<(usize, &str, bool)> = vec![(
+            0,
+            "has(git_ref) && has(days_old) && has(owner) && has(allowed_refs) && allowed_refs.contains(git_ref) && owner == 'NixOS'",
+            true,
+        )];
 
         for (n, condition, expected) in cases {
-            let path = PathBuf::from(format!("tests/flake.cel.{n}.lock"));
+            let path = PathBuf::from(format!("tests/flake.cel.clean.{n}.lock"));
             let flake_lock = FlakeLock::new(&path).unwrap();
             let config = FlakeCheckConfig {
                 check_outdated: false,
                 ..Default::default()
             };
 
-            let result = evaluate_condition(&flake_lock, &config.nixpkgs_keys, condition);
+            let result = evaluate_condition(
+                &flake_lock,
+                &config.nixpkgs_keys,
+                condition,
+                allowed_refs.clone(),
+            );
 
             if expected {
                 assert!(result.is_ok());

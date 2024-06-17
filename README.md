@@ -14,15 +14,32 @@ nix run github:DeterminateSystems/flake-checker
 nix run github:DeterminateSystems/flake-checker /path/to/flake.lock
 ```
 
-Nix Flake Checker looks at your `flake.lock`'s root-level [Nixpkgs] inputs and checks that:
+Nix Flake Checker looks at your `flake.lock`'s root-level [Nixpkgs] inputs.
+There are two ways to express flake policies:
+
+* Via [policy conditions](#policy-conditions) using [Common Expression Language][cel] (CEL)
+* Via [parameters](#parameters)
+
+## Policy conditions
+
+
+
+## Parameters
+
+and checks that:
 
 - Any explicit Nixpkgs Git refs are in this list:
-  - `nixos-23.11`
-  - `nixos-23.11-small`
-  - `nixos-unstable`
-  - `nixos-unstable-small`
-  - `nixpkgs-23.11-darwin`
-  - `nixpkgs-unstable`
+
+  * `nixos-23.11`
+  * `nixos-23.11-small`
+  * `nixos-24.05`
+  * `nixos-24.05-small`
+  * `nixos-unstable`
+  * `nixos-unstable-small`
+  * `nixpkgs-23.11-darwin`
+  * `nixpkgs-24.05-darwin`
+  * `nixpkgs-unstable`
+
 - Any Nixpkgs dependencies are less than 30 days old
 - Any Nixpkgs dependencies have the [`NixOS`][nixos-org] org as the GitHub owner (and thus that the dependency isn't a fork or non-upstream variant)
 
@@ -96,6 +113,7 @@ The `parse-flake-lock` crate doesn't yet exhaustively parse all input node types
 If you'd like to help make the parser more exhaustive, [pull requests][prs] are quite welcome.
 
 [action]: https://github.com/DeterminateSystems/flake-checker-action
+[cel]: https://cel.dev
 [detsys]: https://determinate.systems
 [flakes]: https://zero-to-nix.com/concepts/flakes
 [install]: https://zero-to-nix.com/start/install
