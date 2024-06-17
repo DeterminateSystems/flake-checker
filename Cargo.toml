@@ -34,4 +34,4 @@ thiserror = "1.0.40"
 
 [features]
 default = []
-supported-refs = []
+allowed-refs = []
