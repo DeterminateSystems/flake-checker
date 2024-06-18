@@ -25,8 +25,6 @@ pub(super) fn evaluate_condition(
     let deps = nixpkgs_deps(flake_lock, nixpkgs_keys)?;
 
     for (name, node) in deps {
-        println!("name: {name}");
-
         let (git_ref, last_modified, owner) = match node {
             Node::Repo(repo) => (
                 repo.original.git_ref,
