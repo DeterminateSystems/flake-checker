@@ -76,14 +76,14 @@ Variable | Description
 We recommend a condition *at least* this stringent:
 
 ```ruby
-allowedRefs.contains(gitRef) && numDaysOld < 30 && owner == 'NixOS'
+supportedRefs.contains(gitRef) && numDaysOld < 30 && owner == 'NixOS'
 ```
 
 Here are some other example conditions:
 
 ```ruby
 # Updated in the last two weeks
-allowedRefs.contains(gitRef) && numDaysOld < 14 && owner == 'NixOS'
+supportedRefs.contains(gitRef) && numDaysOld < 14 && owner == 'NixOS'
 
 # Check for most recent stable Nixpkgs
 gitRef.contains("24.05")
