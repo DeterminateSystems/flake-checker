@@ -154,6 +154,15 @@ mod test {
             0,
             "has(gitRef) && has(numDaysOld) && has(owner) && has(supportedRefs) && supportedRefs.contains(gitRef) && owner == 'NixOS'",
             true,
+        ), (
+            0,
+            "has(gitRef) && has(numDaysOld) && has(owner) && has(supportedRefs) && supportedRefs.contains(gitRef) && owner != 'NixOS'",
+            false,
+        ),
+        (
+            0,
+            "has(gitRef) && has(numDaysOld) && has(owner) && has(supportedRefs) && supportedRefs.contains(gitRef) && owner != 'NixOS'",
+            false,
         )];
 
         for (n, condition, expected) in cases {
@@ -173,9 +182,9 @@ mod test {
 
             if expected {
                 assert!(result.is_ok());
-                assert!(result.unwrap().len() == 0);
+                assert!(result.unwrap().is_empty());
             } else {
-                assert!(result.unwrap().len() > 0);
+                assert!(!result.unwrap().is_empty());
             }
         }
     }
