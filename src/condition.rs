@@ -1,5 +1,5 @@
 use cel_interpreter::{Context, Program, Value};
-use parse_flake_lock::{FlakeLock, Node, RepoNode};
+use parse_flake_lock::{FlakeLock, Node};
 
 use crate::{
     error::FlakeCheckerError,
@@ -19,61 +19,68 @@ pub(super) fn evaluate_condition(
     allowed_refs: Vec<String>,
 ) -> Result<Vec<Issue>, FlakeCheckerError> {
     let mut issues: Vec<Issue> = vec![];
-
-    let allowed_refs: Value = Value::from(
-        allowed_refs
-            .iter()
-            .map(|r| Value::from(r.to_string()))
-            .collect::<Vec<Value>>(),
-    );
+    let mut ctx = Context::default();
+    ctx.add_variable_from_value(KEY_SUPPORTED_REFS, allowed_refs.clone());
 
     let deps = nixpkgs_deps(flake_lock, nixpkgs_keys)?;
 
-    for (name, dep) in deps {
-        if let Node::Repo(repo) = dep {
-            let mut ctx = Context::default();
-            ctx.add_variable_from_value(KEY_SUPPORTED_REFS, allowed_refs.clone());
-            for (k, v) in nixpkgs_cel_values(repo) {
-                ctx.add_variable_from_value(k, v);
-            }
+    for (name, node) in deps {
+        println!("name: {name}");
 
-            match Program::compile(condition)?.execute(&ctx) {
-                Ok(result) => match result {
-                    Value::Bool(b) if !b => {
-                        issues.push(Issue {
-                            input: name.clone(),
-                            kind: IssueKind::Violation,
-                        });
-                    }
-                    Value::Bool(b) if b => continue,
-                    result => {
-                        return Err(FlakeCheckerError::NonBooleanCondition(
-                            result.type_of().to_string(),
-                        ))
-                    }
-                },
-                Err(e) => return Err(FlakeCheckerError::CelExecution(e)),
-            }
+        let (git_ref, last_modified, owner) = match node {
+            Node::Repo(repo) => (
+                repo.original.git_ref,
+                Some(repo.locked.last_modified),
+                Some(repo.original.owner),
+            ),
+            Node::Tarball(tarball) => (None, tarball.locked.last_modified, None),
+            _ => (None, None, None),
+        };
+
+        add_cel_variables(&mut ctx, git_ref, last_modified, owner);
+
+        match Program::compile(condition)?.execute(&ctx) {
+            Ok(result) => match result {
+                Value::Bool(b) if !b => {
+                    issues.push(Issue {
+                        input: name.clone(),
+                        kind: IssueKind::Violation,
+                    });
+                }
+                Value::Bool(b) if b => continue,
+                result => {
+                    return Err(FlakeCheckerError::NonBooleanCondition(
+                        result.type_of().to_string(),
+                    ))
+                }
+            },
+            Err(e) => return Err(FlakeCheckerError::CelExecution(e)),
         }
     }
 
     Ok(issues)
 }
 
-fn nixpkgs_cel_values(repo: Box<RepoNode>) -> Vec<(&'static str, Value)> {
-    vec![
-        (
-            KEY_GIT_REF,
-            repo.original
-                .git_ref
-                .map_or_else(|| Value::Null, Value::from),
-        ),
-        (
-            KEY_NUM_DAYS_OLD,
-            Value::from(num_days_old(repo.locked.last_modified)),
-        ),
-        (KEY_OWNER, Value::from(repo.original.owner)),
-    ]
+fn add_cel_variables(
+    ctx: &mut Context,
+    git_ref: Option<String>,
+    last_modified: Option<i64>,
+    owner: Option<String>,
+) {
+    ctx.add_variable_from_value(KEY_GIT_REF, value_or_empty_string(git_ref));
+    ctx.add_variable_from_value(
+        KEY_NUM_DAYS_OLD,
+        value_or_zero(last_modified.map(|d| num_days_old(d))),
+    );
+    ctx.add_variable_from_value(KEY_OWNER, value_or_empty_string(owner));
+}
+
+fn value_or_empty_string(value: Option<String>) -> Value {
+    Value::from(value.unwrap_or(String::from("")))
+}
+
+fn value_or_zero(value: Option<i64>) -> Value {
+    Value::from(value.unwrap_or(0))
 }
 
 pub(super) fn vet_condition(condition: &str) -> Result<(), FlakeCheckerError> {

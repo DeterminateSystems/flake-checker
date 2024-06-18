@@ -85,25 +85,36 @@ pub(crate) fn check_flake_lock(
 
     let deps = nixpkgs_deps(flake_lock, &config.nixpkgs_keys)?;
 
-    for (name, dep) in deps {
-        if let Node::Repo(repo) = dep {
+    for (name, node) in deps {
+        let (git_ref, last_modified, owner) = match node {
+            Node::Repo(repo) => (
+                repo.original.git_ref,
+                Some(repo.locked.last_modified),
+                Some(repo.original.owner),
+            ),
+            Node::Tarball(tarball) => (None, tarball.locked.last_modified, None),
+            _ => (None, None, None),
+        };
+
+        // Check if not explicitly supported
+        if let Some(git_ref) = git_ref {
             // Check if not explicitly supported
             if config.check_supported {
-                if let Some(ref git_ref) = repo.original.git_ref {
-                    if !allowed_refs.contains(git_ref) {
-                        issues.push(Issue {
-                            input: name.clone(),
-                            kind: IssueKind::Disallowed(Disallowed {
-                                reference: git_ref.to_string(),
-                            }),
-                        });
-                    }
+                if !allowed_refs.contains(&git_ref) {
+                    issues.push(Issue {
+                        input: name.clone(),
+                        kind: IssueKind::Disallowed(Disallowed {
+                            reference: git_ref.to_string(),
+                        }),
+                    });
                 }
             }
+        }
 
+        if let Some(last_modified) = last_modified {
             // Check if outdated
             if config.check_outdated {
-                let num_days_old = num_days_old(repo.locked.last_modified);
+                let num_days_old = num_days_old(last_modified);
 
                 if num_days_old > MAX_DAYS {
                     issues.push(Issue {
@@ -112,10 +123,11 @@ pub(crate) fn check_flake_lock(
                     });
                 }
             }
+        }
 
+        if let Some(owner) = owner {
             // Check that the GitHub owner is NixOS
             if config.check_owner {
-                let owner = repo.original.owner;
                 if owner.to_lowercase() != "nixos" {
                     issues.push(Issue {
                         input: name.clone(),

@@ -375,6 +375,9 @@ pub struct TarballNode {
 /// Information about the tarball input that's "locked" because it's supplied by Nix.
 #[derive(Clone, Debug, Deserialize)]
 pub struct TarballLocked {
+    /// The timestamp for when the input was last modified.
+    #[serde(alias = "lastModified")]
+    pub last_modified: Option<i64>,
     /// The NAR hash of the input.
     #[serde(alias = "narHash")]
     pub nar_hash: String,
