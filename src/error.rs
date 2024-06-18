@@ -10,8 +10,8 @@ pub enum FlakeCheckerError {
     FlakeLock(#[from] parse_flake_lock::FlakeLockParseError),
     #[error("http client error: {0}")]
     Http(#[from] reqwest::Error),
-    #[error("invalid CEL condition: {0}")]
-    InvalidCelCondition(String),
+    #[error("CEL conditions must return a Boolean but returned {0} instead")]
+    NonBooleanCondition(String),
     #[error("couldn't access flake.lock: {0}")]
     Io(#[from] std::io::Error),
     #[error("couldn't parse flake.lock: {0}")]

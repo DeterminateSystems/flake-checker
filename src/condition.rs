@@ -46,7 +46,11 @@ pub(super) fn evaluate_condition(
                         });
                     }
                     Value::Bool(b) if b => continue,
-                    result => return Err(FlakeCheckerError::InvalidCelCondition(format!("CEL conditions must return a Boolean but your supplied condition returned a {}", result.type_of()))),
+                    result => {
+                        return Err(FlakeCheckerError::NonBooleanCondition(
+                            result.type_of().to_string(),
+                        ))
+                    }
                 },
                 Err(e) => return Err(FlakeCheckerError::CelExecution(e)),
             }
@@ -70,4 +74,20 @@ fn nixpkgs_cel_values(repo: Box<RepoNode>) -> Vec<(&'static str, Value)> {
         ),
         (KEY_OWNER, Value::from(repo.original.owner)),
     ]
+}
+
+pub(super) fn vet_condition(condition: &str) -> Result<(), FlakeCheckerError> {
+    let mut ctx = Context::default();
+    ctx.add_variable_from_value(KEY_SUPPORTED_REFS, Value::List(Vec::<Value>::new().into()));
+    ctx.add_variable_from_value(KEY_GIT_REF, Value::from("some-ref"));
+    ctx.add_variable_from_value(KEY_NUM_DAYS_OLD, Value::from(27));
+    ctx.add_variable_from_value(KEY_OWNER, Value::from("some-og"));
+
+    match Program::compile(condition)?.execute(&ctx) {
+        Ok(value) if matches!(value, Value::Bool(_)) => Ok(()),
+        Ok(value) => Err(FlakeCheckerError::NonBooleanCondition(
+            value.type_of().to_string(),
+        )),
+        Err(e) => Err(FlakeCheckerError::CelExecution(e)),
+    }
 }
