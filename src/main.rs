@@ -7,7 +7,6 @@ mod issue;
 mod summary;
 mod telemetry;
 
-use condition::vet_condition;
 use error::FlakeCheckerError;
 use flake::{check_flake_lock, FlakeCheckConfig};
 use summary::Summary;
@@ -180,7 +179,6 @@ fn main() -> Result<ExitCode, FlakeCheckerError> {
     };
 
     let issues = if let Some(condition) = &condition {
-        vet_condition(condition)?;
         evaluate_condition(&flake_lock, &nixpkgs_keys, condition, allowed_refs.clone())?
     } else {
         check_flake_lock(&flake_lock, &flake_check_config, allowed_refs.clone())?

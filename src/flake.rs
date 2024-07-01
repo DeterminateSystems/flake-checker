@@ -49,7 +49,7 @@ pub(super) fn nixpkgs_deps(
                 }
             }
             Node::Indirect(indirect_node) => {
-                if &indirect_node.original.id == key {
+                if keys.contains(key) && &indirect_node.original.id == key {
                     deps.insert(key.to_string(), node);
                 }
             }
@@ -99,15 +99,13 @@ pub(crate) fn check_flake_lock(
         // Check if not explicitly supported
         if let Some(git_ref) = git_ref {
             // Check if not explicitly supported
-            if config.check_supported {
-                if !allowed_refs.contains(&git_ref) {
-                    issues.push(Issue {
-                        input: name.clone(),
-                        kind: IssueKind::Disallowed(Disallowed {
-                            reference: git_ref.to_string(),
-                        }),
-                    });
-                }
+            if config.check_supported && !allowed_refs.contains(&git_ref) {
+                issues.push(Issue {
+                    input: name.clone(),
+                    kind: IssueKind::Disallowed(Disallowed {
+                        reference: git_ref.to_string(),
+                    }),
+                });
             }
         }
 
@@ -127,13 +125,11 @@ pub(crate) fn check_flake_lock(
 
         if let Some(owner) = owner {
             // Check that the GitHub owner is NixOS
-            if config.check_owner {
-                if owner.to_lowercase() != "nixos" {
-                    issues.push(Issue {
-                        input: name.clone(),
-                        kind: IssueKind::NonUpstream(NonUpstream { owner }),
-                    });
-                }
+            if config.check_owner && owner.to_lowercase() != "nixos" {
+                issues.push(Issue {
+                    input: name.clone(),
+                    kind: IssueKind::NonUpstream(NonUpstream { owner }),
+                });
             }
         }
     }
@@ -158,30 +154,30 @@ mod test {
     };
 
     #[test]
-    fn test_cel_conditions() {
-        let allowed_refs: Vec<String> =
-            serde_json::from_str(include_str!("../allowed-refs.json")).unwrap();
-        // (n, condition, expected)
-        let cases: Vec<(usize, &str, bool)> = vec![(
-            0,
-            "has(gitRef) && has(numDaysOld) && has(owner) && has(supportedRefs) && supportedRefs.contains(gitRef) && owner == 'NixOS'",
-            true,
-        ), (
-            0,
-            "has(gitRef) && has(numDaysOld) && has(owner) && has(supportedRefs) && supportedRefs.contains(gitRef) && owner != 'NixOS'",
-            false,
-        ),
-        (
-            0,
-            "has(gitRef) && has(numDaysOld) && has(owner) && has(supportedRefs) && supportedRefs.contains(gitRef) && owner != 'NixOS'",
-            false,
-        )];
+    fn cel_conditions() {
+        // (condition, expected)
+        let cases: Vec<(&str, bool)> = vec![
+            (include_str!("../tests/cel-condition.txt"), true),
+            (
 
-        for (n, condition, expected) in cases {
-            let path = PathBuf::from(format!("tests/flake.cel.clean.{n}.lock"));
+                "has(gitRef) && has(numDaysOld) && has(owner) && has(supportedRefs) && supportedRefs.contains(gitRef) && owner != 'NixOS'",
+                false,
+            ),
+            (
+
+                "has(gitRef) && has(numDaysOld) && has(owner) && has(supportedRefs) && supportedRefs.contains(gitRef) && owner != 'NixOS'",
+                false,
+            ),
+        ];
+
+        let supported_refs: Vec<String> =
+            serde_json::from_str(include_str!("../allowed-refs.json")).unwrap();
+        let path = PathBuf::from("tests/flake.cel.lock");
+
+        for (condition, expected) in cases {
             let flake_lock = FlakeLock::new(&path).unwrap();
             let config = FlakeCheckConfig {
-                check_outdated: false,
+                nixpkgs_keys: vec![String::from("nixpkgs")],
                 ..Default::default()
             };
 
@@ -189,7 +185,7 @@ mod test {
                 &flake_lock,
                 &config.nixpkgs_keys,
                 condition,
-                allowed_refs.clone(),
+                supported_refs.clone(),
             );
 
             if expected {
@@ -202,7 +198,7 @@ mod test {
     }
 
     #[test]
-    fn test_clean_flake_locks() {
+    fn clean_flake_locks() {
         let allowed_refs: Vec<String> =
             serde_json::from_str(include_str!("../allowed-refs.json")).unwrap();
         for n in 0..=7 {
@@ -222,7 +218,7 @@ mod test {
     }
 
     #[test]
-    fn test_dirty_flake_locks() {
+    fn dirty_flake_locks() {
         let allowed_refs: Vec<String> =
             serde_json::from_str(include_str!("../allowed-refs.json")).unwrap();
         let cases: Vec<(&str, Vec<Issue>)> = vec![
@@ -276,7 +272,7 @@ mod test {
     }
 
     #[test]
-    fn test_explicit_nixpkgs_keys() {
+    fn explicit_nixpkgs_keys() {
         let allowed_refs: Vec<String> =
             serde_json::from_str(include_str!("../allowed-refs.json")).unwrap();
         let cases: Vec<(&str, Vec<String>, Vec<Issue>)> = vec![(
@@ -304,7 +300,7 @@ mod test {
     }
 
     #[test]
-    fn test_missing_nixpkgs_keys() {
+    fn missing_nixpkgs_keys() {
         let allowed_refs: Vec<String> =
             serde_json::from_str(include_str!("../allowed-refs.json")).unwrap();
         let cases: Vec<(&str, Vec<String>, String)> = vec![(

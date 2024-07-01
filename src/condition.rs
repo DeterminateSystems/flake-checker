@@ -16,11 +16,11 @@ pub(super) fn evaluate_condition(
     flake_lock: &FlakeLock,
     nixpkgs_keys: &[String],
     condition: &str,
-    allowed_refs: Vec<String>,
+    supported_refs: Vec<String>,
 ) -> Result<Vec<Issue>, FlakeCheckerError> {
     let mut issues: Vec<Issue> = vec![];
     let mut ctx = Context::default();
-    ctx.add_variable_from_value(KEY_SUPPORTED_REFS, allowed_refs.clone());
+    ctx.add_variable_from_value(KEY_SUPPORTED_REFS, supported_refs);
 
     let deps = nixpkgs_deps(flake_lock, nixpkgs_keys)?;
 
@@ -68,7 +68,7 @@ fn add_cel_variables(
     ctx.add_variable_from_value(KEY_GIT_REF, value_or_empty_string(git_ref));
     ctx.add_variable_from_value(
         KEY_NUM_DAYS_OLD,
-        value_or_zero(last_modified.map(|d| num_days_old(d))),
+        value_or_zero(last_modified.map(num_days_old)),
     );
     ctx.add_variable_from_value(KEY_OWNER, value_or_empty_string(owner));
 }
@@ -79,20 +79,4 @@ fn value_or_empty_string(value: Option<String>) -> Value {
 
 fn value_or_zero(value: Option<i64>) -> Value {
     Value::from(value.unwrap_or(0))
-}
-
-pub(super) fn vet_condition(condition: &str) -> Result<(), FlakeCheckerError> {
-    let mut ctx = Context::default();
-    ctx.add_variable_from_value(KEY_SUPPORTED_REFS, Value::List(Vec::<Value>::new().into()));
-    ctx.add_variable_from_value(KEY_GIT_REF, Value::from("some-ref"));
-    ctx.add_variable_from_value(KEY_NUM_DAYS_OLD, Value::from(27));
-    ctx.add_variable_from_value(KEY_OWNER, Value::from("some-og"));
-
-    match Program::compile(condition)?.execute(&ctx) {
-        Ok(value) if matches!(value, Value::Bool(_)) => Ok(()),
-        Ok(value) => Err(FlakeCheckerError::NonBooleanCondition(
-            value.type_of().to_string(),
-        )),
-        Err(e) => Err(FlakeCheckerError::CelExecution(e)),
-    }
 }
