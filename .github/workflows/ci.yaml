@@ -25,6 +25,24 @@ jobs:
       - name: Clippy
         run: nix develop -c cargo clippy
 
+  # Ensures that the
+  nix-run:
+    name: Run Nix package on ${{ matrix.systems.os }}
+    runs-on: ${{ matrix.systems.runner }}
+    strategy:
+      matrix:
+        systems:
+          - os: macOS
+            runner: macos-12
+          - os: Linux
+            runner: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+      - run: |
+          nix run
+
   rust-tests:
     name: Test Rust
     runs-on: ubuntu-22.04
