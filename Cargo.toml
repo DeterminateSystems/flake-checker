@@ -16,7 +16,6 @@ thiserror = { version = "1.0.40", default-features = false }
 
 [dependencies]
 cel-interpreter = { version = "0.7.1", default-features = false }
-cel-parser = { version = "0.6.0", default-features = false }
 chrono = { version = "0.4.25", default-features = false, features = ["clock"] }
 clap = { version = "4.3.0", default-features = false, features = [
   "derive",
@@ -26,7 +25,6 @@ clap = { version = "4.3.0", default-features = false, features = [
 ] }
 handlebars = { version = "4.3.7", default-features = false }
 is_ci = "1.1.1"
-once_cell = { version = "1.19.0", default-features = false }
 parse-flake-lock = { path = "./parse-flake-lock" }
 reqwest = { version = "0.11.18", default-features = false, features = [
   "blocking",

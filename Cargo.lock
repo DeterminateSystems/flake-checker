@@ -350,12 +350,10 @@ name = "flake-checker"
 version = "0.2.0"
 dependencies = [
  "cel-interpreter",
- "cel-parser",
  "chrono",
  "clap",
  "handlebars",
  "is_ci",
- "once_cell",
  "parse-flake-lock",
  "reqwest",
  "serde",
