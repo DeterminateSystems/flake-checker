@@ -172,7 +172,7 @@ mod test {
 
         let supported_refs: Vec<String> =
             serde_json::from_str(include_str!("../allowed-refs.json")).unwrap();
-        let path = PathBuf::from("tests/flake.cel.lock");
+        let path = PathBuf::from("tests/flake.cel.0.lock");
 
         for (condition, expected) in cases {
             let flake_lock = FlakeLock::new(&path).unwrap();
