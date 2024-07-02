@@ -36,6 +36,21 @@ jobs:
       - name: cargo test
         run: nix develop -c cargo test
 
+  check-flake-cel-condition:
+    name: Check flake.lock test (CEL condition)
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+      - name: Check flake.lock
+        run: |
+          nix develop -c \
+            cargo run -- \
+              --condition "supportedRefs.contains(gitRef) && numDaysOld < 30 && owner == 'NixOS'" \
+              ./tests/flake.cel.0.lock
+
   check-flake-dirty:
     name: Check flake.lock test (dirty 😈)
     runs-on: ubuntu-22.04

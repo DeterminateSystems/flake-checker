@@ -1,25 +1,21 @@
 {
   inputs = {
-    nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/0.2305.*.tar.gz";
-
+    nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/0.2405.*";
 
     rust-overlay = {
       url = "github:oxalica/rust-overlay";
       inputs.nixpkgs.follows = "nixpkgs";
-      inputs.flake-utils.follows = "flake-utils";
     };
 
     crane = {
-      url = "https://flakehub.com/f/ipetkov/crane/0.14.*.tar.gz";
+      url = "https://flakehub.com/f/ipetkov/crane/0.17.*";
       inputs.nixpkgs.follows = "nixpkgs";
-      inputs.flake-compat.follows = "flake-compat";
-      inputs.flake-utils.follows = "flake-utils";
     };
 
-    flake-compat.url = "https://flakehub.com/f/edolstra/flake-compat/1.0.1.tar.gz";
+    flake-compat.url = "https://flakehub.com/f/edolstra/flake-compat/1.0.1";
   };
 
-  outputs = { self, nixpkgs, flake-utils, rust-overlay, crane, ... }:
+  outputs = { self, nixpkgs, rust-overlay, crane, ... }:
     let
       supportedSystems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
       forAllSystems = f: nixpkgs.lib.genAttrs supportedSystems (system: f rec {

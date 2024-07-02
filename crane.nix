@@ -12,7 +12,7 @@
 let
   inherit (stdenv.hostPlatform) system;
 
-  nightlyVersion = "2023-05-01";
+  nightlyVersion = "2024-06-13";
   rustNightly = pkgs.rust-bin.nightly.${nightlyVersion}.default.override {
     extensions = [ "rust-src" "rust-analyzer-preview" ];
     targets = cargoTargets;
@@ -80,7 +80,7 @@ let
           # The Rust toolchain from rust-overlay has a dynamic libiconv in depsTargetTargetPropagated
           # Our static libiconv needs to take precedence
           ++ lib.optionals pkgs.stdenv.isDarwin [
-          (libiconv.override { enableStatic = true; enableShared = false; })
+          libiconv
         ];
 
         cargoExtraArgs = "--target ${crossPlatform.rustTargetSpec}";

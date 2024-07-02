@@ -1,5 +1,6 @@
 #[cfg(feature = "allowed-refs")]
 mod allowed_refs;
+mod condition;
 mod error;
 mod flake;
 mod issue;
@@ -15,6 +16,8 @@ use std::process::ExitCode;
 
 use clap::Parser;
 use parse_flake_lock::FlakeLock;
+
+use crate::condition::evaluate_condition;
 
 /// A flake.lock checker for Nix projects.
 #[derive(Parser)]
@@ -86,6 +89,10 @@ struct Cli {
     )]
     markdown_summary: bool,
 
+    /// The Common Expression Language (CEL) policy to apply to each Nixpkgs input.
+    #[arg(long, short, env = "NIX_FLAKE_CHECKER_CONDITION")]
+    condition: Option<String>,
+
     #[cfg(feature = "allowed-refs")]
     // Check to make sure that Flake Checker is aware of the current supported branches.
     #[arg(long, hide = true)]
@@ -98,8 +105,8 @@ struct Cli {
 }
 
 fn main() -> Result<ExitCode, FlakeCheckerError> {
-    let allowed_refs: Vec<String> = serde_json::from_str(include_str!("../allowed-refs.json"))
-        .expect("couldn't deserialize allowed-refs.json file");
+    let allowed_refs: Vec<String> =
+        serde_json::from_str(include_str!("../allowed-refs.json")).unwrap();
 
     let Cli {
         no_telemetry,
@@ -111,6 +118,7 @@ fn main() -> Result<ExitCode, FlakeCheckerError> {
         fail_mode,
         nixpkgs_keys,
         markdown_summary,
+        condition,
         #[cfg(feature = "allowed-refs")]
         check_allowed_refs,
         #[cfg(feature = "allowed-refs")]
@@ -166,17 +174,27 @@ fn main() -> Result<ExitCode, FlakeCheckerError> {
         check_supported,
         check_outdated,
         check_owner,
-        nixpkgs_keys,
+        nixpkgs_keys: nixpkgs_keys.clone(),
         fail_mode,
     };
 
-    let issues = check_flake_lock(&flake_lock, &flake_check_config, allowed_refs.clone())?;
+    let issues = if let Some(condition) = &condition {
+        evaluate_condition(&flake_lock, &nixpkgs_keys, condition, allowed_refs.clone())?
+    } else {
+        check_flake_lock(&flake_lock, &flake_check_config, allowed_refs.clone())?
+    };
 
     if !no_telemetry {
         telemetry::TelemetryReport::make_and_send(&issues);
     }
 
-    let summary = Summary::new(&issues, flake_lock_path, flake_check_config, allowed_refs);
+    let summary = Summary::new(
+        &issues,
+        flake_lock_path,
+        flake_check_config,
+        allowed_refs,
+        condition,
+    );
 
     if std::env::var("GITHUB_ACTIONS").is_ok() {
         if markdown_summary {

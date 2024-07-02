@@ -14,20 +14,82 @@ nix run github:DeterminateSystems/flake-checker
 nix run github:DeterminateSystems/flake-checker /path/to/flake.lock
 ```
 
-Nix Flake Checker looks at your `flake.lock`'s root-level [Nixpkgs] inputs and checks that:
+Nix Flake Checker looks at your `flake.lock`'s root-level [Nixpkgs] inputs.
+There are two ways to express flake policies:
 
-- Any explicit Nixpkgs Git refs are in this list:
-  - `nixos-23.11`
-  - `nixos-23.11-small`
-  - `nixos-unstable`
-  - `nixos-unstable-small`
-  - `nixpkgs-23.11-darwin`
-  - `nixpkgs-unstable`
-- Any Nixpkgs dependencies are less than 30 days old
-- Any Nixpkgs dependencies have the [`NixOS`][nixos-org] org as the GitHub owner (and thus that the dependency isn't a fork or non-upstream variant)
+* Via [config parameters](#parameters).
+* Via [policy conditions](#policy-conditions) using [Common Expression Language][cel] (CEL).
 
 If you're running it locally, Nix Flake Checker reports any issues via text output in your terminal.
 But you can also use Nix Flake Checker [in CI](#the-flake-checker-action).
+
+## Supported branches
+
+At any given time, [Nixpkgs] has a bounded set of branches that are considered *supported*.
+The current list:
+
+  * `nixos-23.11`
+  * `nixos-23.11-small`
+  * `nixos-24.05`
+  * `nixos-24.05-small`
+  * `nixos-unstable`
+  * `nixos-unstable-small`
+  * `nixpkgs-23.11-darwin`
+  * `nixpkgs-24.05-darwin`
+  * `nixpkgs-unstable`
+
+## Parameters
+
+By default, Flake Checker verifies that:
+
+- Any explicit Nixpkgs Git refs are in the [supported list](#supported-branches).
+- Any Nixpkgs dependencies are less than 30 days old.
+- Any Nixpkgs dependencies have the [`NixOS`][nixos-org] org as the GitHub owner (and thus that the dependency isn't a fork or non-upstream variant).
+
+You can adjust this behavior via configuration (all are enabled by default but you can disable them):
+
+Flag | Environment variable | Action | Default
+:----|:---------------------|:-------|:-------
+`--check-outdated` | `NIX_FLAKE_CHECKER_CHECK_OUTDATED` | Check for outdated Nixpkgs inputs | `true`
+`--check-owner` | `NIX_FLAKE_CHECKER_CHECK_OWNER` | Check that Nixpkgs inputs have `NixOS` as the GitHub owner | `true`
+`--check-supported` | `NIX_FLAKE_CHECKER_CHECK_SUPPORTED` | Check that Git refs for Nixpkgs inputs are supported | `true`
+
+## Policy conditions
+
+You can apply a CEL condition to your flake using the `--condition` flag.
+Here's an example:
+
+```shell
+flake-checker --condition "has(numDaysOld) && numDaysOld < 365"
+```
+
+This would check that each Nixpkgs input in your `flake.lock` is less than 365 days old.
+These variables are available in each condition:
+
+Variable | Description
+:--------|:-----------
+`gitRef` | The Git reference of the input.
+`numDaysOld` | The number of days old the input is.
+`owner` | The input's owner (if a GitHub input).
+`supportedRefs` | A list of [supported Git refs](#supported-branches) (all are branch names).
+
+We recommend a condition *at least* this stringent:
+
+```ruby
+supportedRefs.contains(gitRef) && (has(numDaysOld) && numDaysOld < 30) && owner == 'NixOS'
+```
+
+Note that not all Nixpkgs inputs have a `numDaysOld` field, so make sure to ensure that that field exists when checking for the number of days.
+
+Here are some other example conditions:
+
+```ruby
+# Updated in the last two weeks
+supportedRefs.contains(gitRef) && (has(numDaysOld) && numDaysOld < 14) && owner == 'NixOS'
+
+# Check for most recent stable Nixpkgs
+gitRef.contains("24.05")
+```
 
 ## The Nix Flake Checker Action
 
@@ -96,6 +158,7 @@ The `parse-flake-lock` crate doesn't yet exhaustively parse all input node types
 If you'd like to help make the parser more exhaustive, [pull requests][prs] are quite welcome.
 
 [action]: https://github.com/DeterminateSystems/flake-checker-action
+[cel]: https://cel.dev
 [detsys]: https://determinate.systems
 [flakes]: https://zero-to-nix.com/concepts/flakes
 [install]: https://zero-to-nix.com/start/install

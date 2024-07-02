@@ -1,9 +1,10 @@
 [package]
 name = "flake-checker"
-version = "0.1.20"
+version = "0.2.0"
 edition = "2021"
 
 [workspace]
+resolver = "2"
 members = [".", "parse-flake-lock"]
 
 [workspace.dependencies]
@@ -13,11 +14,8 @@ serde_json = { version = "1.0.100", default-features = false, features = [
 ] }
 thiserror = { version = "1.0.40", default-features = false }
 
-[features]
-default = []
-allowed-refs = []
-
 [dependencies]
+cel-interpreter = { version = "0.7.1", default-features = false }
 chrono = { version = "0.4.25", default-features = false, features = ["clock"] }
 clap = { version = "4.3.0", default-features = false, features = [
   "derive",
@@ -27,8 +25,7 @@ clap = { version = "4.3.0", default-features = false, features = [
 ] }
 handlebars = { version = "4.3.7", default-features = false }
 is_ci = "1.1.1"
-once_cell = { version = "1.19.0", default-features = false }
-parse-flake-lock = { path = "parse-flake-lock" }
+parse-flake-lock = { path = "./parse-flake-lock" }
 reqwest = { version = "0.11.18", default-features = false, features = [
   "blocking",
   "json",
@@ -38,3 +35,7 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 sha2 = { version = "0.10.6", default-features = false }
 thiserror = { workspace = true }
+
+[features]
+default = []
+allowed-refs = []
