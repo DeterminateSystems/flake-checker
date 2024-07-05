@@ -33,6 +33,20 @@
         "url": "https://flakehub.com/f/edolstra/flake-compat/1.0.1"
       }
     },
+    "flake-schemas": {
+      "locked": {
+        "lastModified": 1697467827,
+        "narHash": "sha256-j8SR19V1SRysyJwpOBF4TLuAvAjF5t+gMiboN4gYQDU=",
+        "rev": "764932025c817d4e500a8d2a4d8c565563923d29",
+        "revCount": 29,
+        "type": "tarball",
+        "url": "https://api.flakehub.com/f/pinned/DeterminateSystems/flake-schemas/0.1.2/018b3da8-4cc3-7fbb-8ff7-1588413c53e2/source.tar.gz"
+      },
+      "original": {
+        "type": "tarball",
+        "url": "https://flakehub.com/f/DeterminateSystems/flake-schemas/%2A"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1717952948,
@@ -51,6 +65,7 @@
       "inputs": {
         "crane": "crane",
         "flake-compat": "flake-compat",
+        "flake-schemas": "flake-schemas",
         "nixpkgs": "nixpkgs",
         "rust-overlay": "rust-overlay"
       }
