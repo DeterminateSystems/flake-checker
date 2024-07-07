@@ -27,3 +27,4 @@ jobs:
           visibility: "public"
           name: "DeterminateSystems/flake-checker"
           tag: "${{ inputs.tag }}"
+          include-output-paths: true
