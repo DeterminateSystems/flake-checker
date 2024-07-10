@@ -15,7 +15,7 @@ pub(crate) struct FlakeCheckConfig {
     pub check_outdated: bool,
     pub check_owner: bool,
     pub fail_mode: bool,
-    pub nixpkgs_keys: Vec<String>,
+    pub nixpkgs_keys: Option<Vec<String>>,
 }
 
 impl Default for FlakeCheckConfig {
@@ -25,16 +25,18 @@ impl Default for FlakeCheckConfig {
             check_outdated: true,
             check_owner: true,
             fail_mode: false,
-            nixpkgs_keys: vec![String::from("nixpkgs")],
+            nixpkgs_keys: None,
         }
     }
 }
 
 pub(super) fn nixpkgs_deps(
     flake_lock: &FlakeLock,
-    keys: &[String],
+    nixpkgs_keys: Option<Vec<String>>,
 ) -> Result<HashMap<String, Node>, FlakeCheckerError> {
     let mut deps: HashMap<String, Node> = HashMap::new();
+
+    let keys = nixpkgs_keys.unwrap_or_default();
 
     for (ref key, node) in flake_lock.root.clone() {
         match &node {
@@ -83,7 +85,7 @@ pub(crate) fn check_flake_lock(
 ) -> Result<Vec<Issue>, FlakeCheckerError> {
     let mut issues = vec![];
 
-    let deps = nixpkgs_deps(flake_lock, &config.nixpkgs_keys)?;
+    let deps = nixpkgs_deps(flake_lock, config.nixpkgs_keys.clone())?;
 
     for (name, node) in deps {
         let (git_ref, last_modified, owner) = match node {

@@ -74,11 +74,10 @@ struct Cli {
         long,
         short,
         env = "NIX_FLAKE_CHECKER_NIXPKGS_KEYS",
-        default_value = "nixpkgs",
         value_delimiter = ',',
         name = "KEY_LIST"
     )]
-    nixpkgs_keys: Vec<String>,
+    nixpkgs_keys: Option<Vec<String>>,
 
     /// Display Markdown summary (in GitHub Actions).
     #[arg(
@@ -179,7 +178,12 @@ fn main() -> Result<ExitCode, FlakeCheckerError> {
     };
 
     let issues = if let Some(condition) = &condition {
-        evaluate_condition(&flake_lock, &nixpkgs_keys, condition, allowed_refs.clone())?
+        evaluate_condition(
+            &flake_lock,
+            &flake_check_config,
+            condition,
+            allowed_refs.clone(),
+        )?
     } else {
         check_flake_lock(&flake_lock, &flake_check_config, allowed_refs.clone())?
     };
