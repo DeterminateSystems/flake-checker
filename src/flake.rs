@@ -78,11 +78,14 @@ pub(super) fn nixpkgs_deps(
         for (ref key, node) in flake_lock.root.clone() {
             match &node {
                 Node::Repo(repo) => {
-                    if repo.original.repo.starts_with("nixpkgs") {
+                    if repo.original.owner.to_lowercase() == "nixos"
+                        && repo.original.repo.to_lowercase() == "nixpkgs"
+                    {
                         deps.insert(key.to_string(), node);
                     }
                 }
                 Node::Tarball(tarball) => {
+                    // If necessary, we can expand this to include other tarball sources
                     if tarball
                         .original
                         .url
