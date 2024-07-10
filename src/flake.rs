@@ -75,20 +75,24 @@ pub(super) fn nixpkgs_deps(
             }
         }
     } else {
-        for (ref _key, node) in flake_lock.root.clone() {
+        for (ref key, node) in flake_lock.root.clone() {
             match &node {
-                Node::Repo(_repo) => {
-                    // TODO
+                Node::Repo(repo) => {
+                    if repo.original.repo.starts_with("nixpkgs") {
+                        deps.insert(key.to_string(), node);
+                    }
                 }
-                Node::Tarball(_tarball) => {
-                    // TODO
+                Node::Tarball(tarball) => {
+                    if tarball
+                        .original
+                        .url
+                        .to_lowercase()
+                        .starts_with("https://flakehub.com/f/nixos/nixpkgs/")
+                    {
+                        deps.insert(key.to_string(), node);
+                    }
                 }
-                Node::Indirect(_indirect_node) => {
-                    // TODO
-                }
-                _ => {
-                    // NOTE: it's unclear that a path node for Nixpkgs should be accepted
-                }
+                _ => {}
             }
         }
     }
@@ -197,16 +201,11 @@ mod test {
         for (condition, expected) in cases {
             let flake_lock = FlakeLock::new(&path).unwrap();
             let config = FlakeCheckConfig {
-                nixpkgs_keys: vec![String::from("nixpkgs")],
                 ..Default::default()
             };
 
-            let result = evaluate_condition(
-                &flake_lock,
-                &config.nixpkgs_keys,
-                condition,
-                supported_refs.clone(),
-            );
+            let result =
+                evaluate_condition(&flake_lock, &config, condition, supported_refs.clone());
 
             if expected {
                 assert!(result.is_ok());
@@ -311,7 +310,7 @@ mod test {
             let flake_lock = FlakeLock::new(&path).unwrap();
             let config = FlakeCheckConfig {
                 check_outdated: false,
-                nixpkgs_keys,
+                nixpkgs_keys: Some(nixpkgs_keys),
                 ..Default::default()
             };
             let issues = check_flake_lock(&flake_lock, &config, allowed_refs.clone()).unwrap();
@@ -338,7 +337,7 @@ mod test {
             let flake_lock = FlakeLock::new(&path).unwrap();
             let config = FlakeCheckConfig {
                 check_outdated: false,
-                nixpkgs_keys,
+                nixpkgs_keys: Some(nixpkgs_keys),
                 ..Default::default()
             };
 
