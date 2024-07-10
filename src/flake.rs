@@ -36,43 +36,61 @@ pub(super) fn nixpkgs_deps(
 ) -> Result<HashMap<String, Node>, FlakeCheckerError> {
     let mut deps: HashMap<String, Node> = HashMap::new();
 
-    let keys = nixpkgs_keys.unwrap_or_default();
+    if let Some(explicit_keys) = nixpkgs_keys {
+        for (ref key, node) in flake_lock.root.clone() {
+            match &node {
+                Node::Repo(_) => {
+                    if explicit_keys.contains(key) {
+                        deps.insert(key.to_string(), node);
+                    }
+                }
+                Node::Tarball(_) => {
+                    if explicit_keys.contains(key) {
+                        deps.insert(key.to_string(), node);
+                    }
+                }
+                Node::Indirect(indirect_node) => {
+                    if explicit_keys.contains(key) && &indirect_node.original.id == key {
+                        deps.insert(key.to_string(), node);
+                    }
+                }
+                _ => {
+                    // NOTE: it's unclear that a path node for Nixpkgs should be accepted
+                }
+            }
 
-    for (ref key, node) in flake_lock.root.clone() {
-        match &node {
-            Node::Repo(_) => {
-                if keys.contains(key) {
-                    deps.insert(key.to_string(), node);
-                }
-            }
-            Node::Tarball(_) => {
-                if keys.contains(key) {
-                    deps.insert(key.to_string(), node);
-                }
-            }
-            Node::Indirect(indirect_node) => {
-                if keys.contains(key) && &indirect_node.original.id == key {
-                    deps.insert(key.to_string(), node);
-                }
-            }
-            _ => {
-                // NOTE: it's unclear that a path node for Nixpkgs should be accepted
+            let missing: Vec<String> = explicit_keys
+                .iter()
+                .filter(|k| !deps.contains_key(*k))
+                .map(String::from)
+                .collect();
+
+            if !missing.is_empty() {
+                let error_msg = format!(
+                    "no nixpkgs dependency found for specified {}: {}",
+                    if missing.len() > 1 { "keys" } else { "key" },
+                    missing.join(", ")
+                );
+                return Err(FlakeCheckerError::Invalid(error_msg));
             }
         }
-    }
-    let missing: Vec<String> = keys
-        .iter()
-        .filter(|k| !deps.contains_key(*k))
-        .map(String::from)
-        .collect();
-
-    if !missing.is_empty() {
-        let error_msg = format!(
-            "no nixpkgs dependency found for specified {}: {}",
-            if missing.len() > 1 { "keys" } else { "key" },
-            missing.join(", ")
-        );
-        return Err(FlakeCheckerError::Invalid(error_msg));
+    } else {
+        for (ref _key, node) in flake_lock.root.clone() {
+            match &node {
+                Node::Repo(_repo) => {
+                    // TODO
+                }
+                Node::Tarball(_tarball) => {
+                    // TODO
+                }
+                Node::Indirect(_indirect_node) => {
+                    // TODO
+                }
+                _ => {
+                    // NOTE: it's unclear that a path node for Nixpkgs should be accepted
+                }
+            }
+        }
     }
 
     Ok(deps)
