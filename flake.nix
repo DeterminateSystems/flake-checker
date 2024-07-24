@@ -9,32 +9,27 @@
       url = "https://flakehub.com/f/ipetkov/crane/0.17.*";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    flake-schemas.url = "https://flakehub.com/f/DeterminateSystems/flake-schemas/*";
-    flake-compat.url = "https://flakehub.com/f/edolstra/flake-compat/1.0.1";
   };
 
-  outputs = { self, nixpkgs, rust-overlay, crane, flake-schemas, ... }:
+  outputs = { self, ... }@inputs:
     let
       supportedSystems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
-      forAllSystems = f: nixpkgs.lib.genAttrs supportedSystems (system: f rec {
-        pkgs = import nixpkgs {
+      forAllSystems = f: inputs.nixpkgs.lib.genAttrs supportedSystems (system: f rec {
+        pkgs = import inputs.nixpkgs {
           inherit system;
           overlays = [
-            rust-overlay.overlays.default
+            inputs.rust-overlay.overlays.default
           ];
         };
 
         cranePkgs = pkgs.callPackage ./crane.nix {
-          inherit crane supportedSystems;
+          inherit (inputs) crane;
+          inherit supportedSystems;
           darwinFrameworks = with pkgs.darwin.apple_sdk.frameworks; [ Security SystemConfiguration ];
         };
       });
     in
     {
-      schemas = {
-        inherit (flake-schemas) devShells packages;
-      };
-
       packages = forAllSystems ({ cranePkgs, ... }: rec {
         inherit (cranePkgs) flake-checker;
         default = flake-checker;
