@@ -1,8 +1,8 @@
 [
-  "nixos-24.05",
-  "nixos-24.05-small",
-  "nixos-unstable",
-  "nixos-unstable-small",
   "nixpkgs-24.05-darwin",
-  "nixpkgs-unstable"
+  "nixos-24.05",
+  "nixpkgs-unstable",
+  "nixos-24.05-small",
+  "nixos-unstable-small",
+  "nixos-unstable"
 ]
