@@ -30,7 +30,7 @@ pub(crate) fn check(allowed_refs: Vec<String>) -> Result<bool, FlakeCheckerError
 }
 
 pub(crate) fn get() -> Result<Vec<String>, FlakeCheckerError> {
-    let officially_supported: Vec<String> = reqwest::blocking::get(ALLOWED_REFS_URL)?
+    let mut officially_supported: Vec<String> = reqwest::blocking::get(ALLOWED_REFS_URL)?
         .json::<Response>()?
         .data
         .result
@@ -38,6 +38,8 @@ pub(crate) fn get() -> Result<Vec<String>, FlakeCheckerError> {
         .filter(|res| res.metric.current == "1")
         .map(|res| res.metric.channel.clone())
         .collect();
+
+    officially_supported.sort();
 
     Ok(officially_supported)
 }

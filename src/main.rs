@@ -1,11 +1,12 @@
-#[cfg(feature = "allowed-refs")]
-mod allowed_refs;
 mod condition;
 mod error;
 mod flake;
 mod issue;
 mod summary;
 mod telemetry;
+
+#[cfg(feature = "allowed-refs")]
+mod allowed_refs;
 
 use error::FlakeCheckerError;
 use flake::{check_flake_lock, FlakeCheckConfig};
@@ -20,6 +21,7 @@ use parse_flake_lock::FlakeLock;
 use crate::condition::evaluate_condition;
 
 /// A flake.lock checker for Nix projects.
+#[cfg(not(feature = "allowed-refs"))]
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 struct Cli {
@@ -92,18 +94,9 @@ struct Cli {
     /// The Common Expression Language (CEL) policy to apply to each Nixpkgs input.
     #[arg(long, short, env = "NIX_FLAKE_CHECKER_CONDITION")]
     condition: Option<String>,
-
-    #[cfg(feature = "allowed-refs")]
-    // Check to make sure that Flake Checker is aware of the current supported branches.
-    #[arg(long, hide = true)]
-    check_allowed_refs: bool,
-
-    #[cfg(feature = "allowed-refs")]
-    // Check to make sure that Flake Checker is aware of the current supported branches.
-    #[arg(long, hide = true)]
-    get_allowed_refs: bool,
 }
 
+#[cfg(not(feature = "allowed-refs"))]
 fn main() -> Result<ExitCode, FlakeCheckerError> {
     let allowed_refs: Vec<String> =
         serde_json::from_str(include_str!("../allowed-refs.json")).unwrap();
@@ -119,44 +112,7 @@ fn main() -> Result<ExitCode, FlakeCheckerError> {
         nixpkgs_keys,
         markdown_summary,
         condition,
-        #[cfg(feature = "allowed-refs")]
-        check_allowed_refs,
-        #[cfg(feature = "allowed-refs")]
-        get_allowed_refs,
     } = Cli::parse();
-    #[cfg(feature = "allowed-refs")]
-    if get_allowed_refs {
-        match allowed_refs::get() {
-            Ok(refs) => {
-                let json_refs = serde_json::to_string(&refs)?;
-                println!("{json_refs}");
-                return Ok(ExitCode::SUCCESS);
-            }
-            Err(e) => {
-                println!("Error fetching allowed refs: {}", e);
-                return Ok(ExitCode::FAILURE);
-            }
-        }
-    }
-
-    #[cfg(feature = "allowed-refs")]
-    if check_allowed_refs {
-        match allowed_refs::check(allowed_refs) {
-            Ok(equals) => {
-                if equals {
-                    println!("The allowed reference sets are up to date.");
-                    return Ok(ExitCode::SUCCESS);
-                } else {
-                    println!("The allowed reference sets are NOT up to date. Make sure to update.");
-                    return Ok(ExitCode::FAILURE);
-                }
-            }
-            Err(e) => {
-                println!("Error checking allowed refs: {}", e);
-                return Ok(ExitCode::FAILURE);
-            }
-        }
-    }
 
     if !flake_lock_path.exists() {
         if ignore_missing_flake_lock {
@@ -207,6 +163,67 @@ fn main() -> Result<ExitCode, FlakeCheckerError> {
 
     if fail_mode && !issues.is_empty() {
         return Ok(ExitCode::FAILURE);
+    }
+
+    Ok(ExitCode::SUCCESS)
+}
+
+#[cfg(feature = "allowed-refs")]
+#[derive(Parser)]
+struct Cli {
+    // Check to make sure that Flake Checker is aware of the current supported branches.
+    #[arg(long, hide = true)]
+    check_allowed_refs: bool,
+
+    // Check to make sure that Flake Checker is aware of the current supported branches.
+    #[arg(long, hide = true)]
+    get_allowed_refs: bool,
+}
+
+#[cfg(feature = "allowed-refs")]
+fn main() -> Result<ExitCode, FlakeCheckerError> {
+    let Cli {
+        check_allowed_refs,
+        get_allowed_refs,
+    } = Cli::parse();
+
+    if !get_allowed_refs && !check_allowed_refs {
+        panic!("You must select either --get-allowed-refs or --check-allowed-refs");
+    }
+
+    if get_allowed_refs {
+        match allowed_refs::get() {
+            Ok(refs) => {
+                let json_refs = serde_json::to_string(&refs)?;
+                println!("{json_refs}");
+                return Ok(ExitCode::SUCCESS);
+            }
+            Err(e) => {
+                println!("Error fetching allowed refs: {}", e);
+                return Ok(ExitCode::FAILURE);
+            }
+        }
+    }
+
+    if check_allowed_refs {
+        let allowed_refs: Vec<String> =
+            serde_json::from_str(include_str!("../allowed-refs.json")).unwrap();
+
+        match allowed_refs::check(allowed_refs) {
+            Ok(equals) => {
+                if equals {
+                    println!("The allowed reference sets are up to date.");
+                    return Ok(ExitCode::SUCCESS);
+                } else {
+                    println!("The allowed reference sets are NOT up to date. Make sure to update.");
+                    return Ok(ExitCode::FAILURE);
+                }
+            }
+            Err(e) => {
+                println!("Error checking allowed refs: {}", e);
+                return Ok(ExitCode::FAILURE);
+            }
+        }
     }
 
     Ok(ExitCode::SUCCESS)
