@@ -192,7 +192,7 @@ fn main() -> Result<ExitCode, FlakeCheckerError> {
     }
 
     if get_allowed_refs {
-        match allowed_refs::get() {
+        match allowed_refs::fetch_allowed_refs() {
             Ok(refs) => {
                 let json_refs = serde_json::to_string(&refs)?;
                 println!("{json_refs}");
@@ -206,10 +206,12 @@ fn main() -> Result<ExitCode, FlakeCheckerError> {
     }
 
     if check_allowed_refs {
-        let allowed_refs: Vec<String> =
+        let mut allowed_refs: Vec<String> =
             serde_json::from_str(include_str!("../allowed-refs.json")).unwrap();
 
-        match allowed_refs::check(allowed_refs) {
+        allowed_refs.sort();
+
+        match allowed_refs::check_allowed_refs(allowed_refs) {
             Ok(equals) => {
                 if equals {
                     println!("The allowed reference sets are up to date.");
