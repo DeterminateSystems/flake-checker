@@ -19,7 +19,7 @@ jobs:
             runner: macos-latest-xlarge
             system: ARM64-macOS
           - nix-system: x86_64-darwin
-            runner: macos-12
+            runner: macos-13-large
             system: X64-macOS
           - nix-system: aarch64-linux
             runner: namespace-profile-default-arm64
