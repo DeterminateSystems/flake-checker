@@ -3,7 +3,7 @@ use parse_flake_lock::{FlakeLock, Node};
 
 use crate::{
     error::FlakeCheckerError,
-    flake::{nixpkgs_deps, num_days_old},
+    flake::{nixpkgs_deps, num_days_old, FlakeCheckConfig},
     issue::{Issue, IssueKind},
 };
 
@@ -14,7 +14,7 @@ const KEY_SUPPORTED_REFS: &str = "supportedRefs";
 
 pub(super) fn evaluate_condition(
     flake_lock: &FlakeLock,
-    nixpkgs_keys: &[String],
+    config: &FlakeCheckConfig,
     condition: &str,
     supported_refs: Vec<String>,
 ) -> Result<Vec<Issue>, FlakeCheckerError> {
@@ -22,7 +22,7 @@ pub(super) fn evaluate_condition(
     let mut ctx = Context::default();
     ctx.add_variable_from_value(KEY_SUPPORTED_REFS, supported_refs);
 
-    let deps = nixpkgs_deps(flake_lock, nixpkgs_keys)?;
+    let deps = nixpkgs_deps(flake_lock, config.nixpkgs_keys.clone())?;
 
     for (name, node) in deps {
         let (git_ref, last_modified, owner) = match node {

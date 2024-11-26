@@ -15,7 +15,7 @@ pub(crate) struct FlakeCheckConfig {
     pub check_outdated: bool,
     pub check_owner: bool,
     pub fail_mode: bool,
-    pub nixpkgs_keys: Vec<String>,
+    pub nixpkgs_keys: Option<Vec<String>>,
 }
 
 impl Default for FlakeCheckConfig {
@@ -25,52 +25,79 @@ impl Default for FlakeCheckConfig {
             check_outdated: true,
             check_owner: true,
             fail_mode: false,
-            nixpkgs_keys: vec![String::from("nixpkgs")],
+            nixpkgs_keys: None,
         }
     }
 }
 
 pub(super) fn nixpkgs_deps(
     flake_lock: &FlakeLock,
-    keys: &[String],
+    nixpkgs_keys: Option<Vec<String>>,
 ) -> Result<HashMap<String, Node>, FlakeCheckerError> {
     let mut deps: HashMap<String, Node> = HashMap::new();
 
-    for (ref key, node) in flake_lock.root.clone() {
-        match &node {
-            Node::Repo(_) => {
-                if keys.contains(key) {
-                    deps.insert(key.to_string(), node);
+    if let Some(explicit_keys) = nixpkgs_keys {
+        for (ref key, node) in flake_lock.root.clone() {
+            match &node {
+                Node::Repo(_) => {
+                    if explicit_keys.contains(key) {
+                        deps.insert(key.to_string(), node);
+                    }
+                }
+                Node::Tarball(_) => {
+                    if explicit_keys.contains(key) {
+                        deps.insert(key.to_string(), node);
+                    }
+                }
+                Node::Indirect(indirect_node) => {
+                    if explicit_keys.contains(key) && &indirect_node.original.id == key {
+                        deps.insert(key.to_string(), node);
+                    }
+                }
+                _ => {
+                    // NOTE: it's unclear that a path node for Nixpkgs should be accepted
                 }
             }
-            Node::Tarball(_) => {
-                if keys.contains(key) {
-                    deps.insert(key.to_string(), node);
-                }
-            }
-            Node::Indirect(indirect_node) => {
-                if keys.contains(key) && &indirect_node.original.id == key {
-                    deps.insert(key.to_string(), node);
-                }
-            }
-            _ => {
-                // NOTE: it's unclear that a path node for Nixpkgs should be accepted
+
+            let missing: Vec<String> = explicit_keys
+                .iter()
+                .filter(|k| !deps.contains_key(*k))
+                .map(String::from)
+                .collect();
+
+            if !missing.is_empty() {
+                let error_msg = format!(
+                    "no nixpkgs dependency found for specified {}: {}",
+                    if missing.len() > 1 { "keys" } else { "key" },
+                    missing.join(", ")
+                );
+                return Err(FlakeCheckerError::Invalid(error_msg));
             }
         }
-    }
-    let missing: Vec<String> = keys
-        .iter()
-        .filter(|k| !deps.contains_key(*k))
-        .map(String::from)
-        .collect();
-
-    if !missing.is_empty() {
-        let error_msg = format!(
-            "no nixpkgs dependency found for specified {}: {}",
-            if missing.len() > 1 { "keys" } else { "key" },
-            missing.join(", ")
-        );
-        return Err(FlakeCheckerError::Invalid(error_msg));
+    } else {
+        for (ref key, node) in flake_lock.root.clone() {
+            match &node {
+                Node::Repo(repo) => {
+                    if repo.original.owner.to_lowercase() == "nixos"
+                        && repo.original.repo.to_lowercase() == "nixpkgs"
+                    {
+                        deps.insert(key.to_string(), node);
+                    }
+                }
+                Node::Tarball(tarball) => {
+                    // If necessary, we can expand this to include other tarball sources
+                    if tarball
+                        .original
+                        .url
+                        .to_lowercase()
+                        .starts_with("https://flakehub.com/f/nixos/nixpkgs/")
+                    {
+                        deps.insert(key.to_string(), node);
+                    }
+                }
+                _ => {}
+            }
+        }
     }
 
     Ok(deps)
@@ -83,7 +110,7 @@ pub(crate) fn check_flake_lock(
 ) -> Result<Vec<Issue>, FlakeCheckerError> {
     let mut issues = vec![];
 
-    let deps = nixpkgs_deps(flake_lock, &config.nixpkgs_keys)?;
+    let deps = nixpkgs_deps(flake_lock, config.nixpkgs_keys.clone())?;
 
     for (name, node) in deps {
         let (git_ref, last_modified, owner) = match node {
@@ -177,16 +204,11 @@ mod test {
         for (condition, expected) in cases {
             let flake_lock = FlakeLock::new(&path).unwrap();
             let config = FlakeCheckConfig {
-                nixpkgs_keys: vec![String::from("nixpkgs")],
                 ..Default::default()
             };
 
-            let result = evaluate_condition(
-                &flake_lock,
-                &config.nixpkgs_keys,
-                condition,
-                supported_refs.clone(),
-            );
+            let result =
+                evaluate_condition(&flake_lock, &config, condition, supported_refs.clone());
 
             if expected {
                 assert!(result.is_ok());
@@ -291,7 +313,7 @@ mod test {
             let flake_lock = FlakeLock::new(&path).unwrap();
             let config = FlakeCheckConfig {
                 check_outdated: false,
-                nixpkgs_keys,
+                nixpkgs_keys: Some(nixpkgs_keys),
                 ..Default::default()
             };
             let issues = check_flake_lock(&flake_lock, &config, allowed_refs.clone()).unwrap();
@@ -318,7 +340,7 @@ mod test {
             let flake_lock = FlakeLock::new(&path).unwrap();
             let config = FlakeCheckConfig {
                 check_outdated: false,
-                nixpkgs_keys,
+                nixpkgs_keys: Some(nixpkgs_keys),
                 ..Default::default()
             };
 

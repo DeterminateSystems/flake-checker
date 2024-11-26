@@ -65,7 +65,7 @@
               cargo-bloat
               cargo-edit
               cargo-machete
-              cargo-watch
+              bacon
               rust-analyzer
 
               # Nix
