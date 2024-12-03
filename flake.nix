@@ -1,12 +1,12 @@
 {
   inputs = {
-    nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/0.2405.*";
+    nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/0.2411.*";
     rust-overlay = {
       url = "github:oxalica/rust-overlay";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     crane = {
-      url = "https://flakehub.com/f/ipetkov/crane/0.17.*";
+      url = "https://flakehub.com/f/ipetkov/crane/0.19.*";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };

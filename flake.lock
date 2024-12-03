@@ -1,36 +1,31 @@
 {
   "nodes": {
     "crane": {
-      "inputs": {
-        "nixpkgs": [
-          "nixpkgs"
-        ]
-      },
       "locked": {
-        "lastModified": 1717383740,
-        "narHash": "sha256-559HbY4uhNeoYvK3H6AMZAtVfmR3y8plXZ1x6ON/cWU=",
-        "rev": "b65673fce97d277934488a451724be94cc62499a",
-        "revCount": 580,
+        "lastModified": 1731974531,
+        "narHash": "sha256-z7hiGBWsbWwSnu5UMmYyfHEehlSmfB8sCA8iH4nmxm8=",
+        "rev": "8ff9c457d60951bdd37a05ae903423de7ff55c6e",
+        "revCount": 654,
         "type": "tarball",
-        "url": "https://api.flakehub.com/f/pinned/ipetkov/crane/0.17.3/018fdc0e-176b-7a0f-92ce-cc2d0db7b735/source.tar.gz"
+        "url": "https://api.flakehub.com/f/pinned/ipetkov/crane/0.19.3/019341bb-a47c-7229-bccd-4586c6148192/source.tar.gz"
       },
       "original": {
         "type": "tarball",
-        "url": "https://flakehub.com/f/ipetkov/crane/0.17.%2A"
+        "url": "https://flakehub.com/f/ipetkov/crane/0.19.%2A"
       }
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1731797254,
-        "narHash": "sha256-df3dJApLPhd11AlueuoN0Q4fHo/hagP75LlM5K1sz9g=",
-        "rev": "e8c38b73aeb218e27163376a2d617e61a2ad9b59",
-        "revCount": 636838,
+        "lastModified": 1732981179,
+        "narHash": "sha256-F7thesZPvAMSwjRu0K8uFshTk3ZZSNAsXTIFvXBT+34=",
+        "rev": "62c435d93bf046a5396f3016472e8f7c8e2aed65",
+        "revCount": 710050,
         "type": "tarball",
-        "url": "https://api.flakehub.com/f/pinned/NixOS/nixpkgs/0.2405.636838%2Brev-e8c38b73aeb218e27163376a2d617e61a2ad9b59/01933af8-1a6e-73c9-86e6-04b8a0066d59/source.tar.gz"
+        "url": "https://api.flakehub.com/f/pinned/NixOS/nixpkgs/0.2411.710050%2Brev-62c435d93bf046a5396f3016472e8f7c8e2aed65/01938188-9ae4-7095-9c6e-c6e2ce4adf18/source.tar.gz"
       },
       "original": {
         "type": "tarball",
-        "url": "https://flakehub.com/f/NixOS/nixpkgs/0.2405.%2A"
+        "url": "https://flakehub.com/f/NixOS/nixpkgs/0.2411.%2A"
       }
     },
     "root": {

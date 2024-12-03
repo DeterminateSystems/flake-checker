@@ -1,4 +1,4 @@
-supportedRefs == ['nixos-24.05', 'nixos-24.05-small', 'nixos-unstable', 'nixos-unstable-small', 'nixpkgs-24.05-darwin', 'nixpkgs-unstable']
+['nixos-unstable', 'nixos-unstable-small', 'nixpkgs-unstable'].map(rev, supportedRefs.contains(rev))
     && owner == 'NixOS'
     && gitRef == 'nixos-unstable'
     && supportedRefs.contains(gitRef)
