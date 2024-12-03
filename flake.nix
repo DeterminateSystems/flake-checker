@@ -5,10 +5,7 @@
       url = "github:oxalica/rust-overlay";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    crane = {
-      url = "https://flakehub.com/f/ipetkov/crane/0.19.*";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    crane.url = "https://flakehub.com/f/ipetkov/crane/0.19.*";
   };
 
   outputs = { self, ... }@inputs:
