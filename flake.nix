@@ -2,13 +2,10 @@
   inputs = {
     nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/0.2405.*";
     rust-overlay = {
-      url = "github:oxalica/rust-overlay";
+      url = "https://flakehub.com/f/oxalica/rust-overlay/*";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    crane = {
-      url = "https://flakehub.com/f/ipetkov/crane/0.17.*";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    crane.url = "https://flakehub.com/f/ipetkov/crane/0.19.*";
   };
 
   outputs = { self, ... }@inputs:

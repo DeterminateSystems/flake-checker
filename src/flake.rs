@@ -157,7 +157,7 @@ mod test {
     fn cel_conditions() {
         // (condition, expected)
         let cases: Vec<(&str, bool)> = vec![
-            (include_str!("../tests/cel-condition.txt"), true),
+            (include_str!("../tests/cel-condition.cel"), true),
             (
 
                 "has(gitRef) && has(numDaysOld) && has(owner) && has(supportedRefs) && supportedRefs.contains(gitRef) && owner != 'NixOS'",
@@ -189,6 +189,8 @@ mod test {
             );
 
             if expected {
+                println!("{result:?}");
+
                 assert!(result.is_ok());
                 assert!(result.unwrap().is_empty());
             } else {
