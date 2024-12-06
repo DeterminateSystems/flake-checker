@@ -87,7 +87,6 @@ let
           inherit (craneLib.findCargoFiles src) cargoConfigs;
           cargoLockList = [
             ./Cargo.lock
-            "${rustStable.passthru.availableComponents.rust-src}/lib/rustlib/src/rust/Cargo.lock"
           ];
         };
       } // crossPlatform.env;
