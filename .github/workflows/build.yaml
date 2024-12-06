@@ -22,10 +22,10 @@ jobs:
             runner: macos-13-large
             system: X64-macOS
           - nix-system: aarch64-linux
-            runner: UbuntuLatest32Cores128GArm
+            runner: namespace-profile-default-arm64
             system: ARM64-Linux
           - nix-system: x86_64-linux
-            runner: UbuntuLatest32Cores128G
+            runner: ubuntu-22.04
             system: X64-Linux
     steps:
       - name: git checkout
