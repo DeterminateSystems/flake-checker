@@ -48,7 +48,7 @@ jobs:
         run: |
           nix develop -c \
             cargo run -- \
-              --condition "supportedRefs.contains(gitRef) && numDaysOld < 30 && owner == 'NixOS'" \
+              --condition "supportedRefs.contains(gitRef) && numDaysOld > 30 && owner == 'NixOS'" \
               ./tests/flake.cel.0.lock
 
   check-flake-dirty:
