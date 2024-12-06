@@ -62,6 +62,11 @@
           doCheck = true;
           buildInputs = with pkgs; [ ] ++ lib.optionals stdenv.isDarwin (with darwin.apple_sdk.frameworks; [ Security SystemConfiguration ]);
           nativeBuildInputs = with pkgs; [ ] ++ lib.optionals stdenv.isDarwin [ libiconv ];
+
+          env = {
+            LIBCLANG_PATH = "${pkgs.libclang.lib}/lib";
+            NIX_CFLAGS_COMPILE = pkgs.lib.optionalString pkgs.stdenv.isDarwin "-I${pkgs.libcxx.dev}/include/c++/v1";
+          };
         };
       });
 
