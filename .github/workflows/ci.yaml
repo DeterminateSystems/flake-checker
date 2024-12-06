@@ -107,11 +107,11 @@ jobs:
       matrix:
         systems:
           - system: X64-Linux
-            runner: ubuntu-22.04
+            runner: UbuntuLatest32Cores128G
           - system: ARM64-Linux
-            runner: namespace-profile-default-arm64
+            runner: UbuntuLatest32Cores128GArm
           - system: X64-macOS
-            runner: macos-13
+            runner: macos-13-large
           - system: ARM64-macOS
             runner: macos-latest-xlarge
     steps:
