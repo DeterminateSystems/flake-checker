@@ -43,12 +43,12 @@
             };
             check-rustfmt = pkgs.writeShellApplication {
               name = "check-rustfmt";
-              runtimeInputs = [ cranePkgs.rustNightly ];
+              runtimeInputs = [ cranePkgs.rustStable ];
               text = "cargo fmt --check";
             };
             get-allowed-refs = pkgs.writeShellApplication {
               name = "get-allowed-refs";
-              runtimeInputs = [ cranePkgs.rustNightly ];
+              runtimeInputs = [ cranePkgs.rustStable ];
               text = "cargo run --features allowed-refs -- --get-allowed-refs";
             };
           in
@@ -57,7 +57,7 @@
               bashInteractive
 
               # Rust
-              cranePkgs.rustNightly
+              cranePkgs.rustStable
               cargo-bloat
               cargo-edit
               cargo-machete
@@ -77,7 +77,7 @@
 
             env = {
               # Required by rust-analyzer
-              RUST_SRC_PATH = "${cranePkgs.rustNightly}/lib/rustlib/src/rust/library";
+              RUST_SRC_PATH = "${cranePkgs.rustStable}/lib/rustlib/src/rust/library";
             };
           };
       });

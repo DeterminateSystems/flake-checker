@@ -11,8 +11,7 @@
 let
   inherit (stdenv.hostPlatform) system;
 
-  nightlyVersion = "2024-06-13";
-  rustNightly = pkgs.rust-bin.nightly.${nightlyVersion}.default.override {
+  rustStable = pkgs.rust-bin.stable.latest.default.override {
     extensions = [ "rust-src" "rust-analyzer-preview" ];
     targets = cargoTargets;
   };
@@ -61,7 +60,7 @@ let
     let
       crossPlatform = crossPlatforms.${system};
       inherit (crossPlatform) pkgs;
-      craneLib = (crane.mkLib pkgs).overrideToolchain rustNightly;
+      craneLib = (crane.mkLib pkgs).overrideToolchain rustStable;
       crateName = craneLib.crateNameFromCargoToml {
         cargoToml = ./Cargo.toml;
       };
@@ -88,7 +87,7 @@ let
           inherit (craneLib.findCargoFiles src) cargoConfigs;
           cargoLockList = [
             ./Cargo.lock
-            "${rustNightly.passthru.availableComponents.rust-src}/lib/rustlib/src/rust/Cargo.lock"
+            "${rustStable.passthru.availableComponents.rust-src}/lib/rustlib/src/rust/Cargo.lock"
           ];
         };
       } // crossPlatform.env;
@@ -102,7 +101,7 @@ let
     crate;
 in
 {
-  inherit crossPlatforms cargoTargets cargoCrossEnvs rustNightly;
+  inherit crossPlatforms cargoTargets cargoCrossEnvs rustStable;
 
   flake-checker = buildFor system;
 }
