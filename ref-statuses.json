@@ -1,0 +1,11 @@
+{
+  "nixos-24.05": "unmaintained",
+  "nixos-24.05-small": "unmaintained",
+  "nixos-24.11": "stable",
+  "nixos-24.11-small": "stable",
+  "nixos-unstable": "rolling",
+  "nixos-unstable-small": "rolling",
+  "nixpkgs-24.05-darwin": "unmaintained",
+  "nixpkgs-24.11-darwin": "stable",
+  "nixpkgs-unstable": "rolling"
+}

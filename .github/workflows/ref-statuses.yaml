@@ -1,0 +1,36 @@
+name: Check that ref statuses are up to date
+
+on:
+  schedule:
+    - cron: "0 0 * * *" # Daily
+
+jobs:
+  check-ref-statuses:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: DeterminateSystems/nix-installer-action@main
+
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+
+      - name: Check ref statuses
+        run: |
+          nix develop --command cargo run --features ref-statuses -- --check-ref-statuses
+
+      - name: Update ref-statuses.json
+        if: failure()
+        run: |
+          ref_statuses_json=$(nix develop --command cargo run --features ref-statuses -- --get-ref-statuses | jq --sort-keys .)
+          echo "${ref_statuses_json}" > ref-statuses.json
+
+      - name: Create pull request
+        if: failure()
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: Update ref-statuses.json to new valid Git refs list
+          title: Update ref-statuses.json
+          body: |
+            Nixpkgs has changed its list of maintained references. This PR updates `ref-statuses.json` to reflect that change.
+          branch: updated-ref-statuses
+          base: main
