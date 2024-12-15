@@ -5,13 +5,14 @@ mod issue;
 mod summary;
 mod telemetry;
 
-#[cfg(feature = "allowed-refs")]
-mod allowed_refs;
+#[cfg(feature = "ref-statuses")]
+mod ref_statuses;
 
 use error::FlakeCheckerError;
 use flake::{check_flake_lock, FlakeCheckConfig};
 use summary::Summary;
 
+use std::collections::HashMap;
 use std::path::PathBuf;
 use std::process::ExitCode;
 
@@ -21,7 +22,7 @@ use parse_flake_lock::FlakeLock;
 use crate::condition::evaluate_condition;
 
 /// A flake.lock checker for Nix projects.
-#[cfg(not(feature = "allowed-refs"))]
+#[cfg(not(feature = "ref-statuses"))]
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 struct Cli {
@@ -96,10 +97,26 @@ struct Cli {
     condition: Option<String>,
 }
 
-#[cfg(not(feature = "allowed-refs"))]
+#[cfg(not(feature = "ref-statuses"))]
+pub(crate) fn supported_refs(ref_statuses: HashMap<String, String>) -> Vec<String> {
+    let mut return_value: Vec<String> = ref_statuses
+        .iter()
+        .filter_map(|(channel, status)| {
+            if *status != "unmaintained" && *status != "beta" {
+                Some(channel.clone())
+            } else {
+                None
+            }
+        })
+        .collect();
+    return_value.sort();
+    return_value
+}
+
+#[cfg(not(feature = "ref-statuses"))]
 fn main() -> Result<ExitCode, FlakeCheckerError> {
-    let allowed_refs: Vec<String> =
-        serde_json::from_str(include_str!("../allowed-refs.json")).unwrap();
+    let ref_statuses: HashMap<String, String> =
+        serde_json::from_str(include_str!("../ref-statuses.json")).unwrap();
 
     let Cli {
         no_telemetry,
@@ -133,6 +150,8 @@ fn main() -> Result<ExitCode, FlakeCheckerError> {
         nixpkgs_keys: nixpkgs_keys.clone(),
         fail_mode,
     };
+
+    let allowed_refs = supported_refs(ref_statuses);
 
     let issues = if let Some(condition) = &condition {
         evaluate_condition(&flake_lock, &nixpkgs_keys, condition, allowed_refs.clone())?
@@ -168,61 +187,61 @@ fn main() -> Result<ExitCode, FlakeCheckerError> {
     Ok(ExitCode::SUCCESS)
 }
 
-#[cfg(feature = "allowed-refs")]
+#[cfg(feature = "ref-statuses")]
 #[derive(Parser)]
 struct Cli {
     // Check to make sure that Flake Checker is aware of the current supported branches.
     #[arg(long, hide = true)]
-    check_allowed_refs: bool,
+    check_ref_statuses: bool,
 
     // Check to make sure that Flake Checker is aware of the current supported branches.
     #[arg(long, hide = true)]
-    get_allowed_refs: bool,
+    get_ref_statuses: bool,
 }
 
-#[cfg(feature = "allowed-refs")]
+#[cfg(feature = "ref-statuses")]
 fn main() -> Result<ExitCode, FlakeCheckerError> {
     let Cli {
-        check_allowed_refs,
-        get_allowed_refs,
+        check_ref_statuses,
+        get_ref_statuses,
     } = Cli::parse();
 
-    if !get_allowed_refs && !check_allowed_refs {
-        panic!("You must select either --get-allowed-refs or --check-allowed-refs");
+    if !get_ref_statuses && !check_ref_statuses {
+        panic!("You must select either --get-ref-statuses or --check-ref-statuses");
     }
 
-    if get_allowed_refs {
-        match allowed_refs::fetch_allowed_refs() {
+    if get_ref_statuses {
+        match ref_statuses::fetch_ref_statuses() {
             Ok(refs) => {
                 let json_refs = serde_json::to_string(&refs)?;
                 println!("{json_refs}");
                 return Ok(ExitCode::SUCCESS);
             }
             Err(e) => {
-                println!("Error fetching allowed refs: {}", e);
+                println!("Error fetching ref statuses: {}", e);
                 return Ok(ExitCode::FAILURE);
             }
         }
     }
 
-    if check_allowed_refs {
-        let mut allowed_refs: Vec<String> =
-            serde_json::from_str(include_str!("../allowed-refs.json")).unwrap();
+    if check_ref_statuses {
+        let mut ref_statuses: HashMap<String, String> =
+            serde_json::from_str(include_str!("../ref-statuses.json")).unwrap();
 
-        allowed_refs.sort();
-
-        match allowed_refs::check_allowed_refs(allowed_refs) {
+        match ref_statuses::check_ref_statuses(ref_statuses) {
             Ok(equals) => {
                 if equals {
-                    println!("The allowed reference sets are up to date.");
+                    println!("The reference statuses sets are up to date.");
                     return Ok(ExitCode::SUCCESS);
                 } else {
-                    println!("The allowed reference sets are NOT up to date. Make sure to update.");
+                    println!(
+                        "The reference statuses sets are NOT up to date. Make sure to update."
+                    );
                     return Ok(ExitCode::FAILURE);
                 }
             }
             Err(e) => {
-                println!("Error checking allowed refs: {}", e);
+                println!("Error checking ref statuses: {}", e);
                 return Ok(ExitCode::FAILURE);
             }
         }

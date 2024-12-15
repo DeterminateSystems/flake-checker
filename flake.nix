@@ -91,10 +91,10 @@
               runtimeInputs = with pkgs; [ rustToolchain ];
               text = "cargo fmt --check";
             };
-            get-allowed-refs = pkgs.writeShellApplication {
-              name = "get-allowed-refs";
+            get-ref-statuses = pkgs.writeShellApplication {
+              name = "get-ref-statuses";
               runtimeInputs = with pkgs; [ rustToolchain ];
-              text = "cargo run --features allowed-refs -- --get-allowed-refs";
+              text = "cargo run --features ref-statuses -- --get-ref-statuses";
             };
           in
           pkgs.mkShell {
@@ -117,7 +117,7 @@
               check-rustfmt
 
               # Scripts
-              get-allowed-refs
+              get-ref-statuses
             ]) ++ pkgs.lib.optionals pkgs.stdenv.isDarwin (with pkgs.darwin.apple_sdk.frameworks; [ Security SystemConfiguration ]);
 
             env = {
