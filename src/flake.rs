@@ -173,7 +173,7 @@ mod test {
 
         let ref_statuses: HashMap<String, String> =
             serde_json::from_str(include_str!("../ref-statuses.json")).unwrap();
-        let supported_refs = supported_refs(ref_statuses);
+        let supported_refs = supported_refs(ref_statuses.clone());
         let path = PathBuf::from("tests/flake.cel.0.lock");
 
         for (condition, expected) in cases {
@@ -187,6 +187,7 @@ mod test {
                 &flake_lock,
                 &config.nixpkgs_keys,
                 condition,
+                ref_statuses.clone(),
                 supported_refs.clone(),
             );
 

@@ -151,10 +151,16 @@ fn main() -> Result<ExitCode, FlakeCheckerError> {
         fail_mode,
     };
 
-    let allowed_refs = supported_refs(ref_statuses);
+    let allowed_refs = supported_refs(ref_statuses.clone());
 
     let issues = if let Some(condition) = &condition {
-        evaluate_condition(&flake_lock, &nixpkgs_keys, condition, allowed_refs.clone())?
+        evaluate_condition(
+            &flake_lock,
+            &nixpkgs_keys,
+            condition,
+            ref_statuses,
+            allowed_refs.clone(),
+        )?
     } else {
         check_flake_lock(&flake_lock, &flake_check_config, allowed_refs.clone())?
     };
