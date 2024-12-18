@@ -38,4 +38,4 @@ thiserror = { workspace = true }
 
 [features]
 default = []
-allowed-refs = []
+ref-statuses = []

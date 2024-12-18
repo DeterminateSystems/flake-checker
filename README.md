@@ -72,6 +72,7 @@ Variable | Description
 `numDaysOld` | The number of days old the input is.
 `owner` | The input's owner (if a GitHub input).
 `supportedRefs` | A list of [supported Git refs](#supported-branches) (all are branch names).
+`refStatuses` | A map. Each key is a branch name. Each value is a branch status (`"rolling"`, `"beta"`, `"stable"`, `"deprecated"` or `"unmaintained"`).
 
 We recommend a condition *at least* this stringent:
 
