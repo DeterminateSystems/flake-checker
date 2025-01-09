@@ -7,7 +7,10 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    naersk.url = "https://flakehub.com/f/nix-community/naersk/0.1.*";
+    naersk = {
+      url = "https://flakehub.com/f/nix-community/naersk/0.1.*";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = { self, ... }@inputs:
