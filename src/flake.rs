@@ -144,13 +144,14 @@ pub(super) fn num_days_old(timestamp: i64) -> i64 {
 
 #[cfg(test)]
 mod test {
+    use std::collections::HashMap;
     use std::path::PathBuf;
 
     use crate::{
         check_flake_lock,
         condition::evaluate_condition,
         issue::{Disallowed, Issue, IssueKind, NonUpstream},
-        FlakeCheckConfig, FlakeLock,
+        supported_refs, FlakeCheckConfig, FlakeLock,
     };
 
     #[test]
@@ -170,8 +171,9 @@ mod test {
             ),
         ];
 
-        let supported_refs: Vec<String> =
-            serde_json::from_str(include_str!("../allowed-refs.json")).unwrap();
+        let ref_statuses: HashMap<String, String> =
+            serde_json::from_str(include_str!("../ref-statuses.json")).unwrap();
+        let supported_refs = supported_refs(ref_statuses.clone());
         let path = PathBuf::from("tests/flake.cel.0.lock");
 
         for (condition, expected) in cases {
@@ -185,6 +187,7 @@ mod test {
                 &flake_lock,
                 &config.nixpkgs_keys,
                 condition,
+                ref_statuses.clone(),
                 supported_refs.clone(),
             );
 
@@ -201,8 +204,9 @@ mod test {
 
     #[test]
     fn clean_flake_locks() {
-        let allowed_refs: Vec<String> =
-            serde_json::from_str(include_str!("../allowed-refs.json")).unwrap();
+        let ref_statuses: HashMap<String, String> =
+            serde_json::from_str(include_str!("../ref-statuses.json")).unwrap();
+        let allowed_refs = supported_refs(ref_statuses);
         for n in 0..=7 {
             let path = PathBuf::from(format!("tests/flake.clean.{n}.lock"));
             let flake_lock = FlakeLock::new(&path).unwrap();
@@ -221,8 +225,9 @@ mod test {
 
     #[test]
     fn dirty_flake_locks() {
-        let allowed_refs: Vec<String> =
-            serde_json::from_str(include_str!("../allowed-refs.json")).unwrap();
+        let ref_statuses: HashMap<String, String> =
+            serde_json::from_str(include_str!("../ref-statuses.json")).unwrap();
+        let allowed_refs = supported_refs(ref_statuses);
         let cases: Vec<(&str, Vec<Issue>)> = vec![
             (
                 "flake.dirty.0.lock",
@@ -275,8 +280,9 @@ mod test {
 
     #[test]
     fn explicit_nixpkgs_keys() {
-        let allowed_refs: Vec<String> =
-            serde_json::from_str(include_str!("../allowed-refs.json")).unwrap();
+        let ref_statuses: HashMap<String, String> =
+            serde_json::from_str(include_str!("../ref-statuses.json")).unwrap();
+        let allowed_refs = supported_refs(ref_statuses);
         let cases: Vec<(&str, Vec<String>, Vec<Issue>)> = vec![(
             "flake.explicit-keys.0.lock",
             vec![String::from("nixpkgs"), String::from("nixpkgs-alt")],
@@ -303,8 +309,9 @@ mod test {
 
     #[test]
     fn missing_nixpkgs_keys() {
-        let allowed_refs: Vec<String> =
-            serde_json::from_str(include_str!("../allowed-refs.json")).unwrap();
+        let ref_statuses: HashMap<String, String> =
+            serde_json::from_str(include_str!("../ref-statuses.json")).unwrap();
+        let allowed_refs = supported_refs(ref_statuses);
         let cases: Vec<(&str, Vec<String>, String)> = vec![(
             "flake.clean.0.lock",
             vec![String::from("nixpkgs"), String::from("foo"), String::from("bar")],
