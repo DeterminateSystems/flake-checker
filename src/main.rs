@@ -7,18 +7,18 @@ mod summary;
 #[cfg(feature = "ref-statuses")]
 mod ref_statuses;
 
-use error::FlakeCheckerError;
-use flake::{check_flake_lock, FlakeCheckConfig};
-use summary::Summary;
-
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::process::ExitCode;
 
 use clap::Parser;
 use parse_flake_lock::FlakeLock;
+use tracing_subscriber::{fmt, prelude::*, EnvFilter};
 
 use crate::condition::evaluate_condition;
+use error::FlakeCheckerError;
+use flake::{check_flake_lock, FlakeCheckConfig};
+use summary::Summary;
 
 /// A flake.lock checker for Nix projects.
 #[cfg(not(feature = "ref-statuses"))]
@@ -115,6 +115,11 @@ pub(crate) fn supported_refs(ref_statuses: HashMap<String, String>) -> Vec<Strin
 #[cfg(not(feature = "ref-statuses"))]
 #[tokio::main]
 async fn main() -> Result<ExitCode, FlakeCheckerError> {
+    tracing_subscriber::registry()
+        .with(fmt::layer())
+        .with(EnvFilter::from_default_env())
+        .init();
+
     let ref_statuses: HashMap<String, String> =
         serde_json::from_str(include_str!("../ref-statuses.json")).unwrap();
 
@@ -226,6 +231,7 @@ async fn main() -> Result<ExitCode, FlakeCheckerError> {
         summary.generate_text()?;
     }
 
+    drop(reporter);
     worker.wait().await;
 
     if fail_mode && !issues.is_empty() {
