@@ -62,7 +62,7 @@
 
         flake-checker = pkgs.naerskLib.buildPackage
           ({
-            name = "flake-checker-${version}";
+            name = "flake-checker";
             src = self;
             doCheck = true;
             buildInputs = with pkgs; [ ] ++ lib.optionals stdenv.isDarwin (with darwin.apple_sdk.frameworks; [ Security SystemConfiguration ]);
