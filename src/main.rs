@@ -3,7 +3,6 @@ mod error;
 mod flake;
 mod issue;
 mod summary;
-mod telemetry;
 
 #[cfg(feature = "ref-statuses")]
 mod ref_statuses;
@@ -114,7 +113,8 @@ pub(crate) fn supported_refs(ref_statuses: HashMap<String, String>) -> Vec<Strin
 }
 
 #[cfg(not(feature = "ref-statuses"))]
-fn main() -> Result<ExitCode, FlakeCheckerError> {
+#[tokio::main]
+async fn main() -> Result<ExitCode, FlakeCheckerError> {
     let ref_statuses: HashMap<String, String> =
         serde_json::from_str(include_str!("../ref-statuses.json")).unwrap();
 
@@ -130,6 +130,18 @@ fn main() -> Result<ExitCode, FlakeCheckerError> {
         markdown_summary,
         condition,
     } = Cli::parse();
+
+    let (reporter, worker) = detsys_ids_client::builder!()
+        .set_enable_reporting(!no_telemetry)
+        .add_fact("check_owner", check_owner)
+        .add_fact("check_outdated", check_outdated)
+        .add_fact("check_supported", check_supported)
+        .add_fact("ignore_missing_flake_lock", ignore_missing_flake_lock)
+        .add_fact("flake_lock_path", flake_lock_path.to_string_lossy())
+        .add_fact("fail_mode", fail_mode)
+        .add_fact("condition", condition.as_deref())
+        .build_or_default()
+        .await;
 
     if !flake_lock_path.exists() {
         if ignore_missing_flake_lock {
@@ -165,9 +177,37 @@ fn main() -> Result<ExitCode, FlakeCheckerError> {
         check_flake_lock(&flake_lock, &flake_check_config, allowed_refs.clone())?
     };
 
-    if !no_telemetry {
-        telemetry::TelemetryReport::make_and_send(&issues);
-    }
+    reporter
+        .record(
+            "flake_issues",
+            Some(detsys_ids_client::Map::from_iter([
+                (
+                    "disallowed".into(),
+                    issues
+                        .iter()
+                        .filter(|issue| issue.kind.is_disallowed())
+                        .count()
+                        .into(),
+                ),
+                (
+                    "outdated".into(),
+                    issues
+                        .iter()
+                        .filter(|issue| issue.kind.is_outdated())
+                        .count()
+                        .into(),
+                ),
+                (
+                    "non_upstream".into(),
+                    issues
+                        .iter()
+                        .filter(|issue| issue.kind.is_non_upstream())
+                        .count()
+                        .into(),
+                ),
+            ])),
+        )
+        .await;
 
     let summary = Summary::new(
         &issues,
@@ -185,6 +225,8 @@ fn main() -> Result<ExitCode, FlakeCheckerError> {
     } else {
         summary.generate_text()?;
     }
+
+    worker.wait().await;
 
     if fail_mode && !issues.is_empty() {
         return Ok(ExitCode::FAILURE);
