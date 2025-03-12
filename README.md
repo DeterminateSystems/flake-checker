@@ -17,26 +17,26 @@ nix run github:DeterminateSystems/flake-checker /path/to/flake.lock
 Nix Flake Checker looks at your `flake.lock`'s root-level [Nixpkgs] inputs.
 There are two ways to express flake policies:
 
-* Via [config parameters](#parameters).
-* Via [policy conditions](#policy-conditions) using [Common Expression Language][cel] (CEL).
+- Via [config parameters](#parameters).
+- Via [policy conditions](#policy-conditions) using [Common Expression Language][cel] (CEL).
 
 If you're running it locally, Nix Flake Checker reports any issues via text output in your terminal.
 But you can also use Nix Flake Checker [in CI](#the-flake-checker-action).
 
 ## Supported branches
 
-At any given time, [Nixpkgs] has a bounded set of branches that are considered *supported*.
+At any given time, [Nixpkgs] has a bounded set of branches that are considered _supported_.
 The current list:
 
-  * `nixos-23.11`
-  * `nixos-23.11-small`
-  * `nixos-24.05`
-  * `nixos-24.05-small`
-  * `nixos-unstable`
-  * `nixos-unstable-small`
-  * `nixpkgs-23.11-darwin`
-  * `nixpkgs-24.05-darwin`
-  * `nixpkgs-unstable`
+- `nixos-23.11`
+- `nixos-23.11-small`
+- `nixos-24.05`
+- `nixos-24.05-small`
+- `nixos-unstable`
+- `nixos-unstable-small`
+- `nixpkgs-23.11-darwin`
+- `nixpkgs-24.05-darwin`
+- `nixpkgs-unstable`
 
 ## Parameters
 
@@ -48,11 +48,11 @@ By default, Flake Checker verifies that:
 
 You can adjust this behavior via configuration (all are enabled by default but you can disable them):
 
-Flag | Environment variable | Action | Default
-:----|:---------------------|:-------|:-------
-`--check-outdated` | `NIX_FLAKE_CHECKER_CHECK_OUTDATED` | Check for outdated Nixpkgs inputs | `true`
-`--check-owner` | `NIX_FLAKE_CHECKER_CHECK_OWNER` | Check that Nixpkgs inputs have `NixOS` as the GitHub owner | `true`
-`--check-supported` | `NIX_FLAKE_CHECKER_CHECK_SUPPORTED` | Check that Git refs for Nixpkgs inputs are supported | `true`
+| Flag                | Environment variable                | Action                                                     | Default |
+| :------------------ | :---------------------------------- | :--------------------------------------------------------- | :------ |
+| `--check-outdated`  | `NIX_FLAKE_CHECKER_CHECK_OUTDATED`  | Check for outdated Nixpkgs inputs                          | `true`  |
+| `--check-owner`     | `NIX_FLAKE_CHECKER_CHECK_OWNER`     | Check that Nixpkgs inputs have `NixOS` as the GitHub owner | `true`  |
+| `--check-supported` | `NIX_FLAKE_CHECKER_CHECK_SUPPORTED` | Check that Git refs for Nixpkgs inputs are supported       | `true`  |
 
 ## Policy conditions
 
@@ -66,15 +66,15 @@ flake-checker --condition "has(numDaysOld) && numDaysOld < 365"
 This would check that each Nixpkgs input in your `flake.lock` is less than 365 days old.
 These variables are available in each condition:
 
-Variable | Description
-:--------|:-----------
-`gitRef` | The Git reference of the input.
-`numDaysOld` | The number of days old the input is.
-`owner` | The input's owner (if a GitHub input).
-`supportedRefs` | A list of [supported Git refs](#supported-branches) (all are branch names).
-`refStatuses` | A map. Each key is a branch name. Each value is a branch status (`"rolling"`, `"beta"`, `"stable"`, `"deprecated"` or `"unmaintained"`).
+| Variable        | Description                                                                                                                              |
+| :-------------- | :--------------------------------------------------------------------------------------------------------------------------------------- |
+| `gitRef`        | The Git reference of the input.                                                                                                          |
+| `numDaysOld`    | The number of days old the input is.                                                                                                     |
+| `owner`         | The input's owner (if a GitHub input).                                                                                                   |
+| `supportedRefs` | A list of [supported Git refs](#supported-branches) (all are branch names).                                                              |
+| `refStatuses`   | A map. Each key is a branch name. Each value is a branch status (`"rolling"`, `"beta"`, `"stable"`, `"deprecated"` or `"unmaintained"`). |
 
-We recommend a condition *at least* this stringent:
+We recommend a condition _at least_ this stringent:
 
 ```ruby
 supportedRefs.contains(gitRef) && (has(numDaysOld) && numDaysOld < 30) && owner == 'NixOS'
@@ -110,17 +110,6 @@ When run in GitHub Actions, Nix Flake Checker always exits with a status code of
 
 The goal of Nix Flake Checker is to help teams stay on recent and supported versions of Nixpkgs.
 The flake checker collects a little bit of telemetry information to help us make that true.
-
-Here is a table of the [telemetry data we collect][telemetry]:
-
-| Field          | Use                                                                                                    |
-| -------------- | ------------------------------------------------------------------------------------------------------ |
-| `distinct_id`  | An opaque string that represents your project, by sha256 hashing repository and organization details.  |
-| `version`      | The version of Nix Flake Checker.                                                                      |
-| `is_ci`        | Whether the checker is being used in CI (GitHub Actions).                                              |
-| `disallowed`   | The number of inputs using unsupported branches of Nixpkgs.                                            |
-| `outdated`     | The number of inputs using outdated versions of Nixpkgs.                                               |
-| `non_upstream` | The number of inputs using forks of Nixpkgs.                                                           |
 
 To disable diagnostic reporting, set the diagnostics URL to an empty string by passing `--no-telemetry` or setting `FLAKE_CHECKER_NO_TELEMETRY=true`.
 
