@@ -329,9 +329,9 @@ checksum = "575f75dfd25738df5b91b8e43e14d44bda14637a58fae779fd2b064f8bf3e010"
 
 [[package]]
 name = "detsys-ids-client"
-version = "0.2.0"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a7e3399dcb417dbeb19e60016ca9369ca2465edfad500d157a45475b2581a3cf"
+checksum = "beff9ab8a33ef8b94e874c9d1ed64a2914d122a4ea80a35c00c0214a7e5c2970"
 dependencies = [
  "async-compression",
  "chrono",
