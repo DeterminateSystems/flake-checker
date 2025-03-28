@@ -22,6 +22,8 @@ jobs:
         with:
           ref: "${{ (inputs.tag != null) && format('refs/tags/{0}', inputs.tag) || '' }}"
       - uses: "DeterminateSystems/nix-installer-action@main"
+        with:
+          determinate: true
       - uses: "DeterminateSystems/flakehub-push@main"
         with:
           visibility: "public"

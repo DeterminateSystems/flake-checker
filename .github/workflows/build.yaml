@@ -33,6 +33,8 @@ jobs:
 
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@main
+        with:
+          determinate: true
 
       - name: Set up Nix cache
         uses: DeterminateSystems/flakehub-cache-action@main
