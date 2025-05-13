@@ -269,7 +269,7 @@ pub struct RepoLocked {
     pub last_modified: i64,
     /// The NAR hash of the input.
     #[serde(alias = "narHash")]
-    pub nar_hash: String,
+    pub nar_hash: Option<String>,
     /// The repository owner.
     pub owner: String,
     /// The repository.
@@ -340,7 +340,7 @@ pub struct PathLocked {
     pub last_modified: i64,
     /// The NAR hash of the input.
     #[serde(alias = "narHash")]
-    pub nar_hash: String,
+    pub nar_hash: Option<String>,
     /// The relative filesystem path for the input.
     pub path: PathBuf,
     /// The type of the node (always `"path"`).
@@ -380,7 +380,7 @@ pub struct TarballLocked {
     pub last_modified: Option<i64>,
     /// The NAR hash of the input.
     #[serde(alias = "narHash")]
-    pub nar_hash: String,
+    pub nar_hash: Option<String>,
     /// The type of the node (always `"tarball"`).
     #[serde(alias = "type")]
     pub node_type: String,
