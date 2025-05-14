@@ -6,7 +6,7 @@ on:
 
 jobs:
   check-ref-statuses:
-    runs-on: ubuntu-22.04
+    runs-on: UbuntuLatest32Cores128G
     steps:
       - uses: actions/checkout@v4
 

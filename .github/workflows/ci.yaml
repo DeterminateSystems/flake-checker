@@ -8,7 +8,7 @@ on:
 jobs:
   checks:
     name: Nix and Rust checks
-    runs-on: ubuntu-22.04
+    runs-on: UbuntuLatest32Cores128G
     steps:
       - uses: actions/checkout@v4
       - name: Install Nix
@@ -29,7 +29,7 @@ jobs:
 
   rust-tests:
     name: Test Rust
-    runs-on: ubuntu-22.04
+    runs-on: UbuntuLatest32Cores128G
     steps:
       - uses: actions/checkout@v4
       - name: Install Nix
@@ -42,7 +42,7 @@ jobs:
 
   check-flake-cel-condition:
     name: Check flake.lock test (CEL condition)
-    runs-on: ubuntu-22.04
+    runs-on: UbuntuLatest32Cores128G
     steps:
       - uses: actions/checkout@v4
       - name: Install Nix
@@ -59,7 +59,7 @@ jobs:
 
   check-flake-dirty:
     name: Check flake.lock test (dirty 😈)
-    runs-on: ubuntu-22.04
+    runs-on: UbuntuLatest32Cores128G
     steps:
       - uses: actions/checkout@v4
       - name: Install Nix
@@ -73,7 +73,7 @@ jobs:
 
   check-flake-clean:
     name: Check flake.lock test (clean 👼)
-    runs-on: ubuntu-22.04
+    runs-on: UbuntuLatest32Cores128G
     steps:
       - uses: actions/checkout@v4
       - name: Install Nix
@@ -87,7 +87,7 @@ jobs:
 
   check-flake-dirty-fail-mode:
     name: Check flake.lock test (dirty 😈 plus fail mode activated)
-    runs-on: ubuntu-22.04
+    runs-on: UbuntuLatest32Cores128G
     if: false
     steps:
       - uses: actions/checkout@v4
@@ -117,11 +117,11 @@ jobs:
       matrix:
         systems:
           - system: X64-Linux
-            runner: ubuntu-22.04
+            runner: UbuntuLatest32Cores128G
           - system: ARM64-Linux
             runner: namespace-profile-default-arm64
           - system: X64-macOS
-            runner: macos-13
+            runner: macos-latest-xlarge
           - system: ARM64-macOS
             runner: macos-latest-xlarge
     steps:

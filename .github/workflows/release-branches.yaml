@@ -13,9 +13,8 @@ jobs:
 
   release:
     needs: build
-
     concurrency: release
-    runs-on: ubuntu-latest
+    runs-on: UbuntuLatest32Cores128G
     permissions:
       contents: read
       id-token: write # In order to request a JWT for AWS auth

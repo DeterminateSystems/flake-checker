@@ -19,13 +19,13 @@ jobs:
             runner: macos-latest-xlarge
             system: ARM64-macOS
           - nix-system: x86_64-darwin
-            runner: macos-13-large
+            runner: macos-latest-xlarge
             system: X64-macOS
           - nix-system: aarch64-linux
             runner: namespace-profile-default-arm64
             system: ARM64-Linux
           - nix-system: x86_64-linux
-            runner: ubuntu-22.04
+            runner: UbuntuLatest32Cores128G
             system: X64-Linux
     steps:
       - name: git checkout
