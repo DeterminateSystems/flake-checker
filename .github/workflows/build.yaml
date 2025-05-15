@@ -31,12 +31,10 @@ jobs:
       - name: git checkout
         uses: actions/checkout@v4
 
-      - name: Install Nix
-        uses: DeterminateSystems/nix-installer-action@main
-        with:
-          determinate: true
+      - name: Install Determinate Nix
+        uses: DeterminateSystems/determinate-nix-action@main
 
-      - name: Set up Nix cache
+      - name: Set up FlakeHub Cache
         uses: DeterminateSystems/flakehub-cache-action@main
 
       - name: Build and cache dev shell for ${{ matrix.systems.nix-system }} on ${{ matrix.systems.runner }}
