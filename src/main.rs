@@ -101,7 +101,7 @@ pub(crate) fn supported_refs(ref_statuses: BTreeMap<String, String>) -> Vec<Stri
     let mut return_value: Vec<String> = ref_statuses
         .iter()
         .filter_map(|(channel, status)| {
-            if *status != "unmaintained" && *status != "beta" {
+            if *status == "rolling" || *status == "stable" {
                 Some(channel.clone())
             } else {
                 None
