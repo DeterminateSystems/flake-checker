@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use crate::issue::{Disallowed, Issue, IssueKind, NonUpstream, Outdated};
 use crate::FlakeCheckerError;
@@ -33,8 +33,8 @@ impl Default for FlakeCheckConfig {
 pub(super) fn nixpkgs_deps(
     flake_lock: &FlakeLock,
     keys: &[String],
-) -> Result<HashMap<String, Node>, FlakeCheckerError> {
-    let mut deps: HashMap<String, Node> = HashMap::new();
+) -> Result<BTreeMap<String, Node>, FlakeCheckerError> {
+    let mut deps: BTreeMap<String, Node> = BTreeMap::new();
 
     for (ref key, node) in flake_lock.root.clone() {
         match &node {
@@ -144,7 +144,7 @@ pub(super) fn num_days_old(timestamp: i64) -> i64 {
 
 #[cfg(test)]
 mod test {
-    use std::collections::HashMap;
+    use std::collections::BTreeMap;
     use std::path::PathBuf;
 
     use crate::{
@@ -171,7 +171,7 @@ mod test {
             ),
         ];
 
-        let ref_statuses: HashMap<String, String> =
+        let ref_statuses: BTreeMap<String, String> =
             serde_json::from_str(include_str!("../ref-statuses.json")).unwrap();
         let supported_refs = supported_refs(ref_statuses.clone());
         let path = PathBuf::from("tests/flake.cel.0.lock");
@@ -204,7 +204,7 @@ mod test {
 
     #[test]
     fn clean_flake_locks() {
-        let ref_statuses: HashMap<String, String> =
+        let ref_statuses: BTreeMap<String, String> =
             serde_json::from_str(include_str!("../ref-statuses.json")).unwrap();
         let allowed_refs = supported_refs(ref_statuses);
         for n in 0..=7 {
@@ -225,7 +225,7 @@ mod test {
 
     #[test]
     fn dirty_flake_locks() {
-        let ref_statuses: HashMap<String, String> =
+        let ref_statuses: BTreeMap<String, String> =
             serde_json::from_str(include_str!("../ref-statuses.json")).unwrap();
         let allowed_refs = supported_refs(ref_statuses);
         let cases: Vec<(&str, Vec<Issue>)> = vec![
@@ -280,7 +280,7 @@ mod test {
 
     #[test]
     fn explicit_nixpkgs_keys() {
-        let ref_statuses: HashMap<String, String> =
+        let ref_statuses: BTreeMap<String, String> =
             serde_json::from_str(include_str!("../ref-statuses.json")).unwrap();
         let allowed_refs = supported_refs(ref_statuses);
         let cases: Vec<(&str, Vec<String>, Vec<Issue>)> = vec![(
@@ -309,7 +309,7 @@ mod test {
 
     #[test]
     fn missing_nixpkgs_keys() {
-        let ref_statuses: HashMap<String, String> =
+        let ref_statuses: BTreeMap<String, String> =
             serde_json::from_str(include_str!("../ref-statuses.json")).unwrap();
         let allowed_refs = supported_refs(ref_statuses);
         let cases: Vec<(&str, Vec<String>, String)> = vec![(
