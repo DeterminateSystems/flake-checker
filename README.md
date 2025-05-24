@@ -28,14 +28,15 @@ But you can also use Nix Flake Checker [in CI](#the-flake-checker-action).
 At any given time, [Nixpkgs] has a bounded set of branches that are considered _supported_.
 The current list:
 
-- `nixos-23.11`
-- `nixos-23.11-small`
-- `nixos-24.05`
-- `nixos-24.05-small`
+- `nixos-24.11` (deprecated)
+- `nixos-24.11-small` (deprecated)
+- `nixpkgs-24.11-darwin` (deprecated)
+- `nixos-25.05`
+- `nixos-25.05-small`
 - `nixos-unstable`
 - `nixos-unstable-small`
-- `nixpkgs-23.11-darwin`
-- `nixpkgs-24.05-darwin`
+- `nixpkgs-25.05` 
+- `nixpkgs-25.05-darwin`
 - `nixpkgs-unstable`
 
 ## Parameters
