@@ -1,7 +1,7 @@
 use cel_interpreter::{Context, Program, Value};
 use parse_flake_lock::{FlakeLock, Node};
 
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
 use crate::{
     error::FlakeCheckerError,
@@ -19,11 +19,15 @@ pub(super) fn evaluate_condition(
     flake_lock: &FlakeLock,
     nixpkgs_keys: &[String],
     condition: &str,
-    ref_statuses: HashMap<String, String>,
+    ref_statuses: BTreeMap<String, String>,
     supported_refs: Vec<String>,
 ) -> Result<Vec<Issue>, FlakeCheckerError> {
     let mut issues: Vec<Issue> = vec![];
     let mut ctx = Context::default();
+
+    let ref_statuses = ref_statuses
+        .into_iter()
+        .collect::<HashMap<String, String>>();
     ctx.add_variable_from_value(KEY_REF_STATUSES, ref_statuses);
     ctx.add_variable_from_value(KEY_SUPPORTED_REFS, supported_refs);
 
