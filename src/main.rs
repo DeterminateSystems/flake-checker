@@ -7,7 +7,7 @@ mod summary;
 #[cfg(feature = "ref-statuses")]
 mod ref_statuses;
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::path::PathBuf;
 use std::process::ExitCode;
 
@@ -97,11 +97,11 @@ struct Cli {
 }
 
 #[cfg(not(feature = "ref-statuses"))]
-pub(crate) fn supported_refs(ref_statuses: HashMap<String, String>) -> Vec<String> {
+pub(crate) fn supported_refs(ref_statuses: BTreeMap<String, String>) -> Vec<String> {
     let mut return_value: Vec<String> = ref_statuses
         .iter()
         .filter_map(|(channel, status)| {
-            if *status != "unmaintained" && *status != "beta" {
+            if ["rolling", "stable", "deprecated"].contains(&status.as_str()) {
                 Some(channel.clone())
             } else {
                 None
@@ -120,7 +120,7 @@ async fn main() -> Result<ExitCode, FlakeCheckerError> {
         .with(EnvFilter::from_default_env())
         .init();
 
-    let ref_statuses: HashMap<String, String> =
+    let ref_statuses: BTreeMap<String, String> =
         serde_json::from_str(include_str!("../ref-statuses.json")).unwrap();
 
     let Cli {
@@ -279,7 +279,7 @@ fn main() -> Result<ExitCode, FlakeCheckerError> {
     }
 
     if check_ref_statuses {
-        let mut ref_statuses: HashMap<String, String> =
+        let mut ref_statuses: BTreeMap<String, String> =
             serde_json::from_str(include_str!("../ref-statuses.json")).unwrap();
 
         match ref_statuses::check_ref_statuses(ref_statuses) {
