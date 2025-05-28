@@ -1,6 +1,6 @@
 [package]
 name = "flake-checker"
-version = "0.2.5"
+version = "0.2.7"
 edition = "2021"
 
 [workspace]

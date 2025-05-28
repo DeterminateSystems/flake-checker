@@ -1,14 +1,14 @@
 {
   "nixos-24.05": "unmaintained",
   "nixos-24.05-small": "unmaintained",
-  "nixos-24.11": "stable",
-  "nixos-24.11-small": "stable",
-  "nixos-25.05": "beta",
-  "nixos-25.05-small": "beta",
+  "nixos-24.11": "deprecated",
+  "nixos-24.11-small": "deprecated",
+  "nixos-25.05": "stable",
+  "nixos-25.05-small": "stable",
   "nixos-unstable": "rolling",
   "nixos-unstable-small": "rolling",
   "nixpkgs-24.05-darwin": "unmaintained",
-  "nixpkgs-24.11-darwin": "stable",
-  "nixpkgs-25.05-darwin": "beta",
+  "nixpkgs-24.11-darwin": "deprecated",
+  "nixpkgs-25.05-darwin": "stable",
   "nixpkgs-unstable": "rolling"
 }

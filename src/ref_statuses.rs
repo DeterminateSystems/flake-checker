@@ -2,7 +2,7 @@ use crate::error::FlakeCheckerError;
 
 use serde::Deserialize;
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 const ALLOWED_REFS_URL: &str = "https://prometheus.nixos.org/api/v1/query?query=channel_revision";
 
@@ -28,13 +28,13 @@ struct Metric {
 }
 
 pub(crate) fn check_ref_statuses(
-    ref_statuses: HashMap<String, String>,
+    ref_statuses: BTreeMap<String, String>,
 ) -> Result<bool, FlakeCheckerError> {
     Ok(fetch_ref_statuses()? == ref_statuses)
 }
 
-pub(crate) fn fetch_ref_statuses() -> Result<HashMap<String, String>, FlakeCheckerError> {
-    let mut officially_supported: HashMap<String, String> =
+pub(crate) fn fetch_ref_statuses() -> Result<BTreeMap<String, String>, FlakeCheckerError> {
+    let mut officially_supported: BTreeMap<String, String> =
         reqwest::blocking::get(ALLOWED_REFS_URL)?
             .json::<Response>()?
             .data
