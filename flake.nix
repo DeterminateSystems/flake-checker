@@ -1,14 +1,14 @@
 {
   inputs = {
-    nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/0.2411.*";
+    nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/0";
 
     fenix = {
-      url = "https://flakehub.com/f/nix-community/fenix/0.1.*";
+      url = "https://flakehub.com/f/nix-community/fenix/0";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
     naersk = {
-      url = "https://flakehub.com/f/nix-community/naersk/0.1.*";
+      url = "https://flakehub.com/f/nix-community/naersk/0";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
@@ -65,7 +65,6 @@
             name = "flake-checker";
             src = self;
             doCheck = true;
-            buildInputs = with pkgs; [ ] ++ lib.optionals stdenv.isDarwin (with darwin.apple_sdk.frameworks; [ Security SystemConfiguration ]);
             nativeBuildInputs = with pkgs; [ ] ++ lib.optionals stdenv.isDarwin [ libiconv ];
           } // pkgs.lib.optionalAttrs pkgs.stdenv.isLinux {
             CARGO_BUILD_TARGET =
@@ -101,7 +100,7 @@
             };
           in
           pkgs.mkShell {
-            packages = (with pkgs; [
+            packages = with pkgs; [
               bashInteractive
 
               # Rust
@@ -121,7 +120,7 @@
 
               # Scripts
               get-ref-statuses
-            ]) ++ pkgs.lib.optionals pkgs.stdenv.isDarwin (with pkgs.darwin.apple_sdk.frameworks; [ Security SystemConfiguration ]);
+            ];
 
             env = {
               # Required by rust-analyzer
