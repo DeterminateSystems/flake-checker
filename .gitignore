@@ -11,3 +11,4 @@ src/policy.json
 
 # Release script artifacts
 releases
+.direnv

@@ -137,14 +137,14 @@ async fn main() -> Result<ExitCode, FlakeCheckerError> {
     } = Cli::parse();
 
     let (reporter, worker) = detsys_ids_client::builder!()
-        .set_enable_reporting(!no_telemetry)
-        .add_fact("check_owner", check_owner)
-        .add_fact("check_outdated", check_outdated)
-        .add_fact("check_supported", check_supported)
-        .add_fact("ignore_missing_flake_lock", ignore_missing_flake_lock)
-        .add_fact("flake_lock_path", flake_lock_path.to_string_lossy())
-        .add_fact("fail_mode", fail_mode)
-        .add_fact("condition", condition.as_deref())
+        .enable_reporting(!no_telemetry)
+        .fact("check_owner", check_owner)
+        .fact("check_outdated", check_outdated)
+        .fact("check_supported", check_supported)
+        .fact("ignore_missing_flake_lock", ignore_missing_flake_lock)
+        .fact("flake_lock_path", flake_lock_path.to_string_lossy())
+        .fact("fail_mode", fail_mode)
+        .fact("condition", condition.as_deref())
         .build_or_default()
         .await;
 
