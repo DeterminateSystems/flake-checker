@@ -40,36 +40,33 @@ jobs:
           name: flake-checker-ARM64-macOS
           path: cache-binary-ARM64-macOS
       - name: Persist the cache binary
-        run: cp ./cache-binary-ARM64-macOS/flake-checker ./artifacts/flake-checker-ARM64-macOS
+        run: cp ./cache-binary-ARM64-macOS/flake-checker ./artifacts/ARM64-macOS
 
       - uses: actions/download-artifact@v4.1.7
         with:
           name: flake-checker-X64-macOS
           path: cache-binary-X64-macOS
       - name: Persist the cache binary
-        run: cp ./cache-binary-X64-macOS/flake-checker ./artifacts/flake-checker-X64-macOS
+        run: cp ./cache-binary-X64-macOS/flake-checker ./artifacts/X64-macOS
 
       - uses: actions/download-artifact@v4.1.7
         with:
           name: flake-checker-X64-Linux
           path: cache-binary-X64-Linux
       - name: Persist the cache binary
-        run: cp ./cache-binary-X64-Linux/flake-checker ./artifacts/flake-checker-X64-Linux
+        run: cp ./cache-binary-X64-Linux/flake-checker ./artifacts/X64-Linux
 
       - uses: actions/download-artifact@v4.1.7
         with:
           name: flake-checker-ARM64-Linux
           path: cache-binary-ARM64-Linux
       - name: Persist the cache binary
-        run: cp ./cache-binary-ARM64-Linux/flake-checker ./artifacts/flake-checker-ARM64-Linux
+        run: cp ./cache-binary-ARM64-Linux/flake-checker ./artifacts/ARM64-Linux
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v2
+      - uses: DeterminateSystems/push-artifact-ids@main
         with:
-          role-to-assume: ${{ secrets.AWS_S3_UPLOAD_ROLE }}
-          aws-region: us-east-2
-      - name: Publish Release (PR)
-        env:
-          AWS_BUCKET: ${{ secrets.AWS_S3_UPLOAD_BUCKET }}
-        run: |
-          .github/workflows/upload_s3.sh pr "${{ github.event.pull_request.number }}" "${{ github.event.pull_request.head.sha }}"
+          s3_upload_role: ${{ secrets.AWS_S3_UPLOAD_ROLE }}
+          bucket: ${{ secrets.AWS_S3_UPLOAD_BUCKET }}
+          directory: ./artifacts
+          ids_project_name: flake-checker
+          ids_binary_prefix: flake-checker
