@@ -150,10 +150,10 @@ async fn main() -> Result<ExitCode, FlakeCheckerError> {
 
     if !flake_lock_path.exists() {
         if ignore_missing_flake_lock {
-            println!("no flake lockfile found at {:?}; ignoring", flake_lock_path);
+            println!("no flake lockfile found at {flake_lock_path:?}; ignoring");
             return Ok(ExitCode::SUCCESS);
         } else {
-            println!("no flake lockfile found at {:?}", flake_lock_path);
+            println!("no flake lockfile found at {flake_lock_path:?}");
             return Ok(ExitCode::FAILURE);
         }
     }

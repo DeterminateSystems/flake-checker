@@ -112,10 +112,7 @@ impl Summary {
         }
 
         if let Some(condition) = &self.condition {
-            println!(
-                "You supplied this CEL condition for your flake:\n\n{}",
-                condition
-            );
+            println!("You supplied this CEL condition for your flake:\n\n{condition}");
             println!("The following inputs violate that condition:\n");
             for issue in self.issues.iter() {
                 println!("* {}", issue.input);
@@ -210,7 +207,7 @@ impl Summary {
 
         let summary_txt = handlebars.render("summary.txt", &self.data)?;
 
-        print!("{}", summary_txt);
+        print!("{summary_txt}");
 
         Ok(())
     }
