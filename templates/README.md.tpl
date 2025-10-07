@@ -28,15 +28,9 @@ But you can also use Nix Flake Checker [in CI](#the-flake-checker-action).
 At any given time, [Nixpkgs] has a bounded set of branches that are considered _supported_.
 The current list, with their statuses:
 
-- `nixos-24.11`
-- `nixos-24.11-small`
-- `nixos-25.05`
-- `nixos-25.05-small`
-- `nixos-unstable`
-- `nixos-unstable-small`
-- `nixpkgs-24.11-darwin`
-- `nixpkgs-25.05-darwin`
-- `nixpkgs-unstable`
+{{#each supported}}
+- `{{@key}}`
+{{/each}}
 
 ## Parameters
 
@@ -162,4 +156,3 @@ If you'd like to help make the parser more exhaustive, [pull requests][prs] are 
 [rust]: https://rust-lang.org
 [telemetry]: https://github.com/DeterminateSystems/nix-flake-checker/blob/main/src/telemetry.rs#L29-L43
 [val]: https://docs.rs/serde_json/latest/serde_json/value/enum.Value.html
-
