@@ -141,7 +141,9 @@
                   inputs="''${tmp}/template-inputs.json"
 
                   jq '{supported: .}' ./ref-statuses.json > "''${inputs}"
-                  easy-template ./templates/README.md.tpl "''${inputs}" > README.md
+                  easy-template ./templates/README.md.handlebars "''${inputs}" > README.md
+
+                  rm -rf "''${tmp}"
                 '';
               };
             in
