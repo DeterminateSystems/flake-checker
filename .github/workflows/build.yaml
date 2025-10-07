@@ -40,7 +40,7 @@ jobs:
       - name: Build and cache dev shell for ${{ matrix.systems.nix-system }} on ${{ matrix.systems.runner }}
         # We still support this system but caching the dev shell fails due to system support mismatch,
         # and we don't really need this cached anyway
-        if: ${{ matrix.systems.nix-system }} != 'x86_64-darwin'
+        if: ${{ matrix.systems.nix-system != 'x86_64-darwin' }}
         run: |
           nix build -L ".#devShells.${{ matrix.systems.nix-system }}.default"
 
