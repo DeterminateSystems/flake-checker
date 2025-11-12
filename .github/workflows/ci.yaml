@@ -9,6 +9,9 @@ jobs:
   checks:
     name: Nix and Rust checks
     runs-on: ubuntu-24.04
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: DeterminateSystems/determinate-nix-action@main
@@ -27,6 +30,9 @@ jobs:
   rust-tests:
     name: Test Rust
     runs-on: ubuntu-24.04
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: DeterminateSystems/determinate-nix-action@main
@@ -37,6 +43,9 @@ jobs:
   check-flake-cel-condition:
     name: Check flake.lock test (CEL condition)
     runs-on: ubuntu-24.04
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: DeterminateSystems/determinate-nix-action@main
@@ -51,6 +60,9 @@ jobs:
   check-flake-dirty:
     name: Check flake.lock test (dirty 😈)
     runs-on: ubuntu-24.04
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: DeterminateSystems/determinate-nix-action@main
@@ -62,6 +74,9 @@ jobs:
   check-flake-clean:
     name: Check flake.lock test (clean 👼)
     runs-on: ubuntu-24.04
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: DeterminateSystems/determinate-nix-action@main
@@ -74,6 +89,9 @@ jobs:
     name: Check flake.lock test (dirty 😈 plus fail mode activated)
     runs-on: ubuntu-24.04
     if: false
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: DeterminateSystems/determinate-nix-action@main

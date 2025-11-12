@@ -8,8 +8,8 @@ jobs:
   build-artifacts:
     runs-on: ${{ matrix.systems.runner }}
     permissions:
-      id-token: "write"
-      contents: "read"
+      id-token: write
+      contents: read
     env:
       ARTIFACT_KEY: flake-checker-${{ matrix.systems.system }}
     strategy:
