@@ -86,7 +86,10 @@
           flake-checker = pkgs.naerskLib.buildPackage (
             {
               name = "flake-checker";
-              src = self;
+              src = builtins.path {
+                name = "flake-checker-src";
+                path = self;
+              };
               doCheck = true;
               nativeBuildInputs = with pkgs; [ ] ++ lib.optionals stdenv.isDarwin [ libiconv ];
             }
@@ -109,18 +112,18 @@
         {
           default =
             let
-              check-nixpkgs-fmt = pkgs.writeShellApplication {
-                name = "check-nixpkgs-fmt";
+              check-nix-fmt = pkgs.writeShellApplication {
+                name = "check-nix-fmt";
                 runtimeInputs = with pkgs; [
                   git
-                  nixpkgs-fmt
+                  nixfmt-rfc-style
                 ];
                 text = ''
-                  nixpkgs-fmt --check "$(git ls-files '*.nix')"
+                  git ls-files '*.nix' | xargs nixfmt --check
                 '';
               };
-              check-rustfmt = pkgs.writeShellApplication {
-                name = "check-rustfmt";
+              check-rust-fmt = pkgs.writeShellApplication {
+                name = "check-rust-fmt";
                 runtimeInputs = with pkgs; [ rustToolchain ];
                 text = "cargo fmt --check";
               };
@@ -158,16 +161,15 @@
                 cargo-watch
                 rust-analyzer
 
-                # Nix
-                nixpkgs-fmt
-
                 # CI checks
-                check-nixpkgs-fmt
-                check-rustfmt
+                check-nix-fmt
+                check-rust-fmt
 
                 # Scripts
                 get-ref-statuses
                 update-readme
+
+                self.formatter.${system}
               ];
 
               env = {
@@ -177,5 +179,7 @@
             };
         }
       );
+
+      formatter = forAllSystems ({ pkgs, ... }: pkgs.nixfmt-rfc-style);
     };
 }

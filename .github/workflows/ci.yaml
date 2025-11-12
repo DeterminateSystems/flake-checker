@@ -21,9 +21,9 @@ jobs:
         with:
           fail-mode: true
       - name: Check Nix formatting
-        run: nix develop -c check-nixpkgs-fmt
+        run: nix develop -c check-nix-fmt
       - name: Check Rust formatting
-        run: nix develop -c check-rustfmt
+        run: nix develop -c check-rust-fmt
       - name: Clippy
         run: nix develop -c cargo clippy
 
