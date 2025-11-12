@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/0";
+    nixpkgs.url = "https://flakehub.com/f/DeterminateSystems/secure/0";
 
     fenix = {
       url = "https://flakehub.com/f/nix-community/fenix/0";
@@ -27,7 +27,6 @@
       supportedSystems = [
         "x86_64-linux"
         "aarch64-linux"
-        "x86_64-darwin"
         "aarch64-darwin"
       ];
 
