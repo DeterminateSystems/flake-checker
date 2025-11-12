@@ -8,8 +8,8 @@ jobs:
   build-artifacts:
     runs-on: ${{ matrix.systems.runner }}
     permissions:
-      id-token: "write"
-      contents: "read"
+      id-token: write
+      contents: read
     env:
       ARTIFACT_KEY: flake-checker-${{ matrix.systems.system }}
     strategy:
@@ -18,9 +18,6 @@ jobs:
           - nix-system: aarch64-darwin
             runner: macos-15
             system: ARM64-macOS
-          - nix-system: x86_64-darwin
-            runner: macos-13
-            system: X64-macOS
           - nix-system: aarch64-linux
             runner: ubuntu-24.04-arm
             system: ARM64-Linux
@@ -38,9 +35,6 @@ jobs:
         uses: DeterminateSystems/flakehub-cache-action@main
 
       - name: Build and cache dev shell for ${{ matrix.systems.nix-system }} on ${{ matrix.systems.runner }}
-        # We still support this system but caching the dev shell fails due to system support mismatch,
-        # and we don't really need this cached anyway
-        if: ${{ matrix.systems.nix-system != 'x86_64-darwin' }}
         run: |
           nix build -L ".#devShells.${{ matrix.systems.nix-system }}.default"
 
