@@ -15,6 +15,10 @@ serde_json = { version = "1.0.100", default-features = false, features = [
 thiserror = { version = "1.0.40", default-features = false }
 
 [dependencies]
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+
 cel-interpreter = { version = "0.7.1", default-features = false }
 chrono = { version = "0.4.25", default-features = false, features = ["clock"] }
 clap = { version = "4.3.0", default-features = false, features = [
@@ -33,9 +37,6 @@ reqwest = { version = "0.11.18", default-features = false, features = [
   "json",
   "rustls-tls-native-roots",
 ] }
-serde = { workspace = true }
-serde_json = { workspace = true }
-thiserror = { workspace = true }
 tokio = { version = "1", features = ["full", "tracing"] }
 tracing = { version = "0.1.41", default-features = false }
 tracing-subscriber = { version = "0.3.19", default-features = false, features = [
