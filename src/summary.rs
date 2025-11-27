@@ -1,7 +1,7 @@
+use crate::FlakeCheckConfig;
 use crate::error::FlakeCheckerError;
 use crate::flake::MAX_DAYS;
 use crate::issue::{Issue, IssueKind};
-use crate::FlakeCheckConfig;
 
 use std::fs::OpenOptions;
 use std::io::Write;
@@ -133,7 +133,7 @@ impl Summary {
                             let reference = &disallowed.reference;
                             Some(format!(
                                 "the `{input}` input uses the non-supported Git branch `{reference}` for Nixpkgs"
-                             ))
+                            ))
                         } else {
                             None
                         }
