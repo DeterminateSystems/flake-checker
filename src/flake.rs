@@ -2,8 +2,8 @@
 
 use std::collections::BTreeMap;
 
-use crate::issue::{Disallowed, Issue, IssueKind, NonUpstream, Outdated};
 use crate::FlakeCheckerError;
+use crate::issue::{Disallowed, Issue, IssueKind, NonUpstream, Outdated};
 
 use chrono::{Duration, Utc};
 use parse_flake_lock::{FlakeLock, Node};
@@ -148,10 +148,10 @@ mod test {
     use std::path::PathBuf;
 
     use crate::{
-        check_flake_lock,
+        FlakeCheckConfig, FlakeLock, check_flake_lock,
         condition::evaluate_condition,
         issue::{Disallowed, Issue, IssueKind, NonUpstream},
-        supported_refs, FlakeCheckConfig, FlakeLock,
+        supported_refs,
     };
 
     #[test]
@@ -160,12 +160,10 @@ mod test {
         let cases: Vec<(&str, bool)> = vec![
             (include_str!("../tests/cel-condition.cel"), true),
             (
-
                 "has(gitRef) && has(numDaysOld) && has(owner) && has(supportedRefs) && supportedRefs.contains(gitRef) && owner != 'NixOS'",
                 false,
             ),
             (
-
                 "has(gitRef) && has(numDaysOld) && has(owner) && has(supportedRefs) && supportedRefs.contains(gitRef) && owner != 'NixOS'",
                 false,
             ),
@@ -312,16 +310,26 @@ mod test {
         let ref_statuses: BTreeMap<String, String> =
             serde_json::from_str(include_str!("../ref-statuses.json")).unwrap();
         let allowed_refs = supported_refs(ref_statuses);
-        let cases: Vec<(&str, Vec<String>, String)> = vec![(
-            "flake.clean.0.lock",
-            vec![String::from("nixpkgs"), String::from("foo"), String::from("bar")],
-            String::from("invalid flake.lock: no nixpkgs dependency found for specified keys: foo, bar"),
-        ),
-        (
-            "flake.clean.1.lock",
-            vec![String::from("nixpkgs"), String::from("nixpkgs-other")],
-            String::from("invalid flake.lock: no nixpkgs dependency found for specified key: nixpkgs-other"),
-        )];
+        let cases: Vec<(&str, Vec<String>, String)> = vec![
+            (
+                "flake.clean.0.lock",
+                vec![
+                    String::from("nixpkgs"),
+                    String::from("foo"),
+                    String::from("bar"),
+                ],
+                String::from(
+                    "invalid flake.lock: no nixpkgs dependency found for specified keys: foo, bar",
+                ),
+            ),
+            (
+                "flake.clean.1.lock",
+                vec![String::from("nixpkgs"), String::from("nixpkgs-other")],
+                String::from(
+                    "invalid flake.lock: no nixpkgs dependency found for specified key: nixpkgs-other",
+                ),
+            ),
+        ];
         for (file, nixpkgs_keys, expected_err) in cases {
             let path = PathBuf::from(format!("tests/{file}"));
             let flake_lock = FlakeLock::new(&path).unwrap();

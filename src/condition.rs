@@ -58,7 +58,7 @@ pub(super) fn evaluate_condition(
                 result => {
                     return Err(FlakeCheckerError::NonBooleanCondition(
                         result.type_of().to_string(),
-                    ))
+                    ));
                 }
             },
             Err(e) => return Err(FlakeCheckerError::CelExecution(e)),
