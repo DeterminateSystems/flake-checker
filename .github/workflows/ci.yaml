@@ -122,8 +122,6 @@ jobs:
             runner: ubuntu-24.04
           - system: ARM64-Linux
             runner: ubuntu-24.04-arm
-          - system: X64-macOS
-            runner: macos-13
           - system: ARM64-macOS
             runner: macos-15
     steps:
