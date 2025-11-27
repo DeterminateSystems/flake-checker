@@ -13,11 +13,11 @@ use std::process::ExitCode;
 
 use clap::Parser;
 use parse_flake_lock::FlakeLock;
-use tracing_subscriber::{fmt, prelude::*, EnvFilter};
+use tracing_subscriber::{EnvFilter, fmt, prelude::*};
 
 use crate::condition::evaluate_condition;
 use error::FlakeCheckerError;
-use flake::{check_flake_lock, FlakeCheckConfig};
+use flake::{FlakeCheckConfig, check_flake_lock};
 use summary::Summary;
 
 /// A flake.lock checker for Nix projects.
