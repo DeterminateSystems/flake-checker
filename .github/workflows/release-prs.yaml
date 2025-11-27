@@ -14,11 +14,11 @@ jobs:
     # Only intra-repo PRs are allowed to have PR artifacts uploaded
     # We only want to trigger once the upload once in the case the upload label is added, not when any label is added
     if: |
-        github.event.pull_request.head.repo.full_name == 'DeterminateSystems/flake-checker'
-        && (
-          (github.event.action == 'labeled' && github.event.label.name == 'upload to s3')
-          || (github.event.action != 'labeled' && contains(github.event.pull_request.labels.*.name, 'upload to s3'))
-        )
+      github.event.pull_request.head.repo.full_name == 'DeterminateSystems/flake-checker'
+      && (
+        (github.event.action == 'labeled' && github.event.label.name == 'upload to s3')
+        || (github.event.action != 'labeled' && contains(github.event.pull_request.labels.*.name, 'upload to s3'))
+      )
     uses: ./.github/workflows/build.yaml
 
   release:
@@ -41,13 +41,6 @@ jobs:
           path: cache-binary-ARM64-macOS
       - name: Persist the cache binary
         run: cp ./cache-binary-ARM64-macOS/flake-checker ./artifacts/ARM64-macOS
-
-      - uses: actions/download-artifact@v4.1.7
-        with:
-          name: flake-checker-X64-macOS
-          path: cache-binary-X64-macOS
-      - name: Persist the cache binary
-        run: cp ./cache-binary-X64-macOS/flake-checker ./artifacts/X64-macOS
 
       - uses: actions/download-artifact@v4.1.7
         with:
