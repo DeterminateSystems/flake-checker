@@ -1,11 +1,11 @@
 {
-  "nixos-25.05": "deprecated",
-  "nixos-25.05-small": "deprecated",
+  "nixos-25.05": "unmaintained",
+  "nixos-25.05-small": "unmaintained",
   "nixos-25.11": "stable",
   "nixos-25.11-small": "stable",
   "nixos-unstable": "rolling",
   "nixos-unstable-small": "rolling",
-  "nixpkgs-25.05-darwin": "deprecated",
+  "nixpkgs-25.05-darwin": "unmaintained",
   "nixpkgs-25.11-darwin": "stable",
   "nixpkgs-unstable": "rolling"
 }
