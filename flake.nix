@@ -1,4 +1,6 @@
 {
+  description = "Health checks for your Nix flakes";
+
   inputs = {
     nixpkgs.url = "https://flakehub.com/f/DeterminateSystems/secure/0";
 
