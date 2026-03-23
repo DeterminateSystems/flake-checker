@@ -99,7 +99,7 @@ You can automate Nix Flake Checker by adding Determinate Systems' [Nix Flake Che
 ```yaml
 checks:
   steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - name: Check Nix flake Nixpkgs inputs
       uses: DeterminateSystems/flake-checker-action@main
 ```
@@ -162,4 +162,3 @@ If you'd like to help make the parser more exhaustive, [pull requests][prs] are 
 [rust]: https://rust-lang.org
 [telemetry]: https://github.com/DeterminateSystems/nix-flake-checker/blob/main/src/telemetry.rs#L29-L43
 [val]: https://docs.rs/serde_json/latest/serde_json/value/enum.Value.html
-
