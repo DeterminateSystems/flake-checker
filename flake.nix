@@ -2,11 +2,6 @@
   inputs = {
     nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/0.1";
 
-    fenix = {
-      url = "https://flakehub.com/f/nix-community/fenix/0";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
     crane.url = "https://flakehub.com/f/ipetkov/crane/0.20.3";
 
     easy-template = {
@@ -33,78 +28,50 @@
           system:
           f rec {
             inherit system;
-            pkgs = import inputs.nixpkgs {
-              inherit system;
-              overlays = [ self.overlays.default ];
-            };
+            pkgs = import inputs.nixpkgs { inherit system; };
           }
         );
 
       forAllSystems = forSystems supportedSystems;
     in
     {
-      overlays.default =
-        final: prev:
-        let
-          inherit (final.stdenv.hostPlatform) system;
-
-          rustToolchain =
-            with inputs.fenix.packages.${system};
-            combine (
-              [
-                stable.clippy
-                stable.rustc
-                stable.cargo
-                stable.rustfmt
-                stable.rust-src
-              ]
-              ++ inputs.nixpkgs.lib.optionals (system == "x86_64-linux") [
-                targets.x86_64-unknown-linux-musl.stable.rust-std
-              ]
-              ++ inputs.nixpkgs.lib.optionals (system == "aarch64-linux") [
-                targets.aarch64-unknown-linux-musl.stable.rust-std
-              ]
-            );
-
-          craneLib = (inputs.crane.mkLib final).overrideToolchain rustToolchain;
-        in
-        {
-          inherit rustToolchain craneLib;
-        };
-
       packages = forAllSystems (
         { pkgs, system }:
+        let
+          # pkgsStatic gives musl on Linux and statically-linked C libs on macOS
+          buildPkgs = pkgs.pkgsStatic;
+
+          craneLib = inputs.crane.mkLib buildPkgs;
+
+          src = builtins.path {
+            name = "flake-checker-src";
+            path = self;
+          };
+
+          commonArgs = {
+            inherit src;
+            depsBuildBuild = [ buildPkgs.stdenv.cc ];
+            CARGO_BUILD_TARGET = buildPkgs.stdenv.hostPlatform.rust.rustcTarget;
+            "CC_${buildPkgs.stdenv.hostPlatform.rust.cargoEnvVarTarget}" =
+              "${buildPkgs.stdenv.cc.targetPrefix}cc";
+            "CARGO_TARGET_${buildPkgs.stdenv.hostPlatform.rust.cargoEnvVarTarget}_LINKER" =
+              "${buildPkgs.stdenv.cc.targetPrefix}cc";
+          }
+          // pkgs.lib.optionalAttrs pkgs.stdenv.isLinux {
+            CARGO_BUILD_RUSTFLAGS = "-C target-feature=+crt-static";
+          };
+
+          cargoArtifacts = craneLib.buildDepsOnly commonArgs;
+        in
         rec {
           default = flake-checker;
-
-          flake-checker =
-            let
-              src = builtins.path {
-                name = "flake-checker-src";
-                path = self;
-              };
-              commonArgs = {
-                inherit src;
-              }
-              // pkgs.lib.optionalAttrs pkgs.stdenv.isLinux {
-                CARGO_BUILD_TARGET =
-                  if system == "x86_64-linux" then
-                    "x86_64-unknown-linux-musl"
-                  else if system == "aarch64-linux" then
-                    "aarch64-unknown-linux-musl"
-                  else
-                    throw "Unsupported Linux system: ${system}";
-                CARGO_BUILD_RUSTFLAGS = "-C target-feature=+crt-static";
-              };
-              cargoArtifacts = pkgs.craneLib.buildDepsOnly commonArgs;
-            in
-            pkgs.craneLib.buildPackage (
-              commonArgs
-              // {
-                inherit cargoArtifacts;
-                doCheck = true;
-              }
-            );
+          flake-checker = craneLib.buildPackage (
+            commonArgs
+            // {
+              inherit cargoArtifacts;
+              doCheck = true;
+            }
+          );
         }
       );
 
@@ -125,12 +92,18 @@
               };
               check-rust-fmt = pkgs.writeShellApplication {
                 name = "check-rust-fmt";
-                runtimeInputs = with pkgs; [ rustToolchain ];
+                runtimeInputs = with pkgs; [
+                  cargo
+                  rustfmt
+                ];
                 text = "cargo fmt --check";
               };
               get-ref-statuses = pkgs.writeShellApplication {
                 name = "get-ref-statuses";
-                runtimeInputs = with pkgs; [ rustToolchain ];
+                runtimeInputs = with pkgs; [
+                  cargo
+                  rustc
+                ];
                 text = "cargo run --features ref-statuses -- --get-ref-statuses";
               };
               update-readme = pkgs.writeShellApplication {
@@ -155,7 +128,10 @@
                 bashInteractive
 
                 # Rust
-                rustToolchain
+                rustc
+                cargo
+                clippy
+                rustfmt
                 cargo-bloat
                 cargo-edit
                 cargo-machete
@@ -175,7 +151,7 @@
 
               env = {
                 # Required by rust-analyzer
-                RUST_SRC_PATH = "${pkgs.rustToolchain}/lib/rustlib/src/rust/library";
+                RUST_SRC_PATH = "${pkgs.rustPlatform.rustLibSrc}";
               };
             };
         }
