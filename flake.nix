@@ -50,7 +50,6 @@
 
           commonArgs = {
             inherit src;
-            depsBuildBuild = [ buildPkgs.stdenv.cc ];
             CARGO_BUILD_TARGET = buildPkgs.stdenv.hostPlatform.rust.rustcTarget;
             "CC_${buildPkgs.stdenv.hostPlatform.rust.cargoEnvVarTarget}" =
               "${buildPkgs.stdenv.cc.targetPrefix}cc";
