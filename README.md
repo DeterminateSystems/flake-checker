@@ -154,8 +154,8 @@ If you'd like to help make the parser more exhaustive, [pull requests][prs] are 
 
 [action]: https://github.com/DeterminateSystems/flake-checker-action
 [cel]: https://cel.dev
-[flake-check]: https://nix.dev/manual/nix/2.28/command-ref/new-cli/nix3-flake-check.html
 [detsys]: https://determinate.systems
+[flake-check]: https://nix.dev/manual/nix/2.28/command-ref/new-cli/nix3-flake-check.html
 [flakes]: https://zero-to-nix.com/concepts/flakes
 [install]: https://zero-to-nix.com/start/install
 [installer]: https://github.com/DeterminateSystems/nix-installer
