@@ -48,13 +48,18 @@
             path = self;
           };
 
+          rustTargetSpec = buildPkgs.stdenv.hostPlatform.rust.rustcTargetSpec;
+          rustTargetSpecEnv = pkgs.lib.toUpper (builtins.replaceStrings [ "-" ] [ "_" ] rustTargetSpec);
+
+          isCross = buildPkgs.stdenv.hostPlatform != buildPkgs.stdenv.buildPlatform;
+
           commonArgs = {
             inherit src;
-            CARGO_BUILD_TARGET = buildPkgs.stdenv.hostPlatform.rust.rustcTarget;
-            "CC_${buildPkgs.stdenv.hostPlatform.rust.cargoEnvVarTarget}" =
-              "${buildPkgs.stdenv.cc.targetPrefix}cc";
-            "CARGO_TARGET_${buildPkgs.stdenv.hostPlatform.rust.cargoEnvVarTarget}_LINKER" =
-              "${buildPkgs.stdenv.cc.targetPrefix}cc";
+          }
+          // pkgs.lib.optionalAttrs isCross {
+            CARGO_BUILD_TARGET = rustTargetSpec;
+            "CC_${rustTargetSpecEnv}" = "${buildPkgs.stdenv.cc.targetPrefix}cc";
+            "CARGO_TARGET_${rustTargetSpecEnv}_LINKER" = "${buildPkgs.stdenv.cc.targetPrefix}cc";
           }
           // pkgs.lib.optionalAttrs pkgs.stdenv.isLinux {
             CARGO_BUILD_RUSTFLAGS = "-C target-feature=+crt-static";
