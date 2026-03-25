@@ -7,10 +7,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    naersk = {
-      url = "https://flakehub.com/f/nix-community/naersk/0";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    crane.url = "https://flakehub.com/f/ipetkov/crane/0.20.3";
 
     easy-template = {
       url = "https://flakehub.com/f/DeterminateSystems/easy-template/0";
@@ -68,14 +65,11 @@
                 targets.aarch64-unknown-linux-musl.stable.rust-std
               ]
             );
+
+          craneLib = (inputs.crane.mkLib final).overrideToolchain rustToolchain;
         in
         {
-          inherit rustToolchain;
-
-          naerskLib = final.callPackage inputs.naersk {
-            cargo = rustToolchain;
-            rustc = rustToolchain;
-          };
+          inherit rustToolchain craneLib;
         };
 
       packages = forAllSystems (
@@ -83,27 +77,34 @@
         rec {
           default = flake-checker;
 
-          flake-checker = pkgs.naerskLib.buildPackage (
-            {
-              name = "flake-checker";
+          flake-checker =
+            let
               src = builtins.path {
                 name = "flake-checker-src";
                 path = self;
               };
-              doCheck = true;
-              nativeBuildInputs = with pkgs; [ ] ++ lib.optionals stdenv.isDarwin [ libiconv ];
-            }
-            // pkgs.lib.optionalAttrs pkgs.stdenv.isLinux {
-              CARGO_BUILD_TARGET =
-                if system == "x86_64-linux" then
-                  "x86_64-unknown-linux-musl"
-                else if system == "aarch64-linux" then
-                  "aarch64-unknown-linux-musl"
-                else
-                  throw "Unsupported Linux system: ${system}";
-              CARGO_BUILD_RUSTFLAGS = "-C target-feature=+crt-static";
-            }
-          );
+              commonArgs = {
+                inherit src;
+              }
+              // pkgs.lib.optionalAttrs pkgs.stdenv.isLinux {
+                CARGO_BUILD_TARGET =
+                  if system == "x86_64-linux" then
+                    "x86_64-unknown-linux-musl"
+                  else if system == "aarch64-linux" then
+                    "aarch64-unknown-linux-musl"
+                  else
+                    throw "Unsupported Linux system: ${system}";
+                CARGO_BUILD_RUSTFLAGS = "-C target-feature=+crt-static";
+              };
+              cargoArtifacts = pkgs.craneLib.buildDepsOnly commonArgs;
+            in
+            pkgs.craneLib.buildPackage (
+              commonArgs
+              // {
+                inherit cargoArtifacts;
+                doCheck = true;
+              }
+            );
         }
       );
 
