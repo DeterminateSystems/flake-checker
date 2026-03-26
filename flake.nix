@@ -170,6 +170,9 @@
               name = "flake-checker-src";
               path = self;
             };
+            env = lib.optionalAttrs (staticTarget != null) {
+              CARGO_BUILD_TARGET = staticTarget;
+            };
           };
 
           inherit rustToolchain;
