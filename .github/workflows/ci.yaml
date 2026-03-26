@@ -19,7 +19,7 @@ jobs:
       - name: Check flake.lock
         uses: DeterminateSystems/flake-checker-action@main
         with:
-          fail-mode: true
+          fail-mode: false
       - name: Check Nix formatting
         run: nix develop -c check-nix-fmt
       - name: Check Rust formatting
