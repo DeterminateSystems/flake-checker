@@ -2,7 +2,12 @@
   inputs = {
     nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/0.1";
 
-    crane.url = "https://flakehub.com/f/ipetkov/crane/0.20.3";
+    fenix = {
+      url = "https://flakehub.com/f/nix-community/fenix/0.1";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    crane.url = "https://flakehub.com/f/ipetkov/crane/0";
 
     easy-template = {
       url = "https://flakehub.com/f/DeterminateSystems/easy-template/0";
@@ -13,8 +18,12 @@
   outputs =
     { self, ... }@inputs:
     let
+      inherit (inputs.nixpkgs) lib;
+
       lastModifiedDate = self.lastModifiedDate or self.lastModified or "19700101";
       version = "${builtins.substring 0 8 lastModifiedDate}-${self.shortRev or "dirty"}";
+
+      meta = (builtins.fromTOML (builtins.readFile ./Cargo.toml)).package;
 
       supportedSystems = [
         "x86_64-linux"
@@ -22,60 +31,25 @@
         "aarch64-darwin"
       ];
 
-      forSystems =
-        s: f:
-        inputs.nixpkgs.lib.genAttrs s (
+      forAllSystems =
+        f:
+        lib.genAttrs supportedSystems (
           system:
-          f rec {
+          f {
             inherit system;
-            pkgs = import inputs.nixpkgs { inherit system; };
+            pkgs = import inputs.nixpkgs {
+              inherit system;
+              overlays = [ self.overlays.default ];
+            };
           }
         );
-
-      forAllSystems = forSystems supportedSystems;
     in
     {
       packages = forAllSystems (
         { pkgs, system }:
-        let
-          # pkgsStatic gives musl on Linux and statically-linked C libs on macOS
-          buildPkgs = pkgs.pkgsStatic;
-
-          craneLib = inputs.crane.mkLib buildPkgs;
-
-          src = builtins.path {
-            name = "flake-checker-src";
-            path = self;
-          };
-
-          rustTargetSpec = buildPkgs.stdenv.hostPlatform.rust.rustcTargetSpec;
-          rustTargetSpecEnv = pkgs.lib.toUpper (builtins.replaceStrings [ "-" ] [ "_" ] rustTargetSpec);
-
-          isCross = buildPkgs.stdenv.hostPlatform != buildPkgs.stdenv.buildPlatform;
-
-          commonArgs = {
-            inherit src;
-          }
-          // pkgs.lib.optionalAttrs isCross {
-            CARGO_BUILD_TARGET = rustTargetSpec;
-            "CC_${rustTargetSpecEnv}" = "${buildPkgs.stdenv.cc.targetPrefix}cc";
-            "CARGO_TARGET_${rustTargetSpecEnv}_LINKER" = "${buildPkgs.stdenv.cc.targetPrefix}cc";
-          }
-          // pkgs.lib.optionalAttrs pkgs.stdenv.isLinux {
-            CARGO_BUILD_RUSTFLAGS = "-C target-feature=+crt-static";
-          };
-
-          cargoArtifacts = craneLib.buildDepsOnly commonArgs;
-        in
-        rec {
-          default = flake-checker;
-          flake-checker = craneLib.buildPackage (
-            commonArgs
-            // {
-              inherit cargoArtifacts;
-              doCheck = true;
-            }
-          );
+        {
+          default = self.packages.${system}.flake-checker;
+          inherit (pkgs) flake-checker;
         }
       );
 
@@ -88,7 +62,7 @@
                 name = "check-nix-fmt";
                 runtimeInputs = with pkgs; [
                   git
-                  nixfmt-rfc-style
+                  nixfmt
                 ];
                 text = ''
                   git ls-files '*.nix' | xargs nixfmt --check
@@ -97,16 +71,14 @@
               check-rust-fmt = pkgs.writeShellApplication {
                 name = "check-rust-fmt";
                 runtimeInputs = with pkgs; [
-                  cargo
-                  rustfmt
+                  rustToolchain
                 ];
                 text = "cargo fmt --check";
               };
               get-ref-statuses = pkgs.writeShellApplication {
                 name = "get-ref-statuses";
                 runtimeInputs = with pkgs; [
-                  cargo
-                  rustc
+                  rustToolchain
                 ];
                 text = "cargo run --features ref-statuses -- --get-ref-statuses";
               };
@@ -132,15 +104,11 @@
                 bashInteractive
 
                 # Rust
-                rustc
-                cargo
-                clippy
-                rustfmt
+                rustToolchain
                 cargo-bloat
                 cargo-edit
                 cargo-machete
                 cargo-watch
-                rust-analyzer
 
                 # CI checks
                 check-nix-fmt
@@ -153,14 +121,58 @@
                 self.formatter.${system}
               ];
 
-              env = {
-                # Required by rust-analyzer
-                RUST_SRC_PATH = "${pkgs.rustPlatform.rustLibSrc}";
-              };
+              # Required by rust-analyzer
+              env.RUST_SRC_PATH = "${pkgs.rustToolchain}/lib/rustlib/src/rust/library";
             };
         }
       );
 
-      formatter = forAllSystems ({ pkgs, ... }: pkgs.nixfmt-rfc-style);
+      formatter = forAllSystems ({ pkgs, ... }: pkgs.nixfmt);
+
+      overlays.default =
+        final: prev:
+        let
+          meta = (builtins.fromTOML (builtins.readFile ./Cargo.toml)).package;
+
+          inherit (prev.stdenv.hostPlatform) system;
+
+          staticTarget =
+            {
+              "aarch64-linux" = "aarch64-unknown-linux-musl";
+              "x86_64-linux" = "x86_64-unknown-linux-musl";
+            }
+            .${system} or null;
+
+          rustToolchain =
+            with inputs.fenix.packages.${system};
+            combine (
+              with stable;
+              [
+                clippy
+                rustc
+                cargo
+                rustfmt
+                rust-src
+                rust-analyzer
+              ]
+              ++ lib.optionals (staticTarget != null) [
+                targets.${staticTarget}.stable.rust-std
+              ]
+            );
+
+          craneLib = (inputs.crane.mkLib prev).overrideToolchain rustToolchain;
+        in
+        {
+          flake-checker = craneLib.buildPackage {
+            inherit (meta) name;
+            inherit version;
+            src = builtins.path {
+              name = "flake-checker-src";
+              path = self;
+            };
+          };
+
+          inherit rustToolchain;
+        };
     };
 }
