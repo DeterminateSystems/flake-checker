@@ -64,12 +64,12 @@
         "rust-analyzer-src": "rust-analyzer-src_2"
       },
       "locked": {
-        "lastModified": 1767250179,
-        "narHash": "sha256-PnQdWvPZqHp+7yaHWDFX3NYSKaOy0fjkwpR+rIQC7AY=",
-        "rev": "a3eaf682db8800962943a77ab77c0aae966f9825",
-        "revCount": 2511,
+        "lastModified": 1772348640,
+        "narHash": "sha256-caiKs7O4khFydpKyg8O8/nmvw/NfN4fn/4spageGoig=",
+        "rev": "47c5355eaba0b08836e720d5d545c8ea1e1783db",
+        "revCount": 2572,
         "type": "tarball",
-        "url": "https://api.flakehub.com/f/pinned/nix-community/fenix/0.1.2511%2Brev-a3eaf682db8800962943a77ab77c0aae966f9825/019b78a8-f9ad-7faf-9a11-350b6ae3fcd9/source.tar.gz"
+        "url": "https://api.flakehub.com/f/pinned/nix-community/fenix/0.1.2572%2Brev-47c5355eaba0b08836e720d5d545c8ea1e1783db/019ca881-cb35-7cd1-8b46-98117609f8b6/source.tar.gz"
       },
       "original": {
         "type": "tarball",
@@ -106,12 +106,12 @@
         ]
       },
       "locked": {
-        "lastModified": 1763384566,
-        "narHash": "sha256-r+wgI+WvNaSdxQmqaM58lVNvJYJ16zoq+tKN20cLst4=",
-        "rev": "d4155d6ebb70fbe2314959842f744aa7cabbbf6a",
-        "revCount": 381,
+        "lastModified": 1769799857,
+        "narHash": "sha256-88IFXZ7Sa1vxbz5pty0Io5qEaMQMMUPMonLa3Ls/ss4=",
+        "rev": "9d4ed44d8b8cecdceb1d6fd76e74123d90ae6339",
+        "revCount": 385,
         "type": "tarball",
-        "url": "https://api.flakehub.com/f/pinned/nix-community/naersk/0.1.381%2Brev-d4155d6ebb70fbe2314959842f744aa7cabbbf6a/019b3a44-9ce1-7d8e-9d0c-f07a28444fd1/source.tar.gz"
+        "url": "https://api.flakehub.com/f/pinned/nix-community/naersk/0.1.385%2Brev-9d4ed44d8b8cecdceb1d6fd76e74123d90ae6339/019c104b-c472-7eef-ba5e-d14761c1e374/source.tar.gz"
       },
       "original": {
         "type": "tarball",
@@ -120,16 +120,16 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1766423894,
-        "narHash": "sha256-8uUHYKMfzu6qgF9M0VYJ3Fw4HJWmJiNRToGBojE5wEU=",
-        "rev": "91461f7fe3c87a3f1d631608943519b0456e0e2e",
-        "revCount": 313,
+        "lastModified": 1774462503,
+        "narHash": "sha256-72J6ZuexBX+7WyUwr9O8fGOdYVobLMbmYjE8gueBuFo=",
+        "rev": "f75a8d5c5b3dc09574c88d88ad7c59661852a517",
+        "revCount": 948363,
         "type": "tarball",
-        "url": "https://api.flakehub.com/f/pinned/DeterminateSystems/secure/0.904649.313/019b4714-003c-7b50-a3aa-ffc368440845/source.tar.gz"
+        "url": "https://api.flakehub.com/f/pinned/DeterminateSystems/secure-packages-rolling/0.1.948363%2Brev-f75a8d5c5b3dc09574c88d88ad7c59661852a517/019d2641-a852-7508-b4dc-b81b8a299860/source.tar.gz"
       },
       "original": {
         "type": "tarball",
-        "url": "https://flakehub.com/f/DeterminateSystems/secure/0"
+        "url": "https://flakehub.com/f/DeterminateSystems/secure-packages-rolling/0"
       }
     },
     "root": {
@@ -160,11 +160,11 @@
     "rust-analyzer-src_2": {
       "flake": false,
       "locked": {
-        "lastModified": 1767191410,
-        "narHash": "sha256-cCZGjubgDWmstvFkS6eAw2qk2ihgWkycw55u2dtLd70=",
+        "lastModified": 1772310333,
+        "narHash": "sha256-njFwHnxYcfQINwSa+XWhenv8s8PMg/j5ID0HpIa49xM=",
         "owner": "rust-lang",
         "repo": "rust-analyzer",
-        "rev": "a9026e6d5068172bf5a0d52a260bb290961d1cb4",
+        "rev": "a96b6a9b887008bae01839543f9ca8e1f67f4ebe",
         "type": "github"
       },
       "original": {

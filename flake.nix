@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "https://flakehub.com/f/DeterminateSystems/secure/0";
+    nixpkgs.url = "https://flakehub.com/f/DeterminateSystems/secure-packages-rolling/0";
 
     fenix = {
       url = "https://flakehub.com/f/nix-community/fenix/0";
