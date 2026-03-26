@@ -163,17 +163,39 @@
           craneLib = (inputs.crane.mkLib prev).overrideToolchain rustToolchain;
         in
         {
-          flake-checker = craneLib.buildPackage {
-            inherit (meta) name;
-            inherit version;
-            src = builtins.path {
-              name = "flake-checker-src";
-              path = self;
-            };
-            env = lib.optionalAttrs (staticTarget != null) {
-              CARGO_BUILD_TARGET = staticTarget;
-            };
-          };
+          flake-checker =
+            let
+              sharedAttrs = {
+                inherit (meta) name;
+                inherit version;
+
+                src = builtins.path {
+                  name = "flake-checker-src";
+                  path = self;
+                };
+
+                env = lib.optionalAttrs (staticTarget != null) {
+                  CARGO_BUILD_TARGET = staticTarget;
+                };
+              };
+            in
+            craneLib.buildPackage (
+              sharedAttrs
+              // {
+                cargoArtifacts = craneLib.buildDepsOnly sharedAttrs;
+
+                disallowedReferences = lib.optionals final.stdenv.hostPlatform.isDarwin [
+                  final.libiconv
+                ];
+
+                postFixup = lib.optionalString final.stdenv.hostPlatform.isDarwin ''
+                  install_name_tool -change \
+                    "$(otool -L $out/bin/flake-checker | grep libiconv | awk '{print $1}')" \
+                    /usr/lib/libiconv.2.dylib \
+                    $out/bin/flake-checker
+                '';
+              }
+            );
 
           inherit rustToolchain;
         };
