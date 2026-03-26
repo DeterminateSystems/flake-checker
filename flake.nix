@@ -43,6 +43,15 @@
             };
           }
         );
+
+      staticTarget' =
+        system:
+        {
+          "aarch64-linux" = "aarch64-unknown-linux-musl";
+          "x86_64-linux" = "x86_64-unknown-linux-musl";
+        }
+        .${system} or null;
+
     in
     {
       packages = forAllSystems (
@@ -58,6 +67,9 @@
         {
           default =
             let
+              staticTarget = staticTarget' system;
+              pkgs' = if staticTarget != null then pkgs.pkgsStatic else pkgs;
+
               check-nix-fmt = pkgs.writeShellApplication {
                 name = "check-nix-fmt";
                 runtimeInputs = with pkgs; [
@@ -99,11 +111,12 @@
                 '';
               };
             in
-            pkgs.mkShell {
+            pkgs'.mkShell {
               packages = with pkgs; [
                 bashInteractive
 
                 # Rust
+                lld
                 rustToolchain
                 cargo-bloat
                 cargo-edit
@@ -122,7 +135,10 @@
               ];
 
               # Required by rust-analyzer
-              env.RUST_SRC_PATH = "${pkgs.rustToolchain}/lib/rustlib/src/rust/library";
+              env = {
+                RUST_SRC_PATH = "${pkgs.rustToolchain}/lib/rustlib/src/rust/library";
+              }
+              // pkgs.env;
             };
         }
       );
@@ -136,12 +152,8 @@
 
           inherit (prev.stdenv.hostPlatform) system;
 
-          staticTarget =
-            {
-              "aarch64-linux" = "aarch64-unknown-linux-musl";
-              "x86_64-linux" = "x86_64-unknown-linux-musl";
-            }
-            .${system} or null;
+          staticTarget = staticTarget' system;
+          pkgs' = if staticTarget != null then final.pkgsStatic else final;
 
           rustToolchain =
             with inputs.fenix.packages.${system};
@@ -160,7 +172,15 @@
               ]
             );
 
-          craneLib = (inputs.crane.mkLib prev).overrideToolchain rustToolchain;
+          craneLib = (inputs.crane.mkLib pkgs').overrideToolchain (_: rustToolchain);
+
+          rustTargetSpec = final.stdenv.hostPlatform.rust.rustcTargetSpec;
+          rustTargetSpecEnv = lib.toUpper (builtins.replaceStrings [ "-" ] [ "_" ] rustTargetSpec);
+
+          env = lib.optionalAttrs (staticTarget != null) {
+            CARGO_BUILD_TARGET = staticTarget;
+            "CARGO_TARGET_${rustTargetSpecEnv}_LINKER" = "${final.stdenv.cc.targetPrefix}cc";
+          };
         in
         {
           flake-checker =
@@ -174,9 +194,14 @@
                   path = self;
                 };
 
-                env = lib.optionalAttrs (staticTarget != null) {
-                  CARGO_BUILD_TARGET = staticTarget;
-                };
+                depsBuildBuild = [
+                  pkgs'.buildPackages.stdenv.cc
+                  pkgs'.lld
+                ];
+
+                doIncludeCrossToolchainEnv = false;
+
+                inherit env;
               };
             in
             craneLib.buildPackage (
@@ -197,7 +222,7 @@
               }
             );
 
-          inherit rustToolchain;
+          inherit env rustToolchain;
         };
     };
 }
