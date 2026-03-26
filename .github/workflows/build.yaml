@@ -43,6 +43,11 @@ jobs:
           nix build -L ".#packages.${{ matrix.systems.nix-system }}.default"
           cp ./result/bin/flake-checker flake-checker
 
+      - name: Ensure that flake-checker binary is static on Linux
+        if: contains(matrix.systems.nix-system, 'linux')
+        run: |
+          ldd ./flake-checker && echo "❌👎 DYNAMIC" && exit 1 || echo "✅👍 STATIC"
+
       - name: Upload flake-checker executable for ${{ matrix.systems.system }}
         uses: actions/upload-artifact@v4.3.3
         with:
