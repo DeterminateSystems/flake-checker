@@ -1,16 +1,13 @@
 {
   inputs = {
-    nixpkgs.url = "https://flakehub.com/f/DeterminateSystems/secure/0";
+    nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/0.1";
 
     fenix = {
-      url = "https://flakehub.com/f/nix-community/fenix/0";
+      url = "https://flakehub.com/f/nix-community/fenix/0.1";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    naersk = {
-      url = "https://flakehub.com/f/nix-community/naersk/0";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    crane.url = "https://flakehub.com/f/ipetkov/crane/0";
 
     easy-template = {
       url = "https://flakehub.com/f/DeterminateSystems/easy-template/0";
@@ -21,8 +18,12 @@
   outputs =
     { self, ... }@inputs:
     let
+      inherit (inputs.nixpkgs) lib;
+
       lastModifiedDate = self.lastModifiedDate or self.lastModified or "19700101";
       version = "${builtins.substring 0 8 lastModifiedDate}-${self.shortRev or "dirty"}";
+
+      meta = (builtins.fromTOML (builtins.readFile ./Cargo.toml)).package;
 
       supportedSystems = [
         "x86_64-linux"
@@ -30,11 +31,11 @@
         "aarch64-darwin"
       ];
 
-      forSystems =
-        s: f:
-        inputs.nixpkgs.lib.genAttrs s (
+      forAllSystems =
+        f:
+        lib.genAttrs supportedSystems (
           system:
-          f rec {
+          f {
             inherit system;
             pkgs = import inputs.nixpkgs {
               inherit system;
@@ -43,67 +44,21 @@
           }
         );
 
-      forAllSystems = forSystems supportedSystems;
+      staticTarget' =
+        system:
+        {
+          "aarch64-linux" = "aarch64-unknown-linux-musl";
+          "x86_64-linux" = "x86_64-unknown-linux-musl";
+        }
+        .${system} or null;
+
     in
     {
-      overlays.default =
-        final: prev:
-        let
-          inherit (final.stdenv.hostPlatform) system;
-
-          rustToolchain =
-            with inputs.fenix.packages.${system};
-            combine (
-              [
-                stable.clippy
-                stable.rustc
-                stable.cargo
-                stable.rustfmt
-                stable.rust-src
-              ]
-              ++ inputs.nixpkgs.lib.optionals (system == "x86_64-linux") [
-                targets.x86_64-unknown-linux-musl.stable.rust-std
-              ]
-              ++ inputs.nixpkgs.lib.optionals (system == "aarch64-linux") [
-                targets.aarch64-unknown-linux-musl.stable.rust-std
-              ]
-            );
-        in
-        {
-          inherit rustToolchain;
-
-          naerskLib = final.callPackage inputs.naersk {
-            cargo = rustToolchain;
-            rustc = rustToolchain;
-          };
-        };
-
       packages = forAllSystems (
         { pkgs, system }:
-        rec {
-          default = flake-checker;
-
-          flake-checker = pkgs.naerskLib.buildPackage (
-            {
-              name = "flake-checker";
-              src = builtins.path {
-                name = "flake-checker-src";
-                path = self;
-              };
-              doCheck = true;
-              nativeBuildInputs = with pkgs; [ ] ++ lib.optionals stdenv.isDarwin [ libiconv ];
-            }
-            // pkgs.lib.optionalAttrs pkgs.stdenv.isLinux {
-              CARGO_BUILD_TARGET =
-                if system == "x86_64-linux" then
-                  "x86_64-unknown-linux-musl"
-                else if system == "aarch64-linux" then
-                  "aarch64-unknown-linux-musl"
-                else
-                  throw "Unsupported Linux system: ${system}";
-              CARGO_BUILD_RUSTFLAGS = "-C target-feature=+crt-static";
-            }
-          );
+        {
+          default = self.packages.${system}.flake-checker;
+          inherit (pkgs) flake-checker;
         }
       );
 
@@ -112,11 +67,14 @@
         {
           default =
             let
+              staticTarget = staticTarget' system;
+              pkgs' = if staticTarget != null then pkgs.pkgsStatic else pkgs;
+
               check-nix-fmt = pkgs.writeShellApplication {
                 name = "check-nix-fmt";
                 runtimeInputs = with pkgs; [
                   git
-                  nixfmt-rfc-style
+                  nixfmt
                 ];
                 text = ''
                   git ls-files '*.nix' | xargs nixfmt --check
@@ -124,12 +82,16 @@
               };
               check-rust-fmt = pkgs.writeShellApplication {
                 name = "check-rust-fmt";
-                runtimeInputs = with pkgs; [ rustToolchain ];
+                runtimeInputs = with pkgs; [
+                  rustToolchain
+                ];
                 text = "cargo fmt --check";
               };
               get-ref-statuses = pkgs.writeShellApplication {
                 name = "get-ref-statuses";
-                runtimeInputs = with pkgs; [ rustToolchain ];
+                runtimeInputs = with pkgs; [
+                  rustToolchain
+                ];
                 text = "cargo run --features ref-statuses -- --get-ref-statuses";
               };
               update-readme = pkgs.writeShellApplication {
@@ -149,17 +111,17 @@
                 '';
               };
             in
-            pkgs.mkShell {
+            pkgs'.mkShell {
               packages = with pkgs; [
                 bashInteractive
 
                 # Rust
+                lld
                 rustToolchain
                 cargo-bloat
                 cargo-edit
                 cargo-machete
                 cargo-watch
-                rust-analyzer
 
                 # CI checks
                 check-nix-fmt
@@ -172,14 +134,95 @@
                 self.formatter.${system}
               ];
 
+              # Required by rust-analyzer
               env = {
-                # Required by rust-analyzer
                 RUST_SRC_PATH = "${pkgs.rustToolchain}/lib/rustlib/src/rust/library";
-              };
+              }
+              // pkgs.env;
             };
         }
       );
 
-      formatter = forAllSystems ({ pkgs, ... }: pkgs.nixfmt-rfc-style);
+      formatter = forAllSystems ({ pkgs, ... }: pkgs.nixfmt);
+
+      overlays.default =
+        final: prev:
+        let
+          meta = (builtins.fromTOML (builtins.readFile ./Cargo.toml)).package;
+
+          inherit (prev.stdenv.hostPlatform) system;
+
+          staticTarget = staticTarget' system;
+          pkgs' = if staticTarget != null then final.pkgsStatic else final;
+
+          rustToolchain =
+            with inputs.fenix.packages.${system};
+            combine (
+              with stable;
+              [
+                clippy
+                rustc
+                cargo
+                rustfmt
+                rust-src
+                rust-analyzer
+              ]
+              ++ lib.optionals (staticTarget != null) [
+                targets.${staticTarget}.stable.rust-std
+              ]
+            );
+
+          craneLib = (inputs.crane.mkLib pkgs').overrideToolchain (_: rustToolchain);
+
+          rustTargetSpec = final.stdenv.hostPlatform.rust.rustcTargetSpec;
+          rustTargetSpecEnv = lib.toUpper (builtins.replaceStrings [ "-" ] [ "_" ] rustTargetSpec);
+
+          env = lib.optionalAttrs (staticTarget != null) {
+            CARGO_BUILD_TARGET = staticTarget;
+            "CARGO_TARGET_${rustTargetSpecEnv}_LINKER" = "${final.stdenv.cc.targetPrefix}cc";
+          };
+        in
+        {
+          flake-checker =
+            let
+              sharedAttrs = {
+                inherit (meta) name;
+                inherit version;
+
+                src = builtins.path {
+                  name = "flake-checker-src";
+                  path = self;
+                };
+
+                depsBuildBuild = [
+                  pkgs'.buildPackages.stdenv.cc
+                  pkgs'.lld
+                ];
+
+                doIncludeCrossToolchainEnv = false;
+
+                inherit env;
+              };
+            in
+            craneLib.buildPackage (
+              sharedAttrs
+              // {
+                cargoArtifacts = craneLib.buildDepsOnly sharedAttrs;
+
+                disallowedReferences = lib.optionals final.stdenv.hostPlatform.isDarwin [
+                  final.libiconv
+                ];
+
+                postFixup = lib.optionalString final.stdenv.hostPlatform.isDarwin ''
+                  install_name_tool -change \
+                    "$(otool -L $out/bin/flake-checker | grep libiconv | awk '{print $1}')" \
+                    /usr/lib/libiconv.2.dylib \
+                    $out/bin/flake-checker
+                '';
+              }
+            );
+
+          inherit env rustToolchain;
+        };
     };
 }
