@@ -1,6 +1,5 @@
-['nixos-unstable', 'nixos-unstable-small', 'nixpkgs-unstable'].map(rev, supportedRefs.contains(rev))
+['nixos-unstable', 'nixos-unstable-small', 'nixpkgs-unstable'].all(rev, supportedRefs.contains(rev))
     && owner == 'NixOS'
     && gitRef == 'nixos-unstable'
     && supportedRefs.contains(gitRef)
-    && has(numDaysOld)
     && numDaysOld > 0

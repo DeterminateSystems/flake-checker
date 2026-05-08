@@ -1,4 +1,4 @@
-use cel_interpreter::{Context, Program, Value};
+use cel::{Context, Program, Value};
 use parse_flake_lock::{FlakeLock, Node};
 
 use std::collections::{BTreeMap, HashMap};
