@@ -122,6 +122,7 @@
                 cargo-edit
                 cargo-machete
                 cargo-watch
+                cargo-audit
 
                 # CI checks
                 check-nix-fmt

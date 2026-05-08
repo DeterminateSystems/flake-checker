@@ -15,7 +15,7 @@ serde_json = { version = "1.0.100", default-features = false, features = [
 thiserror = { version = "1.0.40", default-features = false }
 
 [dependencies]
-cel-interpreter = { version = "0.7.1", default-features = false }
+cel = { version = "0.13", default-features = false }
 chrono = { version = "0.4.25", default-features = false, features = ["clock"] }
 clap = { version = "4.3.0", default-features = false, features = [
   "derive",
@@ -23,7 +23,7 @@ clap = { version = "4.3.0", default-features = false, features = [
   "std",
   "wrap_help",
 ] }
-detsys-ids-client = { version = "0.6", features = ["tracing-instrument"] }
+detsys-ids-client = { version = "0.7", features = ["tracing-instrument"] }
 handlebars = { version = "4.3.7", default-features = false }
 parse-flake-lock = { path = "./parse-flake-lock" }
 reqwest = { version = "0.13", default-features = false, features = [

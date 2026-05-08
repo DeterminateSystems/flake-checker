@@ -159,14 +159,8 @@ mod test {
         // (condition, expected)
         let cases: Vec<(&str, bool)> = vec![
             (include_str!("../tests/cel-condition.cel"), true),
-            (
-                "has(gitRef) && has(numDaysOld) && has(owner) && has(supportedRefs) && supportedRefs.contains(gitRef) && owner != 'NixOS'",
-                false,
-            ),
-            (
-                "has(gitRef) && has(numDaysOld) && has(owner) && has(supportedRefs) && supportedRefs.contains(gitRef) && owner != 'NixOS'",
-                false,
-            ),
+            ("supportedRefs.contains(gitRef) && owner != 'NixOS'", false),
+            ("supportedRefs.contains(gitRef) && owner != 'NixOS'", false),
         ];
 
         let ref_statuses: BTreeMap<String, String> =
