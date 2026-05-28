@@ -35,7 +35,7 @@ jobs:
 
       - name: Create pull request
         if: failure()
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@v8
         with:
           commit-message: Update ref-statuses.json to new valid Git refs list and update README
           title: Update ref-statuses.json

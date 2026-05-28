@@ -26,6 +26,10 @@ jobs:
         run: nix develop -c check-rust-fmt
       - name: Clippy
         run: nix develop -c cargo clippy
+      - name: Check generated README up to date
+        run: |
+          nix develop -c update-readme
+          git diff --exit-code
 
   rust-tests:
     name: Test Rust

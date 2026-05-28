@@ -32,10 +32,13 @@ The current list, with their statuses:
 - `nixos-25.05-small`
 - `nixos-25.11`
 - `nixos-25.11-small`
+- `nixos-26.05`
+- `nixos-26.05-small`
 - `nixos-unstable`
 - `nixos-unstable-small`
 - `nixpkgs-25.05-darwin`
 - `nixpkgs-25.11-darwin`
+- `nixpkgs-26.05-darwin`
 - `nixpkgs-unstable`
 
 ## Parameters
@@ -80,7 +83,7 @@ We recommend a condition _at least_ this stringent:
 supportedRefs.contains(gitRef) && numDaysOld < 30 && owner == 'NixOS'
 ```
 
-Inputs without a `numDaysOld` (e.g. those never locked with a timestamp) default to `0`, which means a bare `numDaysOld < N` check silently passes them. Add `numDaysOld > 0 &&` to your condition if you want to require the field be set.
+Note that not all Nixpkgs inputs have a `numDaysOld` field, so make sure to ensure that that field exists when checking for the number of days.
 
 Here are some other example conditions:
 
@@ -162,3 +165,4 @@ If you'd like to help make the parser more exhaustive, [pull requests][prs] are 
 [rust]: https://rust-lang.org
 [telemetry]: https://github.com/DeterminateSystems/nix-flake-checker/blob/main/src/telemetry.rs#L29-L43
 [val]: https://docs.rs/serde_json/latest/serde_json/value/enum.Value.html
+
