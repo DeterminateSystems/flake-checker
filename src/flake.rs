@@ -38,12 +38,7 @@ pub(super) fn nixpkgs_deps(
 
     for (ref key, node) in flake_lock.root.clone() {
         match &node {
-            Node::Repo(_) => {
-                if keys.contains(key) {
-                    deps.insert(key.to_string(), node);
-                }
-            }
-            Node::Tarball(_) => {
+            Node::Repo(_) | Node::Tarball(_) => {
                 if keys.contains(key) {
                     deps.insert(key.to_string(), node);
                 }
@@ -86,20 +81,14 @@ pub(crate) fn check_flake_lock(
     let deps = nixpkgs_deps(flake_lock, &config.nixpkgs_keys)?;
 
     for (name, node) in deps {
-        let (git_ref, last_modified, owner) = match node {
-            Node::Repo(repo) => (
-                repo.original.git_ref,
-                Some(repo.locked.last_modified),
-                Some(repo.original.owner),
-            ),
-            Node::Tarball(tarball) => (None, tarball.locked.last_modified, None),
-            _ => (None, None, None),
-        };
+        let git_ref = node.git_ref();
+        let last_modified = node.last_modified();
+        let owner = node.owner();
 
         // Check if not explicitly supported
         if let Some(git_ref) = git_ref {
             // Check if not explicitly supported
-            if config.check_supported && !allowed_refs.contains(&git_ref) {
+            if config.check_supported && !allowed_refs.iter().any(|r| r == git_ref) {
                 issues.push(Issue {
                     input: name.clone(),
                     kind: IssueKind::Disallowed(Disallowed {
@@ -128,7 +117,7 @@ pub(crate) fn check_flake_lock(
             if config.check_owner && owner.to_lowercase() != "nixos" {
                 issues.push(Issue {
                     input: name.clone(),
-                    kind: IssueKind::NonUpstream(NonUpstream { owner }),
+                    kind: IssueKind::NonUpstream(NonUpstream { owner: owner.to_string() }),
                 });
             }
         }
@@ -144,7 +133,6 @@ pub(super) fn num_days_old(timestamp: i64) -> i64 {
 
 #[cfg(test)]
 mod test {
-    use std::collections::BTreeMap;
     use std::path::PathBuf;
 
     use crate::{
@@ -160,11 +148,9 @@ mod test {
         let cases: Vec<(&str, bool)> = vec![
             (include_str!("../tests/cel-condition.cel"), true),
             ("supportedRefs.contains(gitRef) && owner != 'NixOS'", false),
-            ("supportedRefs.contains(gitRef) && owner != 'NixOS'", false),
         ];
 
-        let ref_statuses: BTreeMap<String, String> =
-            serde_json::from_str(include_str!("../ref-statuses.json")).unwrap();
+        let ref_statuses = crate::local_ref_statuses();
         let supported_refs = supported_refs(ref_statuses.clone());
         let path = PathBuf::from("tests/flake.cel.0.lock");
 
@@ -196,8 +182,7 @@ mod test {
 
     #[test]
     fn clean_flake_locks() {
-        let ref_statuses: BTreeMap<String, String> =
-            serde_json::from_str(include_str!("../ref-statuses.json")).unwrap();
+        let ref_statuses = crate::local_ref_statuses();
         let allowed_refs = supported_refs(ref_statuses);
         for n in 0..=7 {
             let path = PathBuf::from(format!("tests/flake.clean.{n}.lock"));
@@ -217,8 +202,7 @@ mod test {
 
     #[test]
     fn dirty_flake_locks() {
-        let ref_statuses: BTreeMap<String, String> =
-            serde_json::from_str(include_str!("../ref-statuses.json")).unwrap();
+        let ref_statuses = crate::local_ref_statuses();
         let allowed_refs = supported_refs(ref_statuses);
         let cases: Vec<(&str, Vec<Issue>)> = vec![
             (
@@ -272,8 +256,7 @@ mod test {
 
     #[test]
     fn explicit_nixpkgs_keys() {
-        let ref_statuses: BTreeMap<String, String> =
-            serde_json::from_str(include_str!("../ref-statuses.json")).unwrap();
+        let ref_statuses = crate::local_ref_statuses();
         let allowed_refs = supported_refs(ref_statuses);
         let cases: Vec<(&str, Vec<String>, Vec<Issue>)> = vec![(
             "flake.explicit-keys.0.lock",
@@ -301,8 +284,7 @@ mod test {
 
     #[test]
     fn missing_nixpkgs_keys() {
-        let ref_statuses: BTreeMap<String, String> =
-            serde_json::from_str(include_str!("../ref-statuses.json")).unwrap();
+        let ref_statuses = crate::local_ref_statuses();
         let allowed_refs = supported_refs(ref_statuses);
         let cases: Vec<(&str, Vec<String>, String)> = vec![
             (
