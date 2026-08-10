@@ -38,6 +38,20 @@ The current list, with their statuses:
 - `nixpkgs-26.05-darwin`
 - `nixpkgs-unstable`
 
+## Determinate Secure Packages
+
+[Determinate Secure Packages][secure-packages] flakes count as supported Nixpkgs inputs, so Flake Checker doesn't flag them for using an unsupported Git ref or a non-upstream owner:
+
+```nix
+{
+  inputs.nixpkgs.url = "https://flakehub.com/f/DeterminateSystems/secure-packages-rolling/*";
+}
+```
+
+Any [FlakeHub] flake published under the `DeterminateSystems` org with a name starting with `secure-packages` qualifies, such as `secure-packages-rolling`, `secure-packages-26.05`, and `secure-packages-26.05-fips`.
+
+The age check still applies, because Secure Packages flakes receive a continuous stream of security updates that you should be picking up.
+
 ## Parameters
 
 By default, Flake Checker verifies that:
@@ -45,6 +59,8 @@ By default, Flake Checker verifies that:
 - Any explicit Nixpkgs Git refs are in the [supported list](#supported-branches).
 - Any Nixpkgs dependencies are less than 30 days old.
 - Any Nixpkgs dependencies have the [`NixOS`][nixos-org] org as the GitHub owner (and thus that the dependency isn't a fork or non-upstream variant).
+
+[Determinate Secure Packages](#determinate-secure-packages) inputs are exempt from the ref and owner checks.
 
 You can adjust this behavior via configuration (all are enabled by default but you can disable them):
 
@@ -150,6 +166,7 @@ If you'd like to help make the parser more exhaustive, [pull requests][prs] are 
 [action]: https://github.com/DeterminateSystems/flake-checker-action
 [cel]: https://cel.dev
 [detsys]: https://determinate.systems
+[flakehub]: https://flakehub.com
 [flakes]: https://zero-to-nix.com/concepts/flakes
 [install]: https://zero-to-nix.com/start/install
 [installer]: https://github.com/DeterminateSystems/nix-installer
@@ -160,6 +177,7 @@ If you'd like to help make the parser more exhaustive, [pull requests][prs] are 
 [privacy]: https://determinate.systems/policies/privacy
 [prs]: /pulls
 [rust]: https://rust-lang.org
+[secure-packages]: https://docs.determinate.systems/secure-packages
 [telemetry]: https://github.com/DeterminateSystems/nix-flake-checker/blob/main/src/telemetry.rs#L29-L43
 [val]: https://docs.rs/serde_json/latest/serde_json/value/enum.Value.html
 

@@ -4,6 +4,7 @@ use std::collections::BTreeMap;
 
 use crate::FlakeCheckerError;
 use crate::issue::{Disallowed, Issue, IssueKind, NonUpstream, Outdated};
+use crate::secure_packages::is_secure_packages_url;
 
 use chrono::{Duration, Utc};
 use parse_flake_lock::{FlakeLock, Node};
@@ -86,20 +87,26 @@ pub(crate) fn check_flake_lock(
     let deps = nixpkgs_deps(flake_lock, &config.nixpkgs_keys)?;
 
     for (name, node) in deps {
-        let (git_ref, last_modified, owner) = match node {
+        let (git_ref, last_modified, owner, secure_packages) = match node {
             Node::Repo(repo) => (
                 repo.original.git_ref,
                 Some(repo.locked.last_modified),
                 Some(repo.original.owner),
+                false,
             ),
-            Node::Tarball(tarball) => (None, tarball.locked.last_modified, None),
-            _ => (None, None, None),
+            Node::Tarball(tarball) => {
+                let secure_packages = is_secure_packages_url(&tarball.original.url)
+                    || is_secure_packages_url(&tarball.locked.url);
+
+                (None, tarball.locked.last_modified, None, secure_packages)
+            }
+            _ => (None, None, None, false),
         };
 
-        // Check if not explicitly supported
+        // Secure Packages flakes are exempt from the ref and owner checks, but not the age check
         if let Some(git_ref) = git_ref {
             // Check if not explicitly supported
-            if config.check_supported && !allowed_refs.contains(&git_ref) {
+            if config.check_supported && !secure_packages && !allowed_refs.contains(&git_ref) {
                 issues.push(Issue {
                     input: name.clone(),
                     kind: IssueKind::Disallowed(Disallowed {
@@ -125,7 +132,7 @@ pub(crate) fn check_flake_lock(
 
         if let Some(owner) = owner {
             // Check that the GitHub owner is NixOS
-            if config.check_owner && owner.to_lowercase() != "nixos" {
+            if config.check_owner && !secure_packages && owner.to_lowercase() != "nixos" {
                 issues.push(Issue {
                     input: name.clone(),
                     kind: IssueKind::NonUpstream(NonUpstream { owner }),
@@ -199,7 +206,7 @@ mod test {
         let ref_statuses: BTreeMap<String, String> =
             serde_json::from_str(include_str!("../ref-statuses.json")).unwrap();
         let allowed_refs = supported_refs(ref_statuses);
-        for n in 0..=7 {
+        for n in 0..=8 {
             let path = PathBuf::from(format!("tests/flake.clean.{n}.lock"));
             let flake_lock = FlakeLock::new(&path).unwrap();
             let config = FlakeCheckConfig {
@@ -251,6 +258,24 @@ mod test {
                         input: String::from("nixpkgs"),
                         kind: IssueKind::NonUpstream(NonUpstream {
                             owner: String::from("pretty-shady"),
+                        }),
+                    },
+                ],
+            ),
+            // Secure Packages is a FlakeHub-only product, so the GitHub form gets no exemption
+            (
+                "flake.dirty.2.lock",
+                vec![
+                    Issue {
+                        input: String::from("nixpkgs"),
+                        kind: IssueKind::Disallowed(Disallowed {
+                            reference: String::from("main"),
+                        }),
+                    },
+                    Issue {
+                        input: String::from("nixpkgs"),
+                        kind: IssueKind::NonUpstream(NonUpstream {
+                            owner: String::from("DeterminateSystems"),
                         }),
                     },
                 ],
