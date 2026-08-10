@@ -2,7 +2,8 @@
 //!
 //! These flakes are available only from FlakeHub, published under the `DeterminateSystems` org
 //! with names beginning with `secure-packages` (`secure-packages-rolling`,
-//! `secure-packages-26.05`, `secure-packages-rolling-fips`, and so on).
+//! `secure-packages-26.05`, `secure-packages-rolling-fips`, `secure-packages-26.05-fips`, and so
+//! on).
 
 const DETERMINATE_ORG: &str = "determinatesystems";
 const SECURE_PACKAGES_PREFIX: &str = "secure-packages";
@@ -62,6 +63,7 @@ mod test {
             ("DeterminateSystems", "secure-packages-rolling-fips", true),
             ("DeterminateSystems", "secure-packages-25.11", true),
             ("DeterminateSystems", "secure-packages-26.05", true),
+            ("DeterminateSystems", "secure-packages-26.05-fips", true),
             // Channels that don't exist yet still match the prefix
             ("DeterminateSystems", "secure-packages-26.11", true),
             ("DeterminateSystems", "secure-packages", true),
