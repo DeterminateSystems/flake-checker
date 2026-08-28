@@ -5,6 +5,11 @@
 **Nix Flake Checker** is a tool from [Determinate Systems][detsys] that performs "health" checks on the [`flake.lock`][lockfile] files in your [flake][flakes]-powered Nix projects.
 Its goal is to help your Nix projects stay on recent and supported versions of [Nixpkgs].
 
+> [!NOTE]
+> Nix Flake Checker is not [`nix flake check`][flake-check].
+> `nix flake check` checks whether a flake can be evaluated, *given* some [`flake.lock`][lockfile].
+> Nix Flake Checker (this tool) looks only at your [`flake.lock`][lockfile].
+
 To run the checker in the root of a Nix project:
 
 ```shell
@@ -150,6 +155,7 @@ If you'd like to help make the parser more exhaustive, [pull requests][prs] are 
 [action]: https://github.com/DeterminateSystems/flake-checker-action
 [cel]: https://cel.dev
 [detsys]: https://determinate.systems
+[flake-check]: https://nix.dev/manual/nix/2.28/command-ref/new-cli/nix3-flake-check.html
 [flakes]: https://zero-to-nix.com/concepts/flakes
 [install]: https://zero-to-nix.com/start/install
 [installer]: https://github.com/DeterminateSystems/nix-installer
