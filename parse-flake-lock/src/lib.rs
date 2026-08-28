@@ -114,10 +114,7 @@ impl<'de> Deserialize<'de> for FlakeLock {
                 };
 
                 for (root_name, root_input) in root_node.inputs.iter() {
-                    let inputs: VecDeque<String> = match root_input.clone() {
-                        Input::String(s) => [s].into(),
-                        Input::List(keys) => keys.into(),
-                    };
+                    let inputs: VecDeque<String> = root_input.to_deque();
 
                     let real_node = chase_input_node(&nodes, inputs).map_err(|e| {
                         de::Error::custom(format!("failed to chase input {}: {:?}", root_name, e))
@@ -173,7 +170,7 @@ fn chase_input_node(
         let next_inputs = &node_inputs[&input];
         node = match next_inputs {
             Input::String(s) => &nodes[s],
-            Input::List(inputs) => chase_input_node(nodes, inputs.to_owned().into())?,
+            Input::List(_) => chase_input_node(nodes, next_inputs.to_deque())?,
         };
     }
 
@@ -214,7 +211,6 @@ pub enum Node {
     Fallthrough(serde_json::value::Value), // Covers all other node types
 }
 
-// A string representation of the node variant (for logging).
 impl Node {
     fn variant(&self) -> &'static str {
         match self {
@@ -224,6 +220,34 @@ impl Node {
             Node::Path(_) => "Path",
             Node::Tarball(_) => "Tarball",
             Node::Fallthrough(_) => "Fallthrough", // Covers all other node types
+        }
+    }
+
+    /// Returns the Git reference if this is a repository node.
+    pub fn git_ref(&self) -> Option<&str> {
+        match self {
+            Node::Repo(repo) => repo.original.git_ref.as_deref(),
+            _ => None,
+        }
+    }
+
+    /// Returns the last modified timestamp if available.
+    pub fn last_modified(&self) -> Option<i64> {
+        match self {
+            Node::Repo(repo) => Some(repo.locked.last_modified),
+            Node::Tarball(tarball) => tarball.locked.last_modified,
+            Node::Path(path) => Some(path.locked.last_modified),
+            Node::Indirect(indirect) => Some(indirect.locked.last_modified),
+            _ => None,
+        }
+    }
+
+    /// Returns the repository owner if available.
+    pub fn owner(&self) -> Option<&str> {
+        match self {
+            Node::Repo(repo) => Some(&repo.original.owner),
+            Node::Indirect(indirect) => Some(&indirect.locked.owner),
+            _ => None,
         }
     }
 }
@@ -236,6 +260,16 @@ pub enum Input {
     String(String),
     /// An input expressed as a list of strings.
     List(Vec<String>),
+}
+
+impl Input {
+    /// Returns the input as a list of keys (VecDeque).
+    pub fn to_deque(&self) -> VecDeque<String> {
+        match self {
+            Input::String(s) => vec![s.clone()].into(),
+            Input::List(keys) => keys.clone().into(),
+        }
+    }
 }
 
 /// A flake [Node] representing a raw mapping of strings to [Input]s.

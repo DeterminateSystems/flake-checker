@@ -1,5 +1,5 @@
 use cel::{Context, Program, Value};
-use parse_flake_lock::{FlakeLock, Node};
+use parse_flake_lock::FlakeLock;
 
 use std::collections::{BTreeMap, HashMap};
 
@@ -34,15 +34,9 @@ pub(super) fn evaluate_condition(
     let deps = nixpkgs_deps(flake_lock, nixpkgs_keys)?;
 
     for (name, node) in deps {
-        let (git_ref, last_modified, owner) = match node {
-            Node::Repo(repo) => (
-                repo.original.git_ref,
-                Some(repo.locked.last_modified),
-                Some(repo.original.owner),
-            ),
-            Node::Tarball(tarball) => (None, tarball.locked.last_modified, None),
-            _ => (None, None, None),
-        };
+        let git_ref = node.git_ref();
+        let last_modified = node.last_modified();
+        let owner = node.owner();
 
         add_cel_variables(&mut ctx, git_ref, last_modified, owner);
 
@@ -70,22 +64,14 @@ pub(super) fn evaluate_condition(
 
 fn add_cel_variables(
     ctx: &mut Context,
-    git_ref: Option<String>,
+    git_ref: Option<&str>,
     last_modified: Option<i64>,
-    owner: Option<String>,
+    owner: Option<&str>,
 ) {
-    ctx.add_variable_from_value(KEY_GIT_REF, value_or_empty_string(git_ref));
+    ctx.add_variable_from_value(KEY_GIT_REF, Value::from(git_ref.unwrap_or("")));
     ctx.add_variable_from_value(
         KEY_NUM_DAYS_OLD,
-        value_or_zero(last_modified.map(num_days_old)),
+        Value::from(last_modified.map(num_days_old).unwrap_or(0)),
     );
-    ctx.add_variable_from_value(KEY_OWNER, value_or_empty_string(owner));
-}
-
-fn value_or_empty_string(value: Option<String>) -> Value {
-    Value::from(value.unwrap_or(String::from("")))
-}
-
-fn value_or_zero(value: Option<i64>) -> Value {
-    Value::from(value.unwrap_or(0))
+    ctx.add_variable_from_value(KEY_OWNER, Value::from(owner.unwrap_or("")));
 }

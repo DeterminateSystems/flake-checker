@@ -96,7 +96,10 @@ struct Cli {
     condition: Option<String>,
 }
 
-#[cfg(not(feature = "ref-statuses"))]
+pub(crate) fn local_ref_statuses() -> BTreeMap<String, String> {
+    serde_json::from_str(include_str!("../ref-statuses.json")).unwrap()
+}
+
 pub(crate) fn supported_refs(ref_statuses: BTreeMap<String, String>) -> Vec<String> {
     let mut return_value: Vec<String> = ref_statuses
         .iter()
@@ -120,8 +123,7 @@ async fn main() -> Result<ExitCode, FlakeCheckerError> {
         .with(EnvFilter::from_default_env())
         .init();
 
-    let ref_statuses: BTreeMap<String, String> =
-        serde_json::from_str(include_str!("../ref-statuses.json")).unwrap();
+    let ref_statuses = local_ref_statuses();
 
     let Cli {
         no_telemetry,
@@ -279,8 +281,7 @@ fn main() -> Result<ExitCode, FlakeCheckerError> {
     }
 
     if check_ref_statuses {
-        let mut ref_statuses: BTreeMap<String, String> =
-            serde_json::from_str(include_str!("../ref-statuses.json")).unwrap();
+        let ref_statuses = local_ref_statuses();
 
         match ref_statuses::check_ref_statuses(ref_statuses) {
             Ok(equals) => {

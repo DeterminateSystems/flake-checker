@@ -34,7 +34,7 @@ pub(crate) fn check_ref_statuses(
 }
 
 pub(crate) fn fetch_ref_statuses() -> Result<BTreeMap<String, String>, FlakeCheckerError> {
-    let mut officially_supported: BTreeMap<String, String> =
+    let officially_supported: BTreeMap<String, String> =
         reqwest::blocking::get(ALLOWED_REFS_URL)?
             .json::<Response>()?
             .data
