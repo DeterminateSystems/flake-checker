@@ -65,12 +65,11 @@ pub(super) fn nixpkgs_deps(
         .collect();
 
     if !missing.is_empty() {
-        let error_msg = format!(
+        println!(
             "no nixpkgs dependency found for specified {}: {}",
             if missing.len() > 1 { "keys" } else { "key" },
             missing.join(", ")
         );
-        return Err(FlakeCheckerError::Invalid(error_msg));
     }
 
     Ok(deps)
