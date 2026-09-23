@@ -2,6 +2,7 @@ mod condition;
 mod error;
 mod flake;
 mod issue;
+mod secure_packages;
 mod summary;
 
 #[cfg(feature = "ref-statuses")]
