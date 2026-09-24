@@ -26,6 +26,14 @@ jobs:
       - name: Create the artifacts directory
         run: rm -rf ./artifacts && mkdir ./artifacts
 
+      # x86_64-darwin (uses the aarch64-darwin build)
+      - uses: actions/download-artifact@v4.1.7
+        with:
+          name: flake-checker-ARM64-macOS
+          path: cache-binary-X64-macOS
+      - name: Persist the cache binary
+        run: cp ./cache-binary-X64-macOS/flake-checker ./artifacts/X64-macOS
+
       - uses: actions/download-artifact@v4.1.7
         with:
           name: flake-checker-ARM64-macOS
