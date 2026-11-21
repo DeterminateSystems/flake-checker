@@ -15,6 +15,7 @@ jobs:
     strategy:
       matrix:
         systems:
+          # we also use this for x86_64-darwin
           - nix-system: aarch64-darwin
             runner: macos-15
             system: ARM64-macOS
