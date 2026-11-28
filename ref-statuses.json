@@ -3,9 +3,12 @@
   "nixos-25.11-small": "unmaintained",
   "nixos-26.05": "stable",
   "nixos-26.05-small": "stable",
+  "nixos-26.11": "beta",
+  "nixos-26.11-small": "beta",
   "nixos-unstable": "rolling",
   "nixos-unstable-small": "rolling",
   "nixpkgs-25.11-darwin": "unmaintained",
   "nixpkgs-26.05-darwin": "stable",
+  "nixpkgs-26.11": "beta",
   "nixpkgs-unstable": "rolling"
 }
