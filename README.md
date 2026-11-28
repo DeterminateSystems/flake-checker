@@ -32,10 +32,13 @@ The current list, with their statuses:
 - `nixos-25.11-small`
 - `nixos-26.05`
 - `nixos-26.05-small`
+- `nixos-26.11`
+- `nixos-26.11-small`
 - `nixos-unstable`
 - `nixos-unstable-small`
 - `nixpkgs-25.11-darwin`
 - `nixpkgs-26.05-darwin`
+- `nixpkgs-26.11`
 - `nixpkgs-unstable`
 
 ## Parameters
